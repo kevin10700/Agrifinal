@@ -90,18 +90,8 @@ TEMPLATES = [
 WSGI_APPLICATION = 'appweb.wsgi.application'
 
 # ── Base de Datos (Railway vs Desarrollo Local) ──────────
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.mysql',
-        'NAME': os.getenv('DB_NAME', ''),
-        'USER': os.getenv('DB_USER', ''),
-        'PASSWORD': os.getenv('DB_PASSWORD', ''),
-        'HOST': os.getenv('DB_HOST', '127.0.0.1'),
-        'PORT': os.getenv('DB_PORT', '3306'),
-    }
-}
-
 db_from_env = os.getenv("DATABASE_URL")
+
 if db_from_env:
     parsed_db = dj_database_url.parse(
         db_from_env,
@@ -109,14 +99,27 @@ if db_from_env:
         engine='django.db.backends.mysql'
     )
     if parsed_db:
-        parsed_db['ENGINE'] = 'django.db.backends.mysql'
-        
-        # Si dj_database_url deja el HOST vacío o en 'localhost', 
-        # forzamos que use DB_HOST explícito si existe o '127.0.0.1' para evitar sockets de Unix.
-        if not parsed_db.get('HOST') or parsed_db.get('HOST') == 'localhost':
-            parsed_db['HOST'] = os.getenv('DB_HOST', '127.0.0.1')
-            
-        DATABASES['default'] = parsed_db
+        DATABASES = {
+            'default': {
+                'ENGINE': 'django.db.backends.mysql',
+                'NAME': parsed_db.get('NAME'),
+                'USER': parsed_db.get('USER'),
+                'PASSWORD': parsed_db.get('PASSWORD'),
+                'HOST': parsed_db.get('HOST'),
+                'PORT': parsed_db.get('PORT') or '3306',
+            }
+        }
+else:
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.mysql',
+            'NAME': os.getenv('DB_NAME', ''),
+            'USER': os.getenv('DB_USER', ''),
+            'PASSWORD': os.getenv('DB_PASSWORD', ''),
+            'HOST': os.getenv('DB_HOST', '127.0.0.1'),
+            'PORT': os.getenv('DB_PORT', '3306'),
+        }
+    }
 
 AUTH_PASSWORD_VALIDATORS = [
     {'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator'},
