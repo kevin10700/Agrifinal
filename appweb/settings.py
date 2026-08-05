@@ -103,19 +103,18 @@ DATABASES = {
 
 db_from_env = os.getenv("DATABASE_URL")
 if db_from_env:
-    # Si la URL viene como mysql://, dj_database_url la procesa correctamente
     parsed_db = dj_database_url.parse(
         db_from_env,
         conn_max_age=600,
         engine='django.db.backends.mysql'
     )
     if parsed_db:
-        # Aseguramos que el motor sea MySQL de Django
         parsed_db['ENGINE'] = 'django.db.backends.mysql'
         
-        # Si el HOST por alguna razón se interpreta como 'localhost', lo forzamos o respetamos el host remoto
-        if parsed_db.get('HOST') == 'localhost':
-            parsed_db['HOST'] = '127.0.0.1'
+        # Si dj_database_url deja el HOST vacío o en 'localhost', 
+        # forzamos que use DB_HOST explícito si existe o '127.0.0.1' para evitar sockets de Unix.
+        if not parsed_db.get('HOST') or parsed_db.get('HOST') == 'localhost':
+            parsed_db['HOST'] = os.getenv('DB_HOST', '127.0.0.1')
             
         DATABASES['default'] = parsed_db
 
