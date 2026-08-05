@@ -28,19 +28,17 @@ DEBUG = os.getenv("DEBUG", "False").lower() == "true"
 # En producción define ALLOWED_HOSTS en .env con los dominios públicos separados por coma.
 ALLOWED_HOSTS = ['*']
 
-# ── Ngrok / proxy seguro ──────────────────────────────────
-# Permite que Django confíe en el header X-Forwarded-Proto que
-# ngrok envía para indicar HTTPS.  Sin esto CSRF rompe porque
-# Django cree que está en HTTP y rechaza el origen HTTPS.
+# ── Proxy seguro ──────────────────────────────────────────
 SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
 
-# Orígenes que Django aceptará como válidos para CSRF cuando el
-# sitio se sirve a través de túneles como ngrok.
-# El patrón .ngrok-free.dev cubre todos los subdominios gratuitos.
-CSRF_TRUSTED_ORIGINS = os.getenv(
-    "CSRF_TRUSTED_ORIGINS",
-    "https://agrifinal-production.up.railway.app,https://*.ngrok-free.dev,https://*.ngrok.io,http://127.0.0.1:8000,http://localhost:8000",
-).split(",")
+# ── CSRF Trusted Origins ──────────────────────────────────
+CSRF_TRUSTED_ORIGINS = [
+    "https://agrifinal-production.up.railway.app",
+    "https://*.ngrok-free.dev",
+    "https://*.ngrok.io",
+    "http://127.0.0.1:8000",
+    "http://localhost:8000",
+]
 
 INSTALLED_APPS = [
     'django.contrib.admin',
