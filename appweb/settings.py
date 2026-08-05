@@ -26,11 +26,7 @@ DEBUG = os.getenv("DEBUG", "False").lower() == "true"
 
 # En desarrollo permite el servidor local aunque DEBUG se mantenga desactivado.
 # En producción define ALLOWED_HOSTS en .env con los dominios públicos separados por coma.
-ALLOWED_HOSTS = [
-    host.strip()
-    for host in os.getenv("ALLOWED_HOSTS", "127.0.0.1,localhost,.ngrok-free.dev, agrifinal-production.up.railway.app").split(",")
-    if host.strip()
-]
+ALLOWED_HOSTS = ['*']
 
 # ── Ngrok / proxy seguro ──────────────────────────────────
 # Permite que Django confíe en el header X-Forwarded-Proto que
