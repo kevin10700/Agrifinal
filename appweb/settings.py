@@ -90,25 +90,29 @@ TEMPLATES = [
 WSGI_APPLICATION = 'appweb.wsgi.application'
 
 # ── Base de Datos (Railway vs Desarrollo Local) ──────────
-if os.getenv("DATABASE_URL"):
-    DATABASES = {
-        'default': dj_database_url.config(
-            default=os.getenv("DATABASE_URL"),
+DATABASES = {
+    'default': {
+        'ENGINE': 'django.db.backends.mysql',
+        'NAME': os.getenv('DB_NAME', ''),
+        'USER': os.getenv('DB_USER', ''),
+        'PASSWORD': os.getenv('DB_PASSWORD', ''),
+        'HOST': os.getenv('DB_HOST', 'localhost'),
+        'PORT': os.getenv('DB_PORT', '3306'),
+    }
+}
+
+db_from_env = os.getenv("DATABASE_URL")
+if db_from_env:
+    try:
+        parsed_db = dj_database_url.parse(
+            db_from_env,
             conn_max_age=600,
             engine='django.db.backends.mysql'
         )
-    }
-else:
-    DATABASES = {
-        'default': {
-            'ENGINE': 'django.db.backends.mysql',
-            'NAME': os.getenv('DB_NAME', ''),
-            'USER': os.getenv('DB_USER', ''),
-            'PASSWORD': os.getenv('DB_PASSWORD', ''),
-            'HOST': os.getenv('DB_HOST', 'localhost'),
-            'PORT': os.getenv('DB_PORT', '3306'),
-        }
-    }
+        if parsed_db and parsed_db.get('NAME'):
+            DATABASES['default'] = parsed_db
+    except Exception:
+        pass
 
 AUTH_PASSWORD_VALIDATORS = [
     {'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator'},
