@@ -28,7 +28,7 @@ DEBUG = os.getenv("DEBUG", "False").lower() == "true"
 # En producción define ALLOWED_HOSTS en .env con los dominios públicos separados por coma.
 ALLOWED_HOSTS = [
     host.strip()
-    for host in os.getenv("ALLOWED_HOSTS", "127.0.0.1,localhost,.ngrok-free.dev").split(",")
+    for host in os.getenv("ALLOWED_HOSTS", "127.0.0.1,localhost,.ngrok-free.dev, agrifinal-production.up.railway.app").split(",")
     if host.strip()
 ]
 
@@ -43,7 +43,7 @@ SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
 # El patrón .ngrok-free.dev cubre todos los subdominios gratuitos.
 CSRF_TRUSTED_ORIGINS = os.getenv(
     "CSRF_TRUSTED_ORIGINS",
-    "https://*.ngrok-free.dev,https://*.ngrok.io,http://127.0.0.1:8000,http://localhost:8000",
+    "https://agrifinal-production.up.railway.app,https://*.ngrok-free.dev,https://*.ngrok.io,http://127.0.0.1:8000,http://localhost:8000",
 ).split(",")
 
 INSTALLED_APPS = [
