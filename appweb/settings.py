@@ -1,6 +1,7 @@
 import os
 from pathlib import Path
 from dotenv import dotenv_values, load_dotenv
+import dj_database_url
 from django.db.backends.base.base import BaseDatabaseWrapper
 import django.db.backends.mysql.features as mysql_features
 
@@ -24,8 +25,6 @@ SECRET_KEY = os.getenv("SECRET_KEY") or dotenv_values(BASE_DIR / ".env").get("SE
 
 DEBUG = os.getenv("DEBUG", "False").lower() == "true"
 
-# En desarrollo permite el servidor local aunque DEBUG se mantenga desactivado.
-# En producción define ALLOWED_HOSTS en .env con los dominios públicos separados por coma.
 ALLOWED_HOSTS = ['*']
 
 # ── Proxy seguro ──────────────────────────────────────────
@@ -59,6 +58,7 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
+    'whitenoise.middleware.WhiteNoiseMiddleware',  # Sirve archivos estáticos en producción
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -89,22 +89,26 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'appweb.wsgi.application'
 
-import os
-from dotenv import load_dotenv
-
-# Carga las variables del archivo .env
-load_dotenv()
-
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.mysql',
-        'NAME': os.getenv('DB_NAME'),
-        'USER': os.getenv('DB_USER'),
-        'PASSWORD': os.getenv('DB_PASSWORD'),
-        'HOST': os.getenv('DB_HOST'),
-        'PORT': os.getenv('DB_PORT'),
+# ── Base de Datos (Railway vs Desarrollo Local) ──────────
+if os.getenv("DATABASE_URL"):
+    DATABASES = {
+        'default': dj_database_url.config(
+            default=os.getenv("DATABASE_URL"),
+            conn_max_age=600,
+            engine='django.db.backends.mysql'
+        )
     }
-}
+else:
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.mysql',
+            'NAME': os.getenv('DB_NAME', ''),
+            'USER': os.getenv('DB_USER', ''),
+            'PASSWORD': os.getenv('DB_PASSWORD', ''),
+            'HOST': os.getenv('DB_HOST', 'localhost'),
+            'PORT': os.getenv('DB_PORT', '3306'),
+        }
+    }
 
 AUTH_PASSWORD_VALIDATORS = [
     {'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator'},
@@ -113,8 +117,6 @@ AUTH_PASSWORD_VALIDATORS = [
     {'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator'},
 ]
 
-# Las contraseñas nuevas se almacenan con bcrypt; Django mantiene soporte de
-# hashes anteriores para migrarlos al iniciar sesión.
 PASSWORD_HASHERS = [
     'django.contrib.auth.hashers.BCryptSHA256PasswordHasher',
     'django.contrib.auth.hashers.PBKDF2PasswordHasher',
@@ -125,6 +127,7 @@ TIME_ZONE = 'America/Mexico_City'
 USE_I18N = True
 USE_TZ = True
 
+# ── Archivos Estáticos ────────────────────────────────────
 STATIC_URL = 'static/'
 STATICFILES_DIRS = [
     BASE_DIR / 'static',
@@ -132,7 +135,13 @@ STATICFILES_DIRS = [
 STATIC_ROOT = BASE_DIR / 'staticfiles'
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-# Las cookies secure se activan automáticamente fuera de desarrollo.
+# Compresión y caché de archivos estáticos para WhiteNoise
+STORAGES = {
+    "staticfiles": {
+        "BACKEND": "whitenoise.storage.CompressedManifestStaticFilesStorage",
+    },
+}
+
 JWT_REFRESH_COOKIE = 'agrivale_refresh'
 JWT_COOKIE_SECURE = not DEBUG
 
@@ -144,6 +153,7 @@ LOGOUT_REDIRECT_URL = '/'
 MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
+# ── Correo y Servicios Externos ───────────────────────────
 EMAIL_BACKEND       = 'django.core.mail.backends.smtp.EmailBackend'
 EMAIL_HOST          = 'smtp.gmail.com'
 EMAIL_PORT          = 587
@@ -151,9 +161,10 @@ EMAIL_USE_TLS       = True
 EMAIL_HOST_USER     = os.getenv('EMAIL_HOST_USER')
 EMAIL_HOST_PASSWORD = os.getenv('EMAIL_HOST_PASSWORD')
 DEFAULT_FROM_EMAIL  = f'Agrivale <{os.getenv("EMAIL_HOST_USER")}>'
+
 GEMINI_API_KEY = os.getenv('GEMINI_API_KEY')
 
-# Envia API. Las credenciales y datos de origen se leen solo desde .env.
+# Envia API
 ENVIA_API_TOKEN = os.getenv("ENVIA_API_TOKEN")
 ENVIA_API_URL = os.getenv("ENVIA_API_URL")
 ENVIA_ENVIRONMENT = os.getenv("ENVIA_ENVIRONMENT", "test")
@@ -168,14 +179,14 @@ ENVIA_ORIGIN_POSTAL_CODE = os.getenv("ENVIA_ORIGIN_POSTAL_CODE")
 ENVIA_LABEL_FORMAT = os.getenv("ENVIA_LABEL_FORMAT")
 ENVIA_LABEL_SIZE = os.getenv("ENVIA_LABEL_SIZE")
 
-# settings.py
+# Pasarelas de Pago
 STRIPE_PUBLIC_KEY = os.getenv("STRIPE_PUBLIC_KEY")
 STRIPE_SECRET_KEY = os.getenv("STRIPE_SECRET_KEY")
 MERCADOPAGO_ACCESS_TOKEN = os.getenv("MERCADOPAGO_ACCESS_TOKEN")
 MERCADOPAGO_PUBLIC_KEY = os.getenv("MERCADOPAGO_PUBLIC_KEY")
 MERCADOPAGO_WEBHOOK_SECRET = os.getenv("MERCADOPAGO_WEBHOOK_SECRET")
-GEMINI_API_KEY = os.getenv('GEMINI_API_KEY')
 
+# ── Logging de Consola ────────────────────────────────────
 LOGGING = {
     'version': 1,
     'disable_existing_loggers': False,
