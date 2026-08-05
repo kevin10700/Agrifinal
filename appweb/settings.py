@@ -96,23 +96,28 @@ DATABASES = {
         'NAME': os.getenv('DB_NAME', ''),
         'USER': os.getenv('DB_USER', ''),
         'PASSWORD': os.getenv('DB_PASSWORD', ''),
-        'HOST': os.getenv('DB_HOST', 'localhost'),
+        'HOST': os.getenv('DB_HOST', '127.0.0.1'),
         'PORT': os.getenv('DB_PORT', '3306'),
     }
 }
 
 db_from_env = os.getenv("DATABASE_URL")
 if db_from_env:
-    try:
-        parsed_db = dj_database_url.parse(
-            db_from_env,
-            conn_max_age=600,
-            engine='django.db.backends.mysql'
-        )
-        if parsed_db and parsed_db.get('NAME'):
-            DATABASES['default'] = parsed_db
-    except Exception:
-        pass
+    # Si la URL viene como mysql://, dj_database_url la procesa correctamente
+    parsed_db = dj_database_url.parse(
+        db_from_env,
+        conn_max_age=600,
+        engine='django.db.backends.mysql'
+    )
+    if parsed_db:
+        # Aseguramos que el motor sea MySQL de Django
+        parsed_db['ENGINE'] = 'django.db.backends.mysql'
+        
+        # Si el HOST por alguna razón se interpreta como 'localhost', lo forzamos o respetamos el host remoto
+        if parsed_db.get('HOST') == 'localhost':
+            parsed_db['HOST'] = '127.0.0.1'
+            
+        DATABASES['default'] = parsed_db
 
 AUTH_PASSWORD_VALIDATORS = [
     {'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator'},
