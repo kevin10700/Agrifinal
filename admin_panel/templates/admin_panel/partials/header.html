@@ -1,0 +1,110 @@
+<header class="header">
+    <div class="header-left">
+        <button class="mobile-menu-toggle" id="mobileMenuToggle">
+            <i class="fas fa-bars"></i>
+        </button>
+        
+        <nav class="breadcrumb">
+            {% block breadcrumb %}{% endblock %}
+        </nav>
+    </div>
+    
+    <div class="header-right">
+        <!-- Buscador Global -->
+        <div class="global-search">
+            <i class="fas fa-search"></i>
+            <input type="text" placeholder="Buscar..." id="globalSearch">
+        </div>
+        
+        <!-- Notificaciones / Alertas -->
+        <div class="notification-dropdown" id="notificationDropdown">
+            <a href="#" class="header-icon-btn" title="Notificaciones" id="bellToggle">
+                <i class="fas fa-bell"></i>
+                {% if alertas.total > 0 %}
+                <span class="badge">{{ alertas.total }}</span>
+                {% endif %}
+            </a>
+            
+            <div class="notification-menu" id="notificationMenu">
+                <div class="notification-header">
+                    <h4>Alertas del Sistema</h4>
+                    <a href="{% url 'admin_panel:dashboard' %}" style="font-size: 0.8rem; color: var(--text-secondary);">Ver todas</a>
+                </div>
+                <div class="notification-list">
+                    {% if alertas.productos_sin_stock > 0 %}
+                    <a href="{% url 'admin_panel:inventario' %}" class="notification-item">
+                        <div class="notification-icon" style="color: var(--danger);"><i class="fas fa-times-circle"></i></div>
+                        <div class="notification-content">
+                            <strong>Productos Agotados</strong>
+                            <span>{{ alertas.productos_sin_stock }} producto(s) sin stock</span>
+                        </div>
+                    </a>
+                    {% endif %}
+                    
+                    {% if alertas.productos_bajo_stock > 0 %}
+                    <a href="{% url 'admin_panel:inventario' %}" class="notification-item">
+                        <div class="notification-icon" style="color: var(--warning);"><i class="fas fa-exclamation-triangle"></i></div>
+                        <div class="notification-content">
+                            <strong>Stock Bajo</strong>
+                            <span>{{ alertas.productos_bajo_stock }} producto(s) con stock menor a 10</span>
+                        </div>
+                    </a>
+                    {% endif %}
+                    
+                    {% if alertas.pedidos_pendientes > 0 %}
+                    <a href="{% url 'admin_panel:pedidos_lista' %}" class="notification-item">
+                        <div class="notification-icon" style="color: var(--info);"><i class="fas fa-info-circle"></i></div>
+                        <div class="notification-content">
+                            <strong>Pedidos Pendientes</strong>
+                            <span>{{ alertas.pedidos_pendientes }} pedido(s) esperando procesamiento</span>
+                        </div>
+                    </a>
+                    {% endif %}
+                    
+                    {% if alertas.pedidos_cancelados > 0 %}
+                    <a href="{% url 'admin_panel:pedidos_lista' %}" class="notification-item">
+                        <div class="notification-icon" style="color: var(--danger);"><i class="fas fa-times-circle"></i></div>
+                        <div class="notification-content">
+                            <strong>Pedidos Cancelados</strong>
+                            <span>{{ alertas.pedidos_cancelados }} pedido(s) cancelados</span>
+                        </div>
+                    </a>
+                    {% endif %}
+                    
+                    {% if alertas.total == 0 %}
+                    <div class="notification-empty">
+                        <i class="fas fa-check-circle" style="font-size: 2rem; color: var(--success); margin-bottom: 8px;"></i>
+                        <p>No hay alertas en este momento</p>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        
+        <!-- Toggle de Tema -->
+        <button class="header-icon-btn" id="themeToggle" title="Cambiar tema">
+            <i class="fas fa-moon"></i>
+        </button>
+        
+        <!-- Perfil de Usuario -->
+        <div class="user-profile" id="userProfile">
+            {% if user.foto_perfil %}
+                <img src="{{ user.foto_perfil.url }}" alt="{{ user.nombre_completo }}" class="user-avatar">
+            {% else %}
+                <div class="user-avatar" style="background: var(--primary-color); color: white; display: flex; align-items: center; justify-content: center; font-weight: bold;">
+                    {{ user.nombre|first|upper }}
+                </div>
+            {% endif %}
+            <div class="user-info">
+                <span class="user-name">{{ user.nombre_completo }}</span>
+                <span class="user-role">Administrador</span>
+            </div>
+            <i class="fas fa-chevron-down" style="font-size: 0.8rem; color: var(--text-muted);"></i>
+        </div>
+        
+        <!-- Cerrar Sesión -->
+        <a href="{% url 'usuarios:logout' %}" class="header-icon-btn" title="Cerrar sesión">
+            <i class="fas fa-sign-out-alt"></i>
+        </a>
+    </div>
+</header>

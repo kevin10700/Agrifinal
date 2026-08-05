@@ -1,0 +1,45 @@
+{% extends "admin/base_site.html" %}
+{% load static %}
+
+{% block extrahead %}
+    {{ block.super }}
+    <!-- CSS personalizado para responsividad móvil del admin -->
+    <link rel="stylesheet" href="{% static 'admin/css/admin-mobile.css' %}">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
+{% endblock %}
+
+{% block extrastyle %}
+    {{ block.super }}
+    <!-- Asegurar que el viewport esté bien configurado -->
+    <style>
+        /* Viewport base para admin */
+        html {
+            -webkit-text-size-adjust: 100%;
+            -ms-text-size-adjust: 100%;
+        }
+        
+        /* Mejorar legibilidad en móviles */
+        body {
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+        
+        /* Prevenir zoom en inputs en iOS */
+        @media screen and (max-width: 768px) {
+            input[type="text"],
+            input[type="password"],
+            input[type="email"],
+            input[type="number"],
+            input[type="search"],
+            input[type="url"],
+            textarea,
+            select {
+                font-size: 16px !important;
+            }
+        }
+    </style>
+{% endblock %}
+
+{% block usertools %}
+    {{ block.super }}
+{% endblock %}

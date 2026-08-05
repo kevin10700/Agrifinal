@@ -1,0 +1,124 @@
+{% extends 'admin_panel/base.html' %}
+{% load static %}
+
+{% block title %}{% if direccion %}Editar{% else %}Nueva{% endif %} Dirección - Panel Admin{% endblock %}
+
+{% block breadcrumb %}
+    <span class="breadcrumb-item"><a href="{% url 'admin_panel:dashboard' %}">Inicio</a></span>
+    <span class="breadcrumb-item"><a href="{% url 'admin_panel:direcciones_envio_lista' %}">Direcciones de Envío</a></span>
+    <span class="breadcrumb-item">{% if direccion %}Editar{% else %}Nueva{% endif %}</span>
+{% endblock %}
+
+{% block content %}
+<div class="fade-in">
+    <div class="page-header">
+        <div>
+            <h1 class="page-title">{% if direccion %}Editar{% else %}Nueva{% endif %} Dirección de Envío</h1>
+        </div>
+    </div>
+
+    <div class="card" style="max-width: 800px;">
+        <div class="card-body">
+            <form method="post">
+                {% csrf_token %}
+                
+                <div style="margin-bottom: 24px;">
+                    <label style="display: block; margin-bottom: 8px; font-weight: 600; color: var(--text-primary);">Usuario *</label>
+                    <select name="id_usuario" required style="width: 100%; padding: 10px 12px; border: 1px solid var(--border-color); border-radius: var(--border-radius_sm); background: var(--bg-card); color: var(--text-primary);">
+                        <option value="">Selecciona un usuario...</option>
+                            {% for u in usuarios %}
+                            <option value="{{ u.id_usuario }}" {% if direccion and direccion.id_usuario_id == u.id_usuario %}selected{% endif %}>
+                            {{ u.nombre_completo }} (@{{ u.username }})
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div style="margin-bottom: 24px;">
+                    <label style="display: block; margin-bottom: 8px; font-weight: 600; color: var(--text-primary);">Nombre de referencia *</label>
+                    <input type="text" name="nombre_referencia" value="{{ direccion.nombre_referencia|default:'' }}" required maxlength="100"
+                        placeholder="Ej: Casa, Oficina, Sucursal..."
+                        style="width: 100%; padding: 10px 12px; border: 1px solid var(--border-color); border-radius: var(--border-radius_sm); background: var(--bg-card); color: var(--text-primary);">
+                </div>
+
+                <div style="display: grid; grid-template-columns: 2fr 1fr 1fr; gap: 16px; margin-bottom: 24px;">
+                    <div>
+                        <label style="display: block; margin-bottom: 8px; font-weight: 600; color: var(--text-primary);">Calle *</label>
+                        <input type="text" name="calle" value="{{ direccion.calle|default:'' }}" required
+                            style="width: 100%; padding: 10px 12px; border: 1px solid var(--border-color); border-radius: var(--border-radius_sm); background: var(--bg-card); color: var(--text-primary);">
+                    </div>
+                    <div>
+                        <label style="display: block; margin-bottom: 8px; font-weight: 600; color: var(--text-primary);">Núm. Exterior</label>
+                        <input type="text" name="numero_exterior" value="{{ direccion.numero_exterior|default:'' }}"
+                            style="width: 100%; padding: 10px 12px; border: 1px solid var(--border-color); border-radius: var(--border-radius_sm); background: var(--bg-card); color: var(--text-primary);">
+                    </div>
+                    <div>
+                        <label style="display: block; margin-bottom: 8px; font-weight: 600; color: var(--text-primary);">Núm. Interior</label>
+                        <input type="text" name="numero_interior" value="{{ direccion.numero_interior|default:'' }}"
+                            style="width: 100%; padding: 10px 12px; border: 1px solid var(--border-color); border-radius: var(--border-radius_sm); background: var(--bg-card); color: var(--text-primary);">
+                    </div>
+                </div>
+
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 24px;">
+                    <div>
+                        <label style="display: block; margin-bottom: 8px; font-weight: 600; color: var(--text-primary);">Colonia *</label>
+                        <input type="text" name="colonia" value="{{ direccion.colonia|default:'' }}" required
+                            style="width: 100%; padding: 10px 12px; border: 1px solid var(--border-color); border-radius: var(--border-radius_sm); background: var(--bg-card); color: var(--text-primary);">
+                    </div>
+                    <div>
+                        <label style="display: block; margin-bottom: 8px; font-weight: 600; color: var(--text-primary);">Municipio *</label>
+                        <input type="text" name="municipio" value="{{ direccion.municipio|default:'' }}" required
+                            style="width: 100%; padding: 10px 12px; border: 1px solid var(--border-color); border-radius: var(--border-radius_sm); background: var(--bg-card); color: var(--text-primary);">
+                    </div>
+                </div>
+
+                <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; margin-bottom: 24px;">
+                    <div>
+                        <label style="display: block; margin-bottom: 8px; font-weight: 600; color: var(--text-primary);">Estado *</label>
+                        <input type="text" name="estado" value="{{ direccion.estado|default:'' }}" required
+                            style="width: 100%; padding: 10px 12px; border: 1px solid var(--border-color); border-radius: var(--border-radius_sm); background: var(--bg-card); color: var(--text-primary);">
+                    </div>
+                    <div>
+                        <label style="display: block; margin-bottom: 8px; font-weight: 600; color: var(--text-primary);">Código Postal *</label>
+                        <input type="text" name="codigo_postal" value="{{ direccion.codigo_postal|default:'' }}" required
+                            style="width: 100%; padding: 10px 12px; border: 1px solid var(--border-color); border-radius: var(--border-radius_sm); background: var(--bg-card); color: var(--text-primary);">
+                    </div>
+                    <div>
+                        <label style="display: block; margin-bottom: 8px; font-weight: 600; color: var(--text-primary);">País</label>
+                        <input type="text" name="pais" value="{{ direccion.pais|default:'MX' }}" maxlength="2"
+                            style="width: 100%; padding: 10px 12px; border: 1px solid var(--border-color); border-radius: var(--border-radius_sm); background: var(--bg-card); color: var(--text-primary);">
+                    </div>
+                </div>
+
+                <div style="margin-bottom: 24px;">
+                    <label style="display: block; margin-bottom: 8px; font-weight: 600; color: var(--text-primary);">Teléfono de contacto</label>
+                    <input type="text" name="telefono_contacto" value="{{ direccion.telefono_contacto|default:'' }}"
+                        style="width: 100%; padding: 10px 12px; border: 1px solid var(--border-color); border-radius: var(--border-radius_sm); background: var(--bg-card); color: var(--text-primary);">
+                </div>
+
+                <div style="margin-bottom: 24px;">
+                    <label style="display: block; margin-bottom: 8px; font-weight: 600; color: var(--text-primary);">Referencias</label>
+                    <textarea name="referencias" rows="3"
+                            style="width: 100%; padding: 10px 12px; border: 1px solid var(--border-color); border-radius: var(--border-radius_sm); background: var(--bg-card); color: var(--text-primary);">{{ direccion.referencias|default:'' }}</textarea>
+                </div>
+
+                <div style="margin-bottom: 24px;">
+                    <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
+                        <input type="checkbox" name="es_principal" {% if direccion.es_principal %}checked{% endif %}>
+                        <span style="font-weight: 600; color: var(--text-primary);">Marcar como dirección principal</span>
+                    </label>
+                </div>
+
+                <div style="display: flex; gap: 12px;">
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-save"></i> {% if direccion %}Guardar Cambios{% else %}Crear Dirección{% endif %}
+                    </button>
+                    <a href="{% url 'admin_panel:direcciones_envio_lista' %}" class="btn btn-secondary">
+                        <i class="fas fa-times"></i> Cancelar
+                    </a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

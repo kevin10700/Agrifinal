@@ -1,0 +1,172 @@
+{% extends 'admin_panel/base.html' %}
+{% load static %}
+
+{% block title %}Pedidos - Panel Admin{% endblock %}
+
+{% block breadcrumb %}
+    <span class="breadcrumb-item"><a href="{% url 'admin_panel:dashboard' %}">Inicio</a></span>
+    <span class="breadcrumb-item">Pedidos</span>
+{% endblock %}
+
+{% block content %}
+<div class="fade-in">
+    <div class="page-header">
+        <div>
+            <h1 class="page-title">Pedidos</h1>
+            <p class="page-subtitle">Gestiona los pedidos de clientes</p>
+        </div>
+    </div>
+
+    <!-- Filtros -->
+    <div class="card">
+        <div class="card-body">
+            <form method="get" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; align-items: end;">
+                <div>
+                    <label style="display: block; margin-bottom: 8px; font-weight: 500; color: var(--text-secondary);">Buscar</label>
+                    <input type="text" name="q" value="{{ busqueda }}" placeholder="ID o cliente..." 
+                           style="width: 100%; padding: 10px 12px; border: 1px solid var(--border-color); border-radius: var(--border-radius-sm); background: var(--bg-card); color: var(--text-primary);">
+                </div>
+                
+                <div>
+                    <label style="display: block; margin-bottom: 8px; font-weight: 500; color: var(--text-secondary);">Estado</label>
+                    <select name="estado" style="width: 100%; padding: 10px 12px; border: 1px solid var(--border-color); border-radius: var(--border-radius-sm); background: var(--bg-card); color: var(--text-primary);">
+                        <option value="">Todos los estados</option>
+                        {% for estado in estados %}
+                        <option value="{{ estado.0 }}" {% if estado_seleccionado == estado.0 %}selected{% endif %}>
+                            {{ estado.1 }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                
+                <div>
+                    <label style="display: block; margin-bottom: 8px; font-weight: 500; color: var(--text-secondary);">Ordenar por</label>
+                    <select name="orden" style="width: 100%; padding: 10px 12px; border: 1px solid var(--border-color); border-radius: var(--border-radius-sm); background: var(--bg-card); color: var(--text-primary);">
+                        <option value="-fecha_pedido">Más recientes</option>
+                        <option value="fecha_pedido">Más antiguos</option>
+                        <option value="total">Menor monto</option>
+                        <option value="-total">Mayor monto</option>
+                    </select>
+                </div>
+                
+                <div style="display: flex; gap: 8px;">
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-search"></i> Buscar
+                    </button>
+                    <a href="{% url 'admin_panel:pedidos_lista' %}" class="btn btn-secondary">
+                        <i class="fas fa-times"></i> Limpiar
+                    </a>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Tabla de Pedidos -->
+    <div class="table-container">
+        <div class="table-header">
+            <h3 class="table-title">
+                Total: {{ pedidos.paginator.count }} pedidos
+            </h3>
+        </div>
+        <div class="table-responsive">
+            <table>
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Cliente</th>
+                        <th>Fecha</th>
+                        <th>Total</th>
+                        <th>Estado</th>
+                        <th>Pago</th>
+                        <th>Acciones</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for pedido in pedidos %}
+                    <tr>
+                        <td><strong>#{{ pedido.id_pedido }}</strong></td>
+                        <td>
+                            <div>
+                                <div style="font-weight: 600; color: var(--text-primary);">{{ pedido.id_usuario.nombre_completo }}</div>
+                                <div style="font-size: 0.85rem; color: var(--text-muted);">{{ pedido.id_usuario.email }}</div>
+                            </div>
+                        </td>
+                        <td>{{ pedido.fecha_pedido|date:"d/m/Y H:i" }}</td>
+                        <td><strong>${{ pedido.total|floatformat:2 }}</strong></td>
+                        
+                        <!-- 🔥 CAMBIO PRINCIPAL: Columna Estado con formulario -->
+                        <td>
+                            <div style="display: flex; align-items: center; gap: 8px;">
+                                <!-- Etiqueta del estado actual -->
+                                <span class="badge badge-{% if pedido.estado == 'entregado' %}success{% elif pedido.estado == 'cancelado' %}danger{% elif pedido.estado == 'pendiente' %}warning{% elif pedido.estado == 'confirmado' %}info{% else %}secondary{% endif %}" style="min-width: 85px;">
+                                    {{ pedido.get_estado_display }}
+                                </span>
+                                
+                                <!-- Formulario POST para cambiar estado -->
+                                <form method="POST" action="{% url 'admin_panel:pedido_cambiar_estado' pedido.id_pedido %}" style="display: inline-flex; align-items: center; gap: 4px;">
+                                    {% csrf_token %}
+                                    <select name="nuevo_estado" class="form-control form-control-sm" style="width: auto; min-width: 100px; padding: 2px 6px; font-size: 0.8rem;">
+                                        {% for estado_key, estado_label in estados %}
+                                            <option value="{{ estado_key }}" {% if pedido.estado == estado_key %}selected{% endif %}>
+                                                {{ estado_label }}
+                                            </option>
+                                        {% endfor %}
+                                    </select>
+                                    <button type="submit" class="btn btn-sm btn-outline-primary" title="Actualizar estado">
+                                        <i class="fas fa-sync-alt"></i>
+                                    </button>
+                                </form>
+                            </div>
+                        </td>
+                        <!-- 🔥 FIN DEL CAMBIO -->
+
+                        <td>
+                            <span class="badge badge-{% if pedido.estado_pago == 'pagado' %}success{% elif pedido.estado_pago == 'rechazado' %}danger{% elif pedido.estado_pago == 'cancelado' %}danger{% else %}warning{% endif %}">
+                                {{ pedido.get_estado_pago_display }}
+                            </span>
+                        </td>
+                        <td>
+                            <div style="display: flex; gap: 8px;">
+                                <a href="{% url 'admin_panel:pedido_detalle' pedido.id_pedido %}" class="btn btn-sm btn-primary" title="Ver detalle">
+                                    <i class="fas fa-eye"></i>
+                                </a>
+                            </div>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="7" style="text-align: center; padding: 60px 20px; color: var(--text-muted);">
+                            <i class="fas fa-shopping-cart" style="font-size: 3rem; margin-bottom: 12px; display: block;"></i>
+                            <p style="font-size: 1.1rem; margin-bottom: 8px;">No hay pedidos</p>
+                            <p style="font-size: 0.9rem;">Los pedidos aparecerán aquí cuando los clientes realicen compras</p>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% if pedidos.has_other_pages %}
+        <div class="table-footer">
+            <div>
+                Mostrando {{ pedidos.start_index }} a {{ pedidos.end_index }} de {{ pedidos.paginator.count }} registros
+            </div>
+            <div style="display: flex; gap: 8px;">
+                {% if pedidos.has_previous %}
+                <a href="?page={{ pedidos.previous_page_number }}{% if busqueda %}&q={{ busqueda }}{% endif %}{% if estado_seleccionado %}&estado={{ estado_seleccionado }}{% endif %}" 
+                   class="btn btn-sm btn-secondary">
+                    <i class="fas fa-chevron-left"></i> Anterior
+                </a>
+                {% endif %}
+                
+                {% if pedidos.has_next %}
+                <a href="?page={{ pedidos.next_page_number }}{% if busqueda %}&q={{ busqueda }}{% endif %}{% if estado_seleccionado %}&estado={{ estado_seleccionado }}{% endif %}" 
+                    class="btn btn-sm btn-secondary">
+                    Siguiente <i class="fas fa-chevron-right"></i>
+                </a>
+                {% endif %}
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,141 @@
+{% extends 'admin_panel/base.html' %}
+{% load static %}
+
+{% block title %}Comentarios - Panel Admin{% endblock %}
+
+{% block breadcrumb %}
+    <span class="breadcrumb-item"><a href="{% url 'admin_panel:dashboard' %}">Inicio</a></span>
+    <span class="breadcrumb-item">Comentarios</span>
+{% endblock %}
+
+{% block content %}
+<div class="fade-in">
+    <div class="page-header">
+        <div>
+            <h1 class="page-title">Comentarios y Calificaciones</h1>
+            <p class="page-subtitle">Gestiona los comentarios de los clientes sobre los productos</p>
+        </div>
+    </div>
+
+    <!-- Filtros -->
+    <div class="card">
+        <div class="card-body">
+            <form method="get" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; align-items: end;">
+                <div>
+                    <label style="display: block; margin-bottom: 8px; font-weight: 500; color: var(--text-secondary);">Buscar</label>
+                    <input type="text" name="q" value="{{ busqueda }}" placeholder="Producto, usuario, comentario..." 
+                           style="width: 100%; padding: 10px 12px; border: 1px solid var(--border-color); border-radius: var(--border-radius_sm); background: var(--bg-card); color: var(--text-primary);">
+                </div>
+                
+                <div>
+                    <label style="display: block; margin-bottom: 8px; font-weight: 500; color: var(--text-secondary);">Estado</label>
+                    <select name="filtro" style="width: 100%; padding: 10px 12px; border: 1px solid var(--border-color); border-radius: var(--border-radius_sm); background: var(--bg-card); color: var(--text-primary);">
+                        <option value="">Todos</option>
+                        <option value="pendientes" {% if filtro == 'pendientes' %}selected{% endif %}>Pendientes de aprobar</option>
+                        <option value="aprobados" {% if filtro == 'aprobados' %}selected{% endif %}>Aprobados</option>
+                    </select>
+                </div>
+                
+                <div style="display: flex; gap: 8px;">
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-search"></i> Buscar
+                    </button>
+                    <a href="{% url 'admin_panel:comentarios_lista' %}" class="btn btn-secondary">
+                        <i class="fas fa-times"></i> Limpiar
+                    </a>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Tabla de Comentarios -->
+    <div class="table-container">
+        <div class="table-header">
+            <h3 class="table-title">
+                Total: {{ comentarios|length }} comentarios
+            </h3>
+        </div>
+        <div class="table-responsive">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Producto</th>
+                        <th>Usuario</th>
+                        <th>Calificación</th>
+                        <th>Comentario</th>
+                        <th>Fecha</th>
+                        <th>Estado</th>
+                        <th>Acciones</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for comentario in comentarios %}
+                    <tr>
+                        <td>
+                            <div style="font-weight: 600; color: var(--text-primary);">{{ comentario.id_producto.nombre }}</div>
+                        </td>
+                        <td>
+                            <div style="display: flex; align-items: center; gap: 8px;">
+                                <div style="width: 32px; height: 32px; border-radius: 50%; background: var(--primary-bg); display: flex; align-items: center; justify-content: center; color: var(--primary-color); font-size: 0.8rem; font-weight: 600;">
+                                    {{ comentario.id_usuario.nombre|first|upper }}{{ comentario.id_usuario.apellido_paterno|first|upper }}
+                                </div>
+                                <span style="font-size: 0.9rem;">{{ comentario.id_usuario.nombre_completo }}</span>
+                            </div>
+                        </td>
+                        <td>
+                            <div style="color: #f59e0b; white-space: nowrap;">
+                                {% for i in "12345"|make_list %}
+                                    {% if forloop.counter <= comentario.calificacion %}
+                                    <i class="fas fa-star"></i>
+                                    {% else %}
+                                    <i class="far fa-star"></i>
+                                    {% endif %}
+                                {% endfor %}
+                            </div>
+                        </td>
+                        <td>
+                            <div style="max-width: 300px;">
+                                {% if comentario.titulo %}
+                                <div style="font-weight: 600; font-size: 0.85rem; margin-bottom: 2px;">{{ comentario.titulo }}</div>
+                                {% endif %}
+                                <div style="font-size: 0.85rem; color: var(--text-secondary); display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;">
+                                    {{ comentario.comentario }}
+                                </div>
+                            </div>
+                        </td>
+                        <td style="font-size: 0.85rem; white-space: nowrap;">{{ comentario.fecha_creacion|date:"d/m/Y H:i" }}</td>
+                        <td>
+                            {% if comentario.aprobado %}
+                            <span class="status-badge status-success">Aprobado</span>
+                            {% else %}
+                            <span class="status-badge status-warning">Pendiente</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <div style="display: flex; gap: 8px;">
+                                {% if not comentario.aprobado %}
+                                <a href="{% url 'admin_panel:comentario_aprobar' comentario.id_comentario %}" class="btn btn-sm btn-success" title="Aprobar">
+                                    <i class="fas fa-check"></i>
+                                </a>
+                                {% endif %}
+                                <a href="{% url 'admin_panel:comentario_rechazar' comentario.id_comentario %}" class="btn btn-sm btn-danger" title="Eliminar" onclick="return confirm('¿Estás seguro de eliminar este comentario?')">
+                                    <i class="fas fa-trash"></i>
+                                </a>
+                            </div>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="7" style="text-align: center; padding: 60px 20px; color: var(--text-muted);">
+                            <i class="fas fa-star" style="font-size: 3rem; margin-bottom: 12px; display: block;"></i>
+                            <p style="font-size: 1.1rem; margin-bottom: 8px;">No hay comentarios</p>
+                            <p style="font-size: 0.9rem;">Los comentarios de los clientes aparecerán aquí</p>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

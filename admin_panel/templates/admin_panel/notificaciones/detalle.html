@@ -1,0 +1,64 @@
+{% extends 'admin_panel/base.html' %}
+{% load static %}
+
+{% block title %}Notificación #{{ notificacion.id_notificacion }} - Panel Admin{% endblock %}
+
+{% block breadcrumb %}
+    <span class="breadcrumb-item"><a href="{% url 'admin_panel:dashboard' %}">Inicio</a></span>
+    <span class="breadcrumb-item"><a href="{% url 'admin_panel:notificaciones_lista' %}">Notificaciones</a></span>
+    <span class="breadcrumb-item">#{{ notificacion.id_notificacion }}</span>
+{% endblock %}
+
+{% block content %}
+<div class="fade-in">
+    <div class="page-header">
+        <div>
+            <h1 class="page-title">Notificación #{{ notificacion.id_notificacion }}</h1>
+        </div>
+        <div style="display: flex; gap: 8px;">
+            <a href="{% url 'admin_panel:notificacion_eliminar' notificacion.id_notificacion %}" class="btn btn-danger">
+                <i class="fas fa-trash"></i> Eliminar
+            </a>
+            <a href="{% url 'admin_panel:notificaciones_lista' %}" class="btn btn-secondary">
+                <i class="fas fa-arrow-left"></i> Volver
+            </a>
+        </div>
+    </div>
+
+    <div class="card" style="max-width: 800px;">
+        <div class="card-body">
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 24px;">
+                <div>
+                    <label style="display: block; font-size: 0.85rem; color: var(--text-muted); margin-bottom: 4px;">Usuario</label>
+                    <div style="font-weight: 600;">{{ notificacion.id_usuario.nombre_completo }}</div>
+                </div>
+                <div>
+                    <label style="display: block; font-size: 0.85rem; color: var(--text-muted); margin-bottom: 4px;">Pedido</label>
+                    <div style="font-weight: 600;">#{{ notificacion.id_pedido.id_pedido }}</div>
+                </div>
+                <div>
+                    <label style="display: block; font-size: 0.85rem; color: var(--text-muted); margin-bottom: 4px;">Estado</label>
+                    <div>
+                        {% if notificacion.leida %}
+                        <span class="badge badge-success">Leída</span>
+                        {% else %}
+                        <span class="badge badge-warning">No leída</span>
+                        {% endif %}
+                    </div>
+                </div>
+                <div>
+                    <label style="display: block; font-size: 0.85rem; color: var(--text-muted); margin-bottom: 4px;">Fecha</label>
+                    <div style="font-weight: 600;">{{ notificacion.fecha_creacion|date:"d/m/Y H:i:s" }}</div>
+                </div>
+            </div>
+            
+            <div>
+                <label style="display: block; font-size: 0.85rem; color: var(--text-muted); margin-bottom: 8px;">Mensaje completo</label>
+                <div style="padding: 16px; background: var(--bg-hover); border-radius: var(--border-radius_sm); line-height: 1.6; white-space: pre-wrap;">
+                    {{ notificacion.mensaje }}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

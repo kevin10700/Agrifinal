@@ -1,0 +1,58 @@
+{% extends 'productos/base.html' %}
+
+{% block content %}
+<div class="container">
+    <h2 class="mb-4"> Mi Carrito</h2>
+    
+    {% if items %}
+        <div class="table-responsive">
+            <table class="table table-bordered">
+                <thead class="table-success">
+                    <tr>
+                        <th>Producto</th>
+                        <th>Precio</th>
+                        <th>Cantidad</th>
+                        <th>Subtotal</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in items %}
+                    <tr>
+                        <td>{{ item.id_producto.nombre }}</td>
+                        <td>${{ item.id_producto.get_precio_actual|floatformat:2 }}</td>
+                        <td>
+                            <form method="post" action="{% url 'pedidos:actualizar' item.id_carrito_item %}" style="display: inline;">
+                                {% csrf_token %}
+                                <input type="number" name="cantidad" value="{{ item.cantidad }}" min="1" max="{{ item.id_producto.stock }}" style="width: 70px;">
+                                <button type="submit" class="btn btn-sm btn-warning">Actualizar</button>
+                            </form>
+                        </td>
+                        <td>${{ item.get_subtotal|floatformat:2 }}</td>
+                        <td>
+                            <a href="{% url 'pedidos:eliminar' item.id_carrito_item %}" class="btn btn-sm btn-danger" onclick="return confirm('¿Eliminar producto?')">Eliminar</a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+                <tfoot>
+                    <tr class="table-success">
+                        <td colspan="3" class="text-end"><strong>Total:</strong></td>
+                        <td colspan="2"><strong>${{ total|floatformat:2 }}</strong></td>
+                    </tr>
+                </tfoot>
+            </table>
+        </div>
+        
+        <div class="text-end mt-3">
+            <a href="{% url 'productos:lista' %}" class="btn btn-secondary">Seguir comprando</a>
+            <a href="{% url 'pedidos:confirmar' %}" class="btn btn-success"><i class="fas fa-arrow-right"></i> Continuar con el pago</a>
+        </div>
+    {% else %}
+        <div class="alert alert-info text-center">
+            <p>Tu carrito está vacío.</p>
+            <a href="{% url 'productos:lista' %}" class="btn btn-primary">Ver productos</a>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}

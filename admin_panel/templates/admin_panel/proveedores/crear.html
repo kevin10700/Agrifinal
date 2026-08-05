@@ -1,0 +1,177 @@
+{% extends 'admin_panel/base.html' %}
+{% load static %}
+
+{% block title %}Nuevo Proveedor - Panel Admin{% endblock %}
+
+{% block breadcrumb %}
+    <span class="breadcrumb-item"><a href="{% url 'admin_panel:dashboard' %}">Inicio</a></span>
+    <span class="breadcrumb-item"><a href="{% url 'admin_panel:proveedores_lista' %}">Proveedores</a></span>
+    <span class="breadcrumb-item">Nuevo</span>
+{% endblock %}
+
+{% block content %}
+<div class="fade-in">
+    <div class="page-header">
+        <div>
+            <h1 class="page-title">Nuevo Proveedor</h1>
+            <p class="page-subtitle">Completa la información del proveedor</p>
+        </div>
+        <a href="{% url 'admin_panel:proveedores_lista' %}" class="btn btn-secondary">
+            <i class="fas fa-arrow-left"></i> Volver
+        </a>
+    </div>
+
+    <div class="card">
+        <div class="card-body">
+            <form method="post" enctype="multipart/form-data">
+                {% csrf_token %}
+                
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 24px;">
+                    <!-- Información Básica -->
+                    <div style="grid-column: 1 / -1;">
+                        <h3 style="color: var(--primary-color); margin-bottom: 16px; font-size: 1.1rem;">
+                            <i class="fas fa-info-circle"></i> Información Básica
+                        </h3>
+                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 16px;">
+                            <div>
+                                <label style="display: block; margin-bottom: 8px; font-weight: 500; color: var(--text-secondary);">Empresa *</label>
+                                <input type="text" name="empresa" required style="width: 100%; padding: 10px 12px; border: 1px solid var(--border-color); border-radius: var(--border-radius-sm); background: var(--bg-card); color: var(--text-primary);">
+                            </div>
+                            
+                            <div>
+                                <label style="display: block; margin-bottom: 8px; font-weight: 500; color: var(--text-secondary);">RFC *</label>
+                                <input type="text" name="rfc" required style="width: 100%; padding: 10px 12px; border: 1px solid var(--border-color); border-radius: var(--border-radius-sm); background: var(--bg-card); color: var(--text-primary);" 
+                                       maxlength="13" 
+                                       oninput="this.value = this.value.toUpperCase();" 
+                                       placeholder="Ej: AAA010101AAA">
+                                <small style="display: block; margin-top: 4px; color: var(--text-muted); font-size: 0.85rem;">
+                                    <i class="fas fa-info-circle"></i> Persona Moral (12 dígitos) o Persona Física (13 dígitos). Solo letras y números.
+                                </small>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Contacto -->
+                    <div>
+                        <label style="display: block; margin-bottom: 8px; font-weight: 500; color: var(--text-secondary);">Contacto *</label>
+                        <input type="text" name="contacto" required style="width: 100%; padding: 10px 12px; border: 1px solid var(--border-color); border-radius: var(--border-radius-sm); background: var(--bg-card); color: var(--text-primary);">
+                    </div>
+
+                    <div>
+                        <label style="display: block; margin-bottom: 8px; font-weight: 500; color: var(--text-secondary);">Correo *</label>
+                        <input type="email" name="correo" required style="width: 100%; padding: 10px 12px; border: 1px solid var(--border-color); border-radius: var(--border-radius-sm); background: var(--bg-card); color: var(--text-primary);">
+                    </div>
+
+                    <!-- 🔥 CAMBIO 1: Teléfono con validación de 10 dígitos -->
+                    <div>
+                        <label style="display: block; margin-bottom: 8px; font-weight: 500; color: var(--text-secondary);">Teléfono</label>
+                        <input type="tel" name="telefono" style="width: 100%; padding: 10px 12px; border: 1px solid var(--border-color); border-radius: var(--border-radius-sm); background: var(--bg-card); color: var(--text-primary);" 
+                               maxlength="10" pattern="[0-9]{10}" placeholder="10 dígitos" 
+                               oninput="this.value = this.value.replace(/[^0-9]/g, '').slice(0, 10);">
+                        <small style="display: block; margin-top: 4px; color: var(--text-muted); font-size: 0.85rem;">
+                            <i class="fas fa-info-circle"></i> Exactamente 10 dígitos numéricos.
+                        </small>
+                    </div>
+
+                    <!-- 🔥 CAMBIO 2: WhatsApp con validación de 10 dígitos -->
+                    <div>
+                        <label style="display: block; margin-bottom: 8px; font-weight: 500; color: var(--text-secondary);">WhatsApp</label>
+                        <input type="tel" name="whatsapp" style="width: 100%; padding: 10px 12px; border: 1px solid var(--border-color); border-radius: var(--border-radius-sm); background: var(--bg-card); color: var(--text-primary);" 
+                               maxlength="10" pattern="[0-9]{10}" placeholder="10 dígitos" 
+                               oninput="this.value = this.value.replace(/[^0-9]/g, '').slice(0, 10);">
+                        <small style="display: block; margin-top: 4px; color: var(--text-muted); font-size: 0.85rem;">
+                            <i class="fas fa-info-circle"></i> Exactamente 10 dígitos numéricos.
+                        </small>
+                    </div>
+
+                    <!-- Dirección -->
+                    <div style="grid-column: 1 / -1;">
+                        <h3 style="color: var(--primary-color); margin: 24px 0 16px; font-size: 1.1rem;">
+                            <i class="fas fa-map-marker-alt"></i> Dirección
+                        </h3>
+                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 16px;">
+                            <div>
+                                <label style="display: block; margin-bottom: 8px; font-weight: 500; color: var(--text-secondary);">Calle</label>
+                                <input type="text" name="calle" style="width: 100%; padding: 10px 12px; border: 1px solid var(--border-color); border-radius: var(--border-radius-sm); background: var(--bg-card); color: var(--text-primary);">
+                            </div>
+                            
+                            <div>
+                                <label style="display: block; margin-bottom: 8px; font-weight: 500; color: var(--text-secondary);">Número Exterior</label>
+                                <input type="text" name="numero_exterior" style="width: 100%; padding: 10px 12px; border: 1px solid var(--border-color); border-radius: var(--border-radius-sm); background: var(--bg-card); color: var(--text-primary);">
+                            </div>
+                            
+                            <div>
+                                <label style="display: block; margin-bottom: 8px; font-weight: 500; color: var(--text-secondary);">Colonia</label>
+                                <input type="text" name="colonia" style="width: 100%; padding: 10px 12px; border: 1px solid var(--border-color); border-radius: var(--border-radius-sm); background: var(--bg-card); color: var(--text-primary);">
+                            </div>
+                            
+                            <div>
+                                <label style="display: block; margin-bottom: 8px; font-weight: 500; color: var(--text-secondary);">Municipio</label>
+                                <input type="text" name="municipio" style="width: 100%; padding: 10px 12px; border: 1px solid var(--border-color); border-radius: var(--border-radius-sm); background: var(--bg-card); color: var(--text-primary);">
+                            </div>
+                            
+                            <div>
+                                <label style="display: block; margin-bottom: 8px; font-weight: 500; color: var(--text-secondary);">Estado</label>
+                                <input type="text" name="estado" style="width: 100%; padding: 10px 12px; border: 1px solid var(--border-color); border-radius: var(--border-radius-sm); background: var(--bg-card); color: var(--text-primary);">
+                            </div>
+                            
+                            <div>
+                                <label style="display: block; margin-bottom: 8px; font-weight: 500; color: var(--text-secondary);">Código Postal</label>
+                                <input type="text" name="codigo_postal" style="width: 100%; padding: 10px 12px; border: 1px solid var(--border-color); border-radius: var(--border-radius-sm); background: var(--bg-card); color: var(--text-primary);">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Información Comercial -->
+                    <div style="grid-column: 1 / -1;">
+                        <h3 style="color: var(--primary-color); margin: 24px 0 16px; font-size: 1.1rem;">
+                            <i class="fas fa-briefcase"></i> Información Comercial
+                        </h3>
+                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 16px;">
+                            <div>
+                                <label style="display: block; margin-bottom: 8px; font-weight: 500; color: var(--text-secondary);">Página Web</label>
+                                <input type="url" name="pagina_web" style="width: 100%; padding: 10px 12px; border: 1px solid var(--border-color); border-radius: var(--border-radius-sm); background: var(--bg-card); color: var(--text-primary);">
+                            </div>
+                            
+                            <div>
+                                <label style="display: block; margin-bottom: 8px; font-weight: 500; color: var(--text-secondary);">Tiempo de Entrega (días)</label>
+                                <input type="number" name="tiempo_entrega" style="width: 100%; padding: 10px 12px; border: 1px solid var(--border-color); border-radius: var(--border-radius-sm); background: var(--bg-card); color: var(--text-primary);">
+                            </div>
+                            
+                            <div>
+                                <label style="display: block; margin-bottom: 8px; font-weight: 500; color: var(--text-secondary);">Descuento (%)</label>
+                                <input type="number" step="0.01" name="descuento" style="width: 100%; padding: 10px 12px; border: 1px solid var(--border-color); border-radius: var(--border-radius-sm); background: var(--bg-card); color: var(--text-primary);">
+                            </div>
+                            
+                            <div>
+                                <label style="display: block; margin-bottom: 8px; font-weight: 500; color: var(--text-secondary);">Condiciones de Pago</label>
+                                <select name="condiciones_pago" style="width: 100%; padding: 10px 12px; border: 1px solid var(--border-color); border-radius: var(--border-radius-sm); background: var(--bg-card); color: var(--text-primary);">
+                                    <option value="contado">Contado</option>
+                                    <option value="credito">Crédito</option>
+                                    <option value="mixto">Mixto</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Observaciones -->
+                    <div style="grid-column: 1 / -1;">
+                        <label style="display: block; margin-bottom: 8px; font-weight: 500; color: var(--text-secondary);">Observaciones</label>
+                        <textarea name="observaciones" rows="3" style="width: 100%; padding: 10px 12px; border: 1px solid var(--border-color); border-radius: var(--border-radius-sm); background: var(--bg-card); color: var(--text-primary); resize: vertical;"></textarea>
+                    </div>
+                </div>
+
+                <!-- Botones de Acción -->
+                <div style="display: flex; gap: 12px; justify-content: flex-end; margin-top: 32px; padding-top: 24px; border-top: 1px solid var(--border-color);">
+                    <a href="{% url 'admin_panel:proveedores_lista' %}" class="btn btn-secondary">
+                        <i class="fas fa-times"></i> Cancelar
+                    </a>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-save"></i> Guardar Proveedor
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

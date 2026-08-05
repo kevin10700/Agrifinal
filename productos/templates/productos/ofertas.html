@@ -1,0 +1,198 @@
+{% extends 'productos/base.html' %}
+
+{% block content %}
+<div class="row">
+    <!-- Sidebar con filtros - responsive: full width on mobile -->
+    <div class="col-md-3">
+        <div class="filtro-sidebar">
+            <h5><i class="fas fa-filter"></i> Filtrar Ofertas</h5>
+            <hr>
+            
+            <form method="GET">
+                {% if request.GET.q %}
+                    <input type="hidden" name="q" value="{{ request.GET.q }}">
+                {% endif %}
+                
+                <div class="mb-3">
+                    <label class="form-label"><strong>Categoría</strong></label>
+                    <select name="categoria" class="form-select form-select-lg" onchange="this.form.submit()">
+                        <option value="">Todas las categorías</option>
+                        {% for categoria in categorias %}
+                        <option value="{{ categoria.slug }}" 
+                                {% if categoria_activa == categoria.slug %}selected{% endif %}>
+                            {{ categoria.nombre }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                
+                <button type="submit" class="btn btn-danger w-100 btn-aplicar">
+                    <i class="fas fa-tag"></i> Aplicar filtros
+                </button>
+                <a href="{% url 'productos:ofertas' %}" class="btn btn-outline-secondary w-100 mt-2 btn-limpiar-ofertas">
+                    <i class="fas fa-eraser"></i> Limpiar filtros
+                </a>
+            </form>
+        </div>
+    </div>
+    
+    <!-- Lista de ofertas -->
+    <div class="col-md-9">
+        <!-- Banner de ofertas -->
+        <div class="card bg-danger text-white mb-4 ofertas-banner">
+            <div class="card-body">
+                <div class="row align-items-center">
+                    <div class="col-8">
+                        <h2 class="mb-0 ofertas-titulo">
+                            <i class="fas fa-fire"></i> Ofertas Especiales
+                        </h2>
+                        <p class="mb-0 mt-2 ofertas-descripcion">
+                            ¡Aprovecha estos precios! Productos agrícolas seleccionados con los mejores descuentos
+                        </p>
+                    </div>
+                    <div class="col-4 text-end">
+                        <i class="fas fa-tags fa-3x ofertas-icono"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="d-flex justify-content-between align-items-center mb-4 ofertas-header">
+            <h3 class="ofertas-titulo-lista">
+                <i class="fas fa-tag text-danger"></i> 
+                {{ titulo }}
+                <small class="text-muted">({{ page_obj.paginator.count }} productos)</small>
+            </h3>
+        </div>
+        
+        {% if request.GET.q %}
+        <div class="alert alert-info">
+            <i class="fas fa-search"></i> Resultados para: <strong>"{{ request.GET.q }}"</strong>
+        </div>
+        {% endif %}
+        
+        <!-- Grid de ofertas - responsive: 2 cols mobile, 3 cols desktop -->
+        <div class="row">
+            {% for producto in productos %}
+            <div class="col-sm-6 col-lg-4 mb-4">
+                <!-- ===== TARJETA CLICKEABLE ===== -->
+                <a href="{% url 'productos:detalle' producto.slug %}" class="text-decoration-none text-dark">
+                    <div class="card producto-card h-100 position-relative border-danger">
+                        <!-- Badge de descuento grande -->
+                        <div class="position-absolute top-0 start-0 m-2 ofertas-badge-descuento">
+                            <span class="badge bg-danger fs-6 p-2">
+                                <i class="fas fa-tag"></i> -{{ producto.get_descuento_porcentaje }}%
+                            </span>
+                        </div>
+                        
+                        <!-- Badge de ahorro -->
+                        <div class="position-absolute top-0 end-0 m-2 ofertas-badge-ahorro">
+                            <span class="badge bg-warning text-dark">
+                                <i class="fas fa-coins"></i> OFERTA
+                            </span>
+                        </div>
+                        
+                        <div class="img-wrapper">
+                            {% if producto.imagen_principal %}
+                                <img src="{{ producto.imagen_principal.url }}" alt="{{ producto.nombre }}">
+                            {% else %}
+                                <div class="img-placeholder">
+                                    <i class="fas fa-seedling fa-3x text-success"></i>
+                                </div>
+                            {% endif %}
+                        </div>
+                        <div class="card-body text-center pt-0">
+                            
+                            <h5 class="card-title">{{ producto.nombre }}</h5>
+                            <p class="card-text text-muted small">{{ producto.descripcion_corta|truncatewords:10 }}</p>
+                            
+                            <!-- Precios con oferta -->
+                            <div class="mt-3">
+                                <span class="text-muted text-decoration-line-through fs-6">
+                                    ${{ producto.precio|floatformat:2 }}
+                                </span>
+                                <br>
+                                <span class="text-danger ofertas-precio fw-bold">
+                                    ${{ producto.precio_oferta|floatformat:2 }}
+                                </span>
+                                <small class="text-muted">/ {{ producto.unidad_medida }}</small>
+                            </div>
+                            
+                            <!-- Stock -->
+                            <div class="mt-2">
+                                {% if producto.stock > 0 %}
+                                    <small class="text-success">
+                                        <i class="fas fa-check-circle"></i> Disponible: {{ producto.stock }} {{ producto.unidad_medida }}
+                                    </small>
+                                {% else %}
+                                    <small class="text-danger">
+                                        <i class="fas fa-times-circle"></i> Agotado
+                                    </small>
+                                {% endif %}
+                            </div>
+                            
+                            <!-- Contador de tiempo (opcional) -->
+                            <div class="mt-2 p-2 bg-light rounded">
+                                <small class="text-muted">
+                                    <i class="fas fa-clock"></i> Oferta por tiempo limitado
+                                </small>
+                            </div>
+                        </div>
+                    </div>
+                </a>
+            </div>
+            {% empty %}
+            <div class="col-12">
+                <div class="alert alert-warning text-center">
+                    <i class="fas fa-exclamation-triangle fa-2x"></i>
+                    <h4>No hay productos en oferta</h4>
+                    <p>Pronto tendremos ofertas disponibles.</p>
+                    <a href="{% url 'productos:lista' %}" class="btn btn-primary">
+                        Ver todos los productos
+                    </a>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        
+        <!-- Paginación - responsive -->
+        {% if is_paginated %}
+        <nav aria-label="Page navigation" class="mt-4">
+            <ul class="pagination justify-content-center pagination-responsive">
+                {% if page_obj.has_previous %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page=1{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}">
+                            &laquo;
+                        </a>
+                    </li>
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}">
+                            Anterior
+                        </a>
+                    </li>
+                {% endif %}
+                
+                <li class="page-item active">
+                    <span class="page-link">
+                        {{ page_obj.number }} / {{ page_obj.paginator.num_pages }}
+                    </span>
+                </li>
+                
+                {% if page_obj.has_next %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ page_obj.next_page_number }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}">
+                            Siguiente
+                        </a>
+                    </li>
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}">
+                            &raquo;
+                        </a>
+                    </li>
+                {% endif %}
+            </ul>
+        </nav>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,297 @@
+{% extends 'admin_panel/base.html' %}
+{% load static %}
+
+{% block title %}Editar Producto - Panel Admin{% endblock %}
+
+{% block breadcrumb %}
+    <span class="breadcrumb-item"><a href="{% url 'admin_panel:dashboard' %}">Inicio</a></span>
+    <span class="breadcrumb-item"><a href="{% url 'admin_panel:productos_lista' %}">Productos</a></span>
+    <span class="breadcrumb-item">Editar #{{ producto.id_producto }}</span>
+{% endblock %}
+
+{% block content %}
+<div class="fade-in">
+    <div class="page-header">
+        <div>
+            <h1 class="page-title">Editar Producto</h1>
+            <p class="page-subtitle">Modifica la información del producto. El stock se actualiza automáticamente con compras y ventas.</p>
+        </div>
+        <a href="{% url 'admin_panel:productos_lista' %}" class="btn btn-secondary">
+            <i class="fas fa-arrow-left"></i> Volver
+        </a>
+    </div>
+
+    <div class="card">
+        <div class="card-body">
+            <form method="post" enctype="multipart/form-data">
+                {% csrf_token %}
+
+                <div class="form-grid">
+                    <!-- Información Básica -->
+                    <div class="form-group-full">
+                        <h3 class="form-section-title">
+                            <i class="fas fa-info-circle"></i> Información Básica
+                        </h3>
+                        <div class="form-row">
+                            <div class="form-col">
+                                <label class="form-label">Nombre *</label>
+                                <input type="text" name="nombre" value="{{ producto.nombre }}" required class="form-control" placeholder="Ej: Ferilizante DAP 50kg">
+                            </div>
+
+                            <div class="form-col">
+                                <label class="form-label">Categoría *</label>
+                                <select name="categoria" required class="form-select">
+                                    <option value="">Seleccionar categoría</option>
+                                    {% for categoria in categorias %}
+                                    <option value="{{ categoria.id_categoria }}" {% if producto.id_categoria.id_categoria == categoria.id_categoria %}selected{% endif %}>
+                                        {{ categoria.nombre }}
+                                    </option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Descripción -->
+                    <div class="form-group-full">
+                        <label class="form-label">Descripción Corta *</label>
+                        <input type="text" name="descripcion_corta" value="{{ producto.descripcion_corta }}" required maxlength="300" class="form-control" placeholder="Breve descripción del producto...">
+                    </div>
+
+                    <div class="form-group-full">
+                        <label class="form-label">Descripción Larga</label>
+                        <textarea name="descripcion_larga" rows="4" class="form-control" placeholder="Descripción detallada del producto...">{{ producto.descripcion_larga }}</textarea>
+                    </div>
+
+                    <!-- Precios -->
+                    <div class="form-row">
+                        <div class="form-col">
+                            <label class="form-label">Precio de Venta *</label>
+                            <div class="input-group">
+                                <span class="input-group-text">$</span>
+                                <input type="number" name="precio" value="{{ producto.precio }}" step="0.01" required class="form-control" placeholder="0.00">
+                            </div>
+                        </div>
+
+                        <div class="form-col">
+                            <label class="form-label">Precio Oferta</label>
+                            <div class="input-group">
+                                <span class="input-group-text">$</span>
+                                <input type="number" name="precio_oferta" value="{{ producto.precio_oferta }}" step="0.01" class="form-control" placeholder="0.00">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Stock (solo lectura) -->
+                    <div class="form-row">
+                        <div class="form-col">
+                            <label class="form-label">Stock en Inventario</label>
+                            <input type="number" value="{{ producto.stock }}" readonly disabled class="form-control readonly-field">
+                            <small class="form-text">
+                                <i class="fas fa-info-circle"></i> El stock se actualiza automáticamente con las Compras y Ventas.
+                            </small>
+                        </div>
+
+                        <!-- Costo Promedio -->
+                        <div class="form-col">
+                            <label class="form-label">Costo Promedio (Compra)</label>
+                            <div class="input-group">
+                                <span class="input-group-text">$</span>
+                                <input type="text" value="{{ producto.costo_promedio|floatformat:2 }}" readonly disabled class="form-control readonly-field">
+                            </div>
+                            <small class="form-text">
+                                <i class="fas fa-info-circle"></i> Calculado automáticamente por el sistema (costo promedio ponderado).
+                            </small>
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-col">
+                            <label class="form-label">Unidad de Medida</label>
+                            <select name="unidad_medida" class="form-select">
+                                <option value="kg" {% if producto.unidad_medida == 'kg' %}selected{% endif %}>Kilogramo</option>
+                                <option value="unidad" {% if producto.unidad_medida == 'unidad' %}selected{% endif %}>Unidad</option>
+                                <option value="libra" {% if producto.unidad_medida == 'libra' %}selected{% endif %}>Libra</option>
+                                <option value="docena" {% if producto.unidad_medida == 'docena' %}selected{% endif %}>Docena</option>
+                                <option value="caja" {% if producto.unidad_medida == 'caja' %}selected{% endif %}>Caja</option>
+                            </select>
+                        </div>
+
+                        <!-- Dimensiones -->
+                        <div class="form-col">
+                            <label class="form-label">Peso (kg)</label>
+                            <input type="number" name="peso_kg" value="{{ producto.peso_kg }}" step="0.001" class="form-control" placeholder="0.000">
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-col">
+                            <label class="form-label">Alto (cm)</label>
+                            <input type="number" name="alto_cm" value="{{ producto.alto_cm }}" step="0.01" class="form-control" placeholder="0.00">
+                        </div>
+                        <div class="form-col">
+                            <label class="form-label">Ancho (cm)</label>
+                            <input type="number" name="ancho_cm" value="{{ producto.ancho_cm }}" step="0.01" class="form-control" placeholder="0.00">
+                        </div>
+                        <div class="form-col">
+                            <label class="form-label">Largo (cm)</label>
+                            <input type="number" name="largo_cm" value="{{ producto.largo_cm }}" step="0.01" class="form-control" placeholder="0.00">
+                        </div>
+                    </div>
+
+                    <!-- 🔥 IMAGEN CON VISTA PREVIA Y CANCELACIÓN -->
+                    <div class="form-group-full">
+                        <label class="form-label">Imagen Principal</label>
+                        
+                        <!-- Contenedor para imagen actual (con botón de eliminar) -->
+                        <div id="current-image-container" style="margin-bottom: 15px; display: block; position: relative; width: fit-content;">
+                            {% if producto.imagen_principal %}
+                                <div style="position: relative; display: inline-block;">
+                                    <img src="{{ producto.imagen_principal.url }}" alt="{{ producto.nombre }}" 
+                                         style="max-width: 200px; max-height: 200px; border-radius: 8px; border: 2px solid var(--border-color); padding: 4px; background: white;">
+                                    <button type="button" id="clear-current-image" 
+                                            style="position: absolute; top: -10px; right: -10px; width: 30px; height: 30px; border-radius: 50%; background: #dc3545; color: white; border: 2px solid white; font-weight: bold; cursor: pointer; box-shadow: 0 2px 5px rgba(0,0,0,0.2);">
+                                        &times;
+                                    </button>
+                                </div>
+                            {% else %}
+                                <div style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 10px;">
+                                    <i class="fas fa-info-circle"></i> No hay imagen actual.
+                                </div>
+                            {% endif %}
+                        </div>
+
+                        <!-- Input para subir imagen nueva -->
+                        <input type="file" name="imagen_principal" id="id_imagen_principal" accept="image/*" class="form-control">
+                        <small class="form-text"><i class="fas fa-info-circle"></i> Selecciona una imagen para reemplazar la actual.</small>
+
+                        <!-- 🔥 Contenedor de Previsualización (se oculta por defecto) -->
+                        <div id="preview-container" style="margin-top: 15px; display: none; position: relative; width: fit-content;">
+                            <img id="image-preview" src="#" alt="Vista previa" 
+                                 style="max-width: 200px; max-height: 200px; border-radius: 8px; border: 2px solid var(--border-color); padding: 4px; background: white;">
+                            <button type="button" id="cancel-image-btn" 
+                                    style="position: absolute; top: -10px; right: -10px; width: 30px; height: 30px; border-radius: 50%; background: #dc3545; color: white; border: 2px solid white; font-weight: bold; cursor: pointer; box-shadow: 0 2px 5px rgba(0,0,0,0.2);">
+                                &times;
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Características -->
+                    <div class="form-group-full">
+                        <h3 class="form-section-title">
+                            <i class="fas fa-star"></i> Características
+                        </h3>
+                        <div class="checkbox-group">
+                            <label class="checkbox-item">
+                                <input type="checkbox" name="es_destacado" {% if producto.es_destacado %}checked{% endif %}>
+                                <span>Producto Destacado</span>
+                            </label>
+                            <label class="checkbox-item">
+                                <input type="checkbox" name="es_nuevo" {% if producto.es_nuevo %}checked{% endif %}>
+                                <span>Producto Nuevo</span>
+                            </label>
+                            <label class="checkbox-item">
+                                <input type="checkbox" name="es_organico" {% if producto.es_organico %}checked{% endif %}>
+                                <span>Producto Orgánico</span>
+                            </label>
+                        </div>
+                    </div>
+
+                    <!-- Atributos Agrícolas -->
+                    <div class="form-group-full">
+                        <h3 class="form-section-title">
+                            <i class="fas fa-seedling"></i> Atributos Agrícolas
+                        </h3>
+                        <div class="form-row">
+                            <div class="form-col">
+                                <label class="form-label">Temporada</label>
+                                <input type="text" name="temporada" value="{{ producto.temporada }}" class="form-control" placeholder="Ej: Primavera 2024">
+                            </div>
+                            <div class="form-col">
+                                <label class="form-label">Origen</label>
+                                <input type="text" name="origen" value="{{ producto.origen }}" class="form-control" placeholder="Ej: Michoacán, México">
+                            </div>
+                        </div>
+                        <div class="form-group-full mt-3">
+                            <label class="form-label">Certificaciones</label>
+                            <input type="text" name="certificaciones" value="{{ producto.certificaciones }}" class="form-control" placeholder="Ej: Orgánico, Sin Gluten, Certificación X">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Botones de Acción -->
+                <div class="form-actions">
+                    <a href="{% url 'admin_panel:productos_lista' %}" class="btn btn-secondary">
+                        <i class="fas fa-times"></i> Cancelar
+                    </a>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-save"></i> Actualizar Producto
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- 🔥 JAVASCRIPT PARA LA VISTA PREVIA Y CANCELACIÓN -->
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const inputFile = document.getElementById('id_imagen_principal');
+    const previewContainer = document.getElementById('preview-container');
+    const imagePreview = document.getElementById('image-preview');
+    const cancelBtn = document.getElementById('cancel-image-btn');
+    const currentImageContainer = document.getElementById('current-image-container');
+    const clearCurrentBtn = document.getElementById('clear-current-image');
+
+    // 1. Cuando el usuario selecciona un archivo
+    if (inputFile) {
+        inputFile.addEventListener('change', function() {
+            const file = this.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    imagePreview.src = e.target.result;
+                    previewContainer.style.display = 'block';
+                    // Si existe una imagen actual, la ocultamos
+                    if(currentImageContainer) {
+                        currentImageContainer.style.display = 'none';
+                    }
+                }
+                reader.readAsDataURL(file);
+            } else {
+                previewContainer.style.display = 'none';
+                imagePreview.src = '#';
+            }
+        });
+    }
+
+    // 2. Botón de cancelar (borra la selección y oculta la previsualización)
+    if (cancelBtn) {
+        cancelBtn.addEventListener('click', function() {
+            inputFile.value = '';
+            previewContainer.style.display = 'none';
+            imagePreview.src = '#';
+            // Volvemos a mostrar la imagen actual si existe
+            if(currentImageContainer && currentImageContainer.querySelector('img')) {
+                currentImageContainer.style.display = 'block';
+            }
+        });
+    }
+
+    // 3. Botón para eliminar la imagen actual (solo si existe el botón)
+    if (clearCurrentBtn) {
+        clearCurrentBtn.addEventListener('click', function() {
+            // Creamos un input oculto para decirle al servidor que borre la imagen
+            const hiddenInput = document.createElement('input');
+            hiddenInput.type = 'hidden';
+            hiddenInput.name = 'eliminar_imagen_actual';
+            hiddenInput.value = 'true';
+            document.querySelector('form').appendChild(hiddenInput);
+            
+            // Ocultamos el contenedor de la imagen actual
+            currentImageContainer.style.display = 'none';
+        });
+    }
+});
+</script>
+{% endblock %}

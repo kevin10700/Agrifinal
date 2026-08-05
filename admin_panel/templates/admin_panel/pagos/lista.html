@@ -1,0 +1,116 @@
+{% extends 'admin_panel/base.html' %}
+{% load static %}
+
+{% block title %}Pagos - Panel Admin{% endblock %}
+
+{% block breadcrumb %}
+    <span class="breadcrumb-item"><a href="{% url 'admin_panel:dashboard' %}">Inicio</a></span>
+    <span class="breadcrumb-item">Pagos</span>
+{% endblock %}
+
+{% block content %}
+<div class="fade-in">
+    <div class="page-header">
+        <div>
+            <h1 class="page-title">Pagos</h1>
+            <p class="page-subtitle">Gestiona los pagos y transacciones</p>
+        </div>
+    </div>
+
+    <!-- Filtros -->
+    <div class="card">
+        <div class="card-body">
+            <form method="get" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; align-items: end;">
+                <div>
+                    <label style="display: block; margin-bottom: 8px; font-weight: 500; color: var(--text-secondary);">Estado</label>
+                    <select name="estado" style="width: 100%; padding: 10px 12px; border: 1px solid var(--border-color); border-radius: var(--border-radius-sm); background: var(--bg-card); color: var(--text-primary);">
+                        <option value="">Todos</option>
+                        {% for estado in estados %}
+                        <option value="{{ estado.0 }}" {% if estado_seleccionado == estado.0 %}selected{% endif %}>
+                            {{ estado.1 }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                
+                <div style="display: flex; gap: 8px;">
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-search"></i> Filtrar
+                    </button>
+                    <a href="{% url 'admin_panel:pagos_lista' %}" class="btn btn-secondary">
+                        <i class="fas fa-times"></i> Limpiar
+                    </a>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Tabla de Pagos -->
+    <div class="table-container">
+        <div class="table-header">
+            <h3 class="table-title">
+                Total: {{ pagos.paginator.count }} pagos
+            </h3>
+        </div>
+        <div class="table-responsive">
+            <table>
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Pedido</th>
+                        <th>Método</th>
+                        <th>Monto</th>
+                        <th>Estado</th>
+                        <th>Fecha</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for pago in pagos %}
+                    <tr>
+                        <td><strong>#{{ pago.id_pago }}</strong></td>
+                        <td>Pedido #{{ pago.id_pedido.id_pedido }}</td>
+                        <td>{{ pago.get_metodo_display }}</td>
+                        <td><strong>${{ pago.id_pedido.total|floatformat:2 }}</strong></td>
+                        <td>
+                            <span class="badge badge-{% if pago.estado == 'pagado' %}success{% elif pago.estado == 'fallido' %}danger{% else %}warning{% endif %}">
+                                {{ pago.get_estado_display }}
+                            </span>
+                        </td>
+                        <td>{{ pago.fecha_pago|date:"d/m/Y H:i"|default:"-" }}</td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="6" style="text-align: center; padding: 60px 20px; color: var(--text-muted);">
+                            <i class="fas fa-credit-card" style="font-size: 3rem; margin-bottom: 12px; display: block;"></i>
+                            <p>No hay pagos registrados</p>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% if pagos.has_other_pages %}
+        <div class="table-footer">
+            <div>
+                Mostrando {{ pagos.start_index }} a {{ pagos.end_index }} de {{ pagos.paginator.count }} registros
+            </div>
+            <div style="display: flex; gap: 8px;">
+                {% if pagos.has_previous %}
+                <a href="?page={{ pagos.previous_page_number }}{% if estado_seleccionado %}&estado={{ estado_seleccionado }}{% endif %}" 
+                   class="btn btn-sm btn-secondary">
+                    <i class="fas fa-chevron-left"></i> Anterior
+                </a>
+                {% endif %}
+                
+                {% if pagos.has_next %}
+                <a href="?page={{ pagos.next_page_number }}{% if estado_seleccionado %}&estado={{ estado_seleccionado }}{% endif %}" 
+                   class="btn btn-sm btn-secondary">
+                    Siguiente <i class="fas fa-chevron-right"></i>
+                </a>
+                {% endif %}
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,125 @@
+{% extends 'productos/base.html' %}
+
+{% block content %}
+<div class="container">
+    <h2 class="mb-4"><i class="fas fa-truck"></i> Detalle de entrega #{{ entrega.id }}</h2>
+    
+    <div class="row">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header bg-info text-white">
+                    <h5>Información de la entrega</h5>
+                </div>
+                <div class="card-body">
+                    <p><strong>Pedido:</strong> #{{ entrega.pedido.id }}</p>
+                    <p><strong>Cliente:</strong> {{ entrega.pedido.usuario.username }}</p>
+                    <p><strong>Estado:</strong> 
+                        <span class="badge 
+                            {% if entrega.estado == 'entregado' %}bg-success
+                            {% elif entrega.estado == 'en_ruta' %}bg-info
+                            {% elif entrega.estado == 'asignado' %}bg-primary
+                            {% elif entrega.estado == 'incidente' %}bg-danger
+                            {% else %}bg-warning text-dark{% endif %}">
+                            {{ entrega.get_estado_display }}
+                        </span>
+                    </p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h5>Repartidor</h5>
+                </div>
+                <div class="card-body">
+                    {% if entrega.repartidor %}
+                        <p><strong>Nombre:</strong> {{ entrega.repartidor.nombre }}</p>
+                        <p><strong>Vehículo:</strong> {{ entrega.repartidor.vehiculo }}</p>
+                        <p><strong>Placa:</strong> {{ entrega.repartidor.placa }}</p>
+                        <p><strong>Teléfono:</strong> {{ entrega.repartidor.telefono }}</p>
+                    {% else %}
+                        <p class="text-muted">Sin repartidor asignado</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="card mt-3">
+        <div class="card-header bg-success text-white">
+            <h5>Seguimiento</h5>
+        </div>
+        <div class="card-body">
+            <div class="timeline">
+                <div class="timeline-item">
+                    <span class="badge bg-success">✅ Pedido creado</span>
+                    <small class="d-block">{{ entrega.pedido.fecha|date:"d/m/Y H:i" }}</small>
+                </div>
+                {% if entrega.fecha_asignacion %}
+                <div class="timeline-item mt-2">
+                    <span class="badge bg-primary">🚚 Asignado a repartidor</span>
+                    <small class="d-block">{{ entrega.fecha_asignacion|date:"d/m/Y H:i" }}</small>
+                </div>
+                {% endif %}
+                {% if entrega.fecha_envio %}
+                <div class="timeline-item mt-2">
+                    <span class="badge bg-info">📦 En camino</span>
+                    <small class="d-block">{{ entrega.fecha_envio|date:"d/m/Y H:i" }}</small>
+                </div>
+                {% endif %}
+                {% if entrega.fecha_entrega %}
+                <div class="timeline-item mt-2">
+                    <span class="badge bg-success">✅ Entregado</span>
+                    <small class="d-block">{{ entrega.fecha_entrega|date:"d/m/Y H:i" }}</small>
+                </div>
+                {% endif %}
+            </div>
+            
+            {% if entrega.ubicacion_actual %}
+            <div class="alert alert-info mt-3">
+                <strong>📍 Ubicación actual:</strong> {{ entrega.ubicacion_actual }}
+            </div>
+            {% endif %}
+            
+            {% if entrega.notas_entrega %}
+            <div class="alert alert-secondary mt-2">
+                <strong>📝 Notas:</strong> {{ entrega.notas_entrega }}
+            </div>
+            {% endif %}
+        </div>
+    </div>
+    
+    <div class="mt-3">
+        <a href="{% url 'pedidos:admin_entregas' %}" class="btn btn-secondary">
+            <i class="fas fa-arrow-left"></i> Volver al panel de entregas
+        </a>
+    </div>
+</div>
+
+<style>
+    .timeline {
+        position: relative;
+        padding-left: 20px;
+    }
+    .timeline-item {
+        position: relative;
+        padding-bottom: 15px;
+        border-left: 2px solid #dee2e6;
+        padding-left: 20px;
+    }
+    .timeline-item:last-child {
+        border-left: none;
+    }
+    .timeline-item::before {
+        content: '';
+        position: absolute;
+        left: -6px;
+        top: 5px;
+        width: 10px;
+        height: 10px;
+        border-radius: 50%;
+        background: #28a745;
+    }
+</style>
+{% endblock %}

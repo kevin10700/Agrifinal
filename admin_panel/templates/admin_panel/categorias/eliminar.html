@@ -1,0 +1,55 @@
+{% extends 'admin_panel/base.html' %}
+{% load static %}
+
+{% block title %}Eliminar Categoría - Panel Admin{% endblock %}
+
+{% block breadcrumb %}
+    <span class="breadcrumb-item"><a href="{% url 'admin_panel:dashboard' %}">Inicio</a></span>
+    <span class="breadcrumb-item"><a href="{% url 'admin_panel:categorias_lista' %}">Categorías</a></span>
+    <span class="breadcrumb-item">Eliminar: {{ categoria.nombre }}</span>
+{% endblock %}
+
+{% block content %}
+<div class="fade-in">
+    <div class="page-header">
+        <div>
+            <h1 class="page-title">Eliminar Categoría</h1>
+            <p class="page-subtitle">Confirma la eliminación de la categoría</p>
+        </div>
+        <a href="{% url 'admin_panel:categorias_lista' %}" class="btn btn-secondary">
+            <i class="fas fa-arrow-left"></i> Volver
+        </a>
+    </div>
+
+    <div class="card">
+        <div class="card-body">
+            <div style="text-align: center; padding: 40px 20px;">
+                <div style="width: 80px; height: 80px; border-radius: 50%; background: var(--danger-bg, #fde8e8); display: flex; align-items: center; justify-content: center; margin: 0 auto 24px;">
+                    <i class="fas fa-exclamation-triangle" style="font-size: 2rem; color: var(--danger, #e74c3c);"></i>
+                </div>
+                
+                <h3 style="color: var(--text-primary); margin-bottom: 12px; font-size: 1.3rem;">
+                    ¿Estás seguro de eliminar esta categoría?
+                </h3>
+                
+                <p style="color: var(--text-secondary); margin-bottom: 8px; font-size: 1rem;">
+                    Estás a punto de eliminar la categoría <strong>"{{ categoria.nombre }}"</strong>.
+                </p>
+                <p style="color: var(--text-muted); margin-bottom: 32px; font-size: 0.9rem;">
+                    <i class="fas fa-info-circle"></i> Esta acción no se puede deshacer. Los productos asociados a esta categoría no serán eliminados, pero quedarán sin categoría asignada.
+                </p>
+
+                <form method="post" style="display: flex; gap: 12px; justify-content: center;">
+                    {% csrf_token %}
+                    <a href="{% url 'admin_panel:categorias_lista' %}" class="btn btn-secondary btn-lg">
+                        <i class="fas fa-times"></i> Cancelar
+                    </a>
+                    <button type="submit" class="btn btn-danger btn-lg">
+                        <i class="fas fa-trash"></i> Sí, Eliminar
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

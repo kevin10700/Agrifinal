@@ -1,0 +1,92 @@
+{% extends 'admin_panel/base.html' %}
+{% load static %}
+
+{% block title %}Zonas de Reparto - AGRIVALE{% endblock %}
+
+{% block breadcrumb %}
+    <span class="breadcrumb-item">Envíos</span>
+    <span class="breadcrumb-item">Zonas de Reparto</span>
+{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div>
+        <h1 class="page-title">Zonas de Reparto</h1>
+        <p class="page-subtitle">Gestiona los códigos postales y costos de envío por zona</p>
+    </div>
+    <div>
+        <a href="{% url 'admin_panel:zona_reparto_crear' %}" class="btn btn-primary">
+            <i class="fas fa-plus"></i> Nueva Zona
+        </a>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-body">
+        {% if zonas %}
+        <div class="table-responsive">
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Nombre</th>
+                        <th>Municipio</th>
+                        <th>Estado</th>
+                        <th>CP Desde</th>
+                        <th>CP Hasta</th>
+                        <th>Costo Envío</th>
+                        <th>Tiempo Entrega</th>
+                        <th>Estado</th>
+                        <th>Acciones</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for zona in zonas %}
+                    <tr>
+                        <td><strong>{{ zona.nombre }}</strong></td>
+                        <td>{{ zona.municipio }}</td>
+                        <td>{{ zona.estado }}</td>
+                        <td>{{ zona.codigo_postal_inicio }}</td>
+                        <td>{{ zona.codigo_postal_fin }}</td>
+                        <td><strong>${{ zona.costo_envio }}</strong></td>
+                        <td>{{ zona.tiempo_entrega }}</td>
+                        <td>
+                            {% if zona.activo %}
+                            <span class="status-badge status-success">Activa</span>
+                            {% else %}
+                            <span class="status-badge status-danger">Inactiva</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <div style="display: flex; gap: 8px;">
+                                <a href="{% url 'admin_panel:zona_reparto_editar' zona.id %}" class="btn btn-sm btn-primary" title="Editar">
+                                    <i class="fas fa-edit"></i>
+                                </a>
+                                <a href="{% url 'admin_panel:zona_reparto_eliminar' zona.id %}" class="btn btn-sm btn-danger" title="Eliminar">
+                                    <i class="fas fa-trash"></i>
+                                </a>
+                            </div>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="9" class="text-center py-4">
+                            <i class="fas fa-map-marker-alt" style="font-size: 2rem; color: var(--text-muted); margin-bottom: 8px; display: block;"></i>
+                            <p class="text-muted">No hay zonas de reparto registradas</p>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="text-center py-5">
+            <i class="fas fa-map-marker-alt" style="font-size: 3rem; color: var(--text-muted); margin-bottom: 12px; display: block;"></i>
+            <p class="text-muted">No hay zonas de reparto registradas</p>
+            <a href="{% url 'admin_panel:zona_reparto_crear' %}" class="btn btn-primary mt-3">
+                <i class="fas fa-plus"></i> Crear primera zona
+            </a>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,58 @@
+{% extends 'admin_panel/base.html' %}
+{% load static %}
+
+{% block title %}Desactivar Producto - Panel Admin{% endblock %}
+
+{% block breadcrumb %}
+    <span class="breadcrumb-item"><a href="{% url 'admin_panel:dashboard' %}">Inicio</a></span>
+    <span class="breadcrumb-item"><a href="{% url 'admin_panel:productos_lista' %}">Productos</a></span>
+    <span class="breadcrumb-item">Desactivar #{{ producto.id_producto }}</span>
+{% endblock %}
+
+{% block content %}
+<div class="fade-in">
+    <div class="page-header">
+        <div>
+            <h1 class="page-title">Desactivar Producto</h1>
+            <p class="page-subtitle">Confirma la desactivación del producto</p>
+        </div>
+        <a href="{% url 'admin_panel:productos_lista' %}" class="btn btn-secondary">
+            <i class="fas fa-arrow-left"></i> Volver
+        </a>
+    </div>
+
+    <div class="card" style="max-width: 600px; margin: 0 auto;">
+        <div class="card-body" style="text-align: center; padding: 40px;">
+            <div style="width: 80px; height: 80px; border-radius: 50%; background: #fff3cd; display: flex; align-items: center; justify-content: center; margin: 0 auto 20px;">
+                <i class="fas fa-eye-slash" style="font-size: 2.5rem; color: #856404;"></i>
+            </div>
+            
+            <h2 style="color: var(--warning); margin-bottom: 12px;">¿Desactivar Producto?</h2>
+            <p style="color: var(--text-secondary); margin-bottom: 24px;">
+                Estás a punto de desactivar el producto <strong>"{{ producto.nombre }}"</strong>.
+                <br>El producto dejará de verse en la tienda, pero <strong>NO se eliminará</strong>. Sus datos (precio, inventario e historial) se conservarán y podrás reactivarlo en cualquier momento.
+            </p>
+
+            <div style="background: var(--bg-hover); padding: 16px; border-radius: var(--border-radius-sm); margin-bottom: 24px; text-align: left;">
+                <p style="margin-bottom: 8px;"><strong>ID:</strong> #{{ producto.id_producto }}</p>
+                <p style="margin-bottom: 8px;"><strong>Nombre:</strong> {{ producto.nombre }}</p>
+                <p style="margin-bottom: 8px;"><strong>Categoría:</strong> {{ producto.id_categoria.nombre }}</p>
+                <p style="margin-bottom: 8px;"><strong>Precio:</strong> ${{ producto.precio|floatformat:2 }}</p>
+                <p><strong>Stock:</strong> {{ producto.stock }} {{ producto.unidad_medida }}</p>
+            </div>
+
+            <form method="post">
+                {% csrf_token %}
+                <div style="display: flex; gap: 12px; justify-content: center;">
+                    <a href="{% url 'admin_panel:productos_lista' %}" class="btn btn-secondary">
+                        <i class="fas fa-times"></i> Cancelar
+                    </a>
+                    <button type="submit" class="btn btn-warning" style="color: #fff;">
+                        <i class="fas fa-eye-slash"></i> Desactivar Producto
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

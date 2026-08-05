@@ -1,0 +1,121 @@
+{% extends 'productos/base.html' %}
+
+{% block content %}
+<div class="container py-5">
+    <!-- Encabezado de la página -->
+    <div class="d-flex align-items-center gap-3 mb-5">
+        <span class="p-3 bg-success bg-opacity-10 rounded-4">
+            <i class="fas fa-truck text-success fa-2x"></i>
+        </span>
+        <div>
+            <h2 class="fw-bold text-dark mb-1">Mis Pedidos</h2>
+            <p class="text-muted mb-0">Sigue el estado y revisa el historial de tus compras en Agrivale.</p>
+        </div>
+    </div>
+    
+    {% if pedidos %}
+        <!-- Grid de Pedidos Moderno (Tarjetas en lugar de tablas planas) -->
+        <div class="row g-4">
+            {% for pedido in pedidos %}
+            <div class="col-12">
+                <div class="card border-0 shadow-sm rounded-4 p-3 bg-white position-relative transition-hover">
+                    <div class="card-body">
+                        <div class="row align-items-center g-3">
+                            
+                            <!-- Número de Pedido e Icono -->
+                            <div class="col-md-3">
+                                <span class="text-uppercase font-monospace text-muted small fw-bold d-block mb-1">ID del Pedido</span>
+                                <div class="d-flex align-items-center gap-2">
+                                    <i class="fas fa-receipt text-success opacity-75 fs-5"></i>
+                                    <!-- Usamos .pk para resolver el problema de la clave primaria automáticamente -->
+                                    <span class="fw-bold text-dark fs-5">#{{ pedido.pk }}</span>
+                                </div>
+                            </div>
+                            
+                            <!-- Fecha de Compra -->
+                            <div class="col-md-3">
+                                <span class="text-uppercase font-monospace text-muted small fw-bold d-block mb-1">Fecha Realizada</span>
+                                <span class="text-secondary fw-medium">
+                                    <i class="far fa-calendar-alt text-muted me-1"></i> {{ pedido.fecha|date:"d/m/Y H:i" }}
+                                </span>
+                            </div>
+                            
+                            <!-- Estado del Envío con badges modernos -->
+                            <div class="col-md-2">
+                                <span class="text-uppercase font-monospace text-muted small fw-bold d-block mb-1">Estado</span>
+                                {% if pedido.estado == 'entregado' %}
+                                    <span class="badge bg-success-subtle text-success border border-success-subtle px-3 py-2 rounded-pill fw-bold">
+                                        <i class="fas fa-check-circle me-1"></i> Entregado
+                                    </span>
+                                {% elif pedido.estado == 'cancelado' %}
+                                    <span class="badge bg-danger-subtle text-danger border border-danger-subtle px-3 py-2 rounded-pill fw-bold">
+                                        <i class="fas fa-times-circle me-1"></i> Cancelado
+                                    </span>
+                                {% elif pedido.estado == 'pendiente' %}
+                                    <span class="badge bg-warning-subtle text-warning-emphasis border border-warning-subtle px-3 py-2 rounded-pill fw-bold">
+                                        <i class="fas fa-clock me-1"></i> Pendiente
+                                    </span>
+                                {% else %}
+                                    <span class="badge bg-info-subtle text-info-emphasis border border-info-subtle px-3 py-2 rounded-pill fw-bold">
+                                        <i class="fas fa-shipping-fast me-1"></i> En camino
+                                    </span>
+                                {% endif %}
+                            </div>
+                            
+                            <!-- Total de Compra -->
+                            <div class="col-md-2">
+                                <span class="text-uppercase font-monospace text-muted small fw-bold d-block mb-1">Total</span>
+                                <span class="text-success fw-extrabold fs-5">${{ pedido.total|floatformat:2 }}</span>
+                            </div>
+                            
+                            <!-- Botón de Acción -->
+                            <div class="col-md-2 text-md-end">
+                                <!-- Cambiado 'pedido.id' a 'pedido.pk' para evitar el NoReverseMatch -->
+                                <a href="{% url 'pedidos:detalle_pedido' pedido.pk %}" class="btn btn-success px-4 py-2 rounded-3 fw-bold shadow-sm transition-up">
+                                    <i class="fas fa-eye me-1"></i> Detalles
+                                </a>
+                            </div>
+                            
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        
+    {% else %}
+        <!-- Estado Vacío Ilustrado -->
+        <div class="text-center py-5">
+            <div class="p-4 bg-light rounded-circle d-inline-block mb-4" style="width: 100px; height: 100px;">
+                <i class="fas fa-box-open fa-3x text-muted mt-1"></i>
+            </div>
+            <h4 class="fw-bold text-dark">Aún no tienes pedidos</h4>
+            <p class="text-muted mb-4 max-width-xs mx-auto">Cuando realices compras de nuestras frutas y verduras frescas, aparecerán listadas aquí para su seguimiento.</p>
+            <a href="{% url 'productos:lista' %}" class="btn btn-success px-4 py-3 fw-bold rounded-3 shadow">
+                <i class="fas fa-shopping-basket me-2"></i> Comenzar a comprar
+            </a>
+        </div>
+    {% endif %}
+</div>
+
+<!-- Estilos para animaciones de las tarjetas de Pedidos -->
+<style>
+    .fw-extrabold { font-weight: 800; }
+    .transition-hover {
+        transition: transform 0.25s ease, box-shadow 0.25s ease;
+    }
+    .transition-hover:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 .5rem 1.5rem rgba(0,0,0,.08)!important;
+    }
+    .transition-up {
+        transition: transform 0.2s ease, background-color 0.2s ease;
+    }
+    .transition-up:hover {
+        transform: translateY(-1px);
+    }
+    .max-width-xs {
+        max-width: 380px;
+    }
+</style>
+{% endblock %}

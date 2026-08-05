@@ -1,0 +1,116 @@
+{% extends 'admin_panel/base.html' %}
+{% load static %}
+
+{% block title %}Envíos - Panel Admin{% endblock %}
+
+{% block breadcrumb %}
+    <span class="breadcrumb-item"><a href="{% url 'admin_panel:dashboard' %}">Inicio</a></span>
+    <span class="breadcrumb-item">Envíos</span>
+{% endblock %}
+
+{% block content %}
+<div class="fade-in">
+    <div class="page-header">
+        <div>
+            <h1 class="page-title">Envíos</h1>
+            <p class="page-subtitle">Gestiona los envíos y paquetería</p>
+        </div>
+    </div>
+
+    <!-- Filtros -->
+    <div class="card">
+        <div class="card-body">
+            <form method="get" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; align-items: end;">
+                <div>
+                    <label style="display: block; margin-bottom: 8px; font-weight: 500; color: var(--text-secondary);">Estado</label>
+                    <select name="estado" style="width: 100%; padding: 10px 12px; border: 1px solid var(--border-color); border-radius: var(--border-radius-sm); background: var(--bg-card); color: var(--text-primary);">
+                        <option value="">Todos</option>
+                        {% for estado in estados %}
+                        <option value="{{ estado.0 }}" {% if estado_seleccionado == estado.0 %}selected{% endif %}>
+                            {{ estado.1 }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                
+                <div style="display: flex; gap: 8px;">
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-search"></i> Filtrar
+                    </button>
+                    <a href="{% url 'admin_panel:envios_lista' %}" class="btn btn-secondary">
+                        <i class="fas fa-times"></i> Limpiar
+                    </a>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Tabla de Envíos -->
+    <div class="table-container">
+        <div class="table-header">
+            <h3 class="table-title">
+                Total: {{ envios.paginator.count }} envíos
+            </h3>
+        </div>
+        <div class="table-responsive">
+            <table>
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Pedido</th>
+                        <th>Transportista</th>
+                        <th>Guía</th>
+                        <th>Estado</th>
+                        <th>Fecha Envío</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for envio in envios %}
+                    <tr>
+                        <td><strong>#{{ envio.id_entrega }}</strong></td>
+                        <td>Pedido #{{ envio.id_pedido.id_pedido }}</td>
+                        <td>{{ envio.transportista|default:envio.paqueteria|default:"-" }}</td>
+                        <td>{{ envio.numero_guia|default:"-" }}</td>
+                        <td>
+                            <span class="badge badge-{% if envio.estado == 'entregado' %}success{% elif envio.estado == 'incidente' %}danger{% else %}info{% endif %}">
+                                {{ envio.get_estado_display }}
+                            </span>
+                        </td>
+                        <td>{{ envio.fecha_envio|date:"d/m/Y H:i"|default:"-" }}</td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="6" style="text-align: center; padding: 60px 20px; color: var(--text-muted);">
+                            <i class="fas fa-shipping-fast" style="font-size: 3rem; margin-bottom: 12px; display: block;"></i>
+                            <p>No hay envíos registrados</p>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% if envios.has_other_pages %}
+        <div class="table-footer">
+            <div>
+                Mostrando {{ envios.start_index }} a {{ envios.end_index }} de {{ envios.paginator.count }} registros
+            </div>
+            <div style="display: flex; gap: 8px;">
+                {% if envios.has_previous %}
+                <a href="?page={{ envios.previous_page_number }}{% if estado_seleccionado %}&estado={{ estado_seleccionado }}{% endif %}" 
+                   class="btn btn-sm btn-secondary">
+                    <i class="fas fa-chevron-left"></i> Anterior
+                </a>
+                {% endif %}
+                
+                {% if envios.next_page_number %}
+                <a href="?page={{ envios.next_page_number }}{% if estado_seleccionado %}&estado={{ estado_seleccionado }}{% endif %}" 
+                   class="btn btn-sm btn-secondary">
+                    Siguiente <i class="fas fa-chevron-right"></i>
+                </a>
+                {% endif %}
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

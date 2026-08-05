@@ -1,0 +1,88 @@
+{% extends 'productos/base.html' %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-8 offset-md-2">
+        <div class="card">
+            <div class="card-header bg-success text-white">
+                <h3><i class="fas fa-star"></i> Escribir opinión</h3>
+                <p class="mb-0">Sobre: {{ producto.nombre }}</p>
+            </div>
+            <div class="card-body">
+                <form method="post" enctype="multipart/form-data">
+                    {% csrf_token %}
+                    
+                    <div class="mb-4">
+                        <label class="form-label fw-bold">{{ form.calificacion.label }}</label>
+                        <div class="d-flex flex-wrap gap-2">
+                            {% for radio in form.calificacion %}
+                                <div class="form-check form-check-inline">
+                                    {{ radio.tag }}
+                                    <label class="form-check-label" for="{{ radio.id_for_label }}">
+                                        {{ radio.choice_label }}
+                                    </label>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">{{ form.titulo.label }}</label>
+                        {{ form.titulo }}
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">{{ form.comentario.label }}</label>
+                        {{ form.comentario }}
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">{{ form.imagen_1.label }}</label>
+                        {{ form.imagen_1 }}
+                        <small class="text-muted d-block">Formatos: JPG, PNG (Máx. 5MB)</small>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">{{ form.imagen_2.label }}</label>
+                        {{ form.imagen_2 }}
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">{{ form.imagen_3.label }}</label>
+                        {{ form.imagen_3 }}
+                    </div>
+                    
+                    <button type="submit" class="btn btn-success w-100">
+                        <i class="fas fa-paper-plane"></i> Publicar opinión
+                    </button>
+                </form>
+                <hr>
+                <div class="text-center">
+                    <a href="{% url 'productos:detalle' producto.slug %}" class="btn btn-secondary">
+                        <i class="fas fa-arrow-left"></i> Volver al producto
+                    </a>
+                </div>
+            </div>
+        </div>
+        
+        <div class="alert alert-info mt-3">
+            <i class="fas fa-info-circle"></i>
+            <strong>¿Sabías que?</strong> Tu opinión ayuda a otros compradores a tomar decisiones. 
+            Sé honesto y detallado en tu comentario.
+        </div>
+    </div>
+</div>
+
+<style>
+    /* Estilo para las estrellas en los radio buttons */
+    .form-check-inline {
+        margin-right: 10px;
+    }
+    .form-check-inline input[type="radio"] {
+        margin-right: 5px;
+    }
+    .form-check-inline label {
+        cursor: pointer;
+    }
+</style>
+{% endblock %}

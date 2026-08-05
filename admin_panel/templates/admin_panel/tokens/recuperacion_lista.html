@@ -1,0 +1,93 @@
+{% extends 'admin_panel/base.html' %}
+{% load static %}
+
+{% block title %}Tokens de Recuperación - Panel Admin{% endblock %}
+
+{% block breadcrumb %}
+    <span class="breadcrumb-item"><a href="{% url 'admin_panel:dashboard' %}">Inicio</a></span>
+    <span class="breadcrumb-item">Tokens de Recuperación</span>
+{% endblock %}
+
+{% block content %}
+<div class="fade-in">
+    <div class="page-header">
+        <div>
+            <h1 class="page-title">Tokens de Recuperación</h1>
+            <p class="page-subtitle">Tokens generados para recuperación de contraseña</p>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-body">
+            <form method="get" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; align-items: end;">
+                <div>
+                    <label style="display: block; margin-bottom: 8px; font-weight: 500; color: var(--text-secondary);">Buscar</label>
+                    <input type="text" name="q" value="{{ busqueda }}" placeholder="Usuario, email..."
+                           style="width: 100%; padding: 10px 12px; border: 1px solid var(--border-color); border-radius: var(--border-radius_sm); background: var(--bg-card); color: var(--text-primary);">
+                </div>
+                <div>
+                    <label style="display: block; margin-bottom: 8px; font-weight: 500; color: var(--text-secondary);">Estado</label>
+                    <select name="filtro" style="width: 100%; padding: 10px 12px; border: 1px solid var(--border-color); border-radius: var(--border-radius_sm); background: var(--bg-card); color: var(--text-primary);">
+                        <option value="">Todos</option>
+                        <option value="usados" {% if filtro == 'usados' %}selected{% endif %}>Usados</option>
+                        <option value="no_usados" {% if filtro == 'no_usados' %}selected{% endif %}>No usados</option>
+                    </select>
+                </div>
+                <div style="display: flex; gap: 8px;">
+                    <button type="submit" class="btn btn-primary"><i class="fas fa-search"></i> Buscar</button>
+                    <a href="{% url 'admin_panel:tokens_recuperacion_lista' %}" class="btn btn-secondary"><i class="fas fa-times"></i> Limpiar</a>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div class="table-container">
+        <div class="table-header">
+            <h3 class="table-title">Total: {{ tokens|length }} tokens</h3>
+        </div>
+        <div class="table-responsive">
+            <table>
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Usuario</th>
+                        <th>Token</th>
+                        <th>Usado</th>
+                        <th>Creado</th>
+                        <th>Acciones</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for t in tokens %}
+                    <tr>
+                        <td>#{{ t.id_token }}</td>
+                        <td>{{ t.id_usuario.nombre_completo }} (@{{ t.id_usuario.username }})</td>
+                        <td style="font-family: monospace; font-size: 0.85rem;">{{ t.token|truncatechars:20 }}</td>
+                        <td>
+                            {% if t.usado %}
+                            <span class="badge badge-danger">Usado</span>
+                            {% else %}
+                            <span class="badge badge-success">Vigente</span>
+                            {% endif %}
+                        </td>
+                        <td>{{ t.creado_en|date:"d/m/Y H:i" }}</td>
+                        <td>
+                            <a href="{% url 'admin_panel:token_recuperacion_eliminar' t.id_token %}" class="btn btn-sm btn-danger" title="Eliminar">
+                                <i class="fas fa-trash"></i>
+                            </a>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="6" style="text-align: center; padding: 60px 20px; color: var(--text-muted);">
+                            <i class="fas fa-key" style="font-size: 3rem; margin-bottom: 12px; display: block;"></i>
+                            <p style="font-size: 1.1rem;">No hay tokens de recuperación</p>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

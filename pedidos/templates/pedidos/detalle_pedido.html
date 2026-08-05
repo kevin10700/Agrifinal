@@ -1,0 +1,92 @@
+{% extends 'productos/base.html' %}
+
+{% block content %}
+<div class="container py-4">
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <div><h1 class="h3 mb-1">Pedido #{{ pedido.id_pedido }}</h1><p class="text-muted mb-0">{{ pedido.fecha_pedido|date:"d/m/Y H:i" }}</p></div>
+    <a class="btn btn-outline-secondary" href="{% url 'pedidos:mis_pedidos' %}">Mis pedidos</a>
+  </div>
+  <div class="row g-4">
+    <section class="col-lg-7">
+      <div class="card border-0 shadow-sm mb-4"><div class="card-body">
+        <h2 class="h5">Productos</h2>
+        {% for item in pedido.items.all %}
+          <div class="d-flex align-items-center gap-3 border-top py-3">
+            {% if item.id_producto.imagen_principal %}<img src="{{ item.id_producto.imagen_principal.url }}" alt="{{ item.id_producto.nombre }}" width="64" height="64" class="object-fit-cover rounded">{% endif %}
+            <div class="flex-grow-1"><strong>{{ item.id_producto.nombre }}</strong><br><span class="text-muted">Cantidad: {{ item.cantidad }} · ${{ item.precio_unitario|floatformat:2 }}</span></div>
+            <strong>${{ item.get_subtotal|floatformat:2 }}</strong>
+          </div>
+        {% endfor %}
+        <div class="border-top pt-3 text-end"><div>Subtotal: ${{ pedido.subtotal|floatformat:2 }}</div><div>Envío: ${{ pedido.costo_envio|floatformat:2 }}</div><h3 class="h5">Total: ${{ pedido.total|floatformat:2 }}</h3></div>
+      </div></div>
+      <div class="card border-0 shadow-sm"><div class="card-body"><h2 class="h5">Entrega</h2>
+        <p class="mb-1"><strong>Dirección:</strong> {{ pedido.direccion_entrega }}</p>
+        {% if pedido.id_direccion_envio.referencias %}<p class="mb-1"><strong>Referencias:</strong> {{ pedido.id_direccion_envio.referencias }}</p>{% endif %}
+        {% if pedido.entrega %}
+          <p class="mb-1"><strong>Transportista:</strong> {{ pedido.entrega.transportista|default:"Pendiente" }}</p>
+          <p class="mb-1"><strong>Servicio:</strong> {{ pedido.entrega.servicio|default:"Pendiente" }}</p>
+          <p class="mb-1"><strong>Número de guía:</strong> {{ pedido.entrega.numero_guia|default:"Aún no generado" }}</p>
+          <p class="mb-0"><strong>Tracking:</strong> {{ pedido.entrega.tracking_number|default:"Aún no disponible" }}</p>
+        {% endif %}
+      </div></div>
+    </section>
+    <aside class="col-lg-5">
+      <div class="card border-0 shadow-sm mb-4"><div class="card-body"><h2 class="h5">Estado</h2>
+        <p><strong>Pedido:</strong> {{ pedido.get_estado_display }}</p>
+        <p><strong>Pago:</strong> {{ pedido.get_estado_pago_display }}</p>
+        {% if pedido.entrega %}<p><strong>Envío:</strong> {{ pedido.entrega.get_estado_display }}</p>{% endif %}
+        <p class="small text-muted mb-0">Pendiente de pago → Pago confirmado → Preparando pedido → Enviado / En tránsito → Entregado.</p>
+      </div></div>
+      <div class="card border-0 shadow-sm mb-4"><div class="card-body"><h2 class="h5">Pago</h2>
+        {% if pedido.pago %}<p class="mb-1"><strong>Estado:</strong> {{ pedido.pago.get_estado_display }}</p><p class="mb-0"><strong>Referencia:</strong> {{ pedido.pago.referencia_pago|default:pedido.pago.referencia|default:"Pendiente" }}</p>{% else %}<p class="mb-0">Pago aún no registrado.</p>{% endif %}
+      </div></div>
+      
+      <!-- Botón de cancelación de pedido -->
+      {% if pedido.estado != 'cancelado' and pedido.estado != 'entregado' and pedido.estado_cancelacion == 'sin_solicitud' %}
+      <div class="card border-0 shadow-sm border-danger border-opacity-25">
+        <div class="card-body">
+          <h2 class="h5 text-danger mb-3">
+            <i class="fas fa-exclamation-triangle me-2"></i>Cancelar Pedido
+          </h2>
+          <p class="small text-muted mb-3">
+            ¿Necesitas cancelar este pedido? Puedes solicitar la cancelación y la administración la revisará.
+          </p>
+          <a href="{% url 'pedidos:solicitar_cancelacion' pedido.pk %}" 
+             class="btn btn-outline-danger w-100 py-2 rounded-3 fw-semibold"
+             onclick="return confirm('¿Estás seguro de que deseas solicitar la cancelación de este pedido?')">
+            <i class="fas fa-times-circle me-2"></i>Solicitar Cancelación
+          </a>
+        </div>
+      </div>
+      {% endif %}
+      
+      <!-- Mostrar estado de cancelación si existe -->
+      {% if pedido.estado_cancelacion != 'sin_solicitud' %}
+      <div class="card border-0 shadow-sm mt-4">
+        <div class="card-body">
+          <h2 class="h5 mb-3">
+            <i class="fas fa-info-circle me-2"></i>Estado de Cancelación
+          </h2>
+          {% if pedido.estado_cancelacion == 'solicitado' %}
+            <div class="alert alert-warning border-0 mb-0">
+              <strong>Solicitud enviada</strong><br>
+              <small>Tu solicitud de cancelación está siendo revisada por la administración. Te notificaremos cuando sea procesada.</small>
+            </div>
+          {% elif pedido.estado_cancelacion == 'aprobado' %}
+            <div class="alert alert-success border-0 mb-0">
+              <strong>Cancelación aprobada</strong><br>
+              <small>Tu pedido ha sido cancelado exitosamente.{% if pedido.requiere_reembolso %} Se procesará el reembolso correspondiente.{% endif %}</small>
+            </div>
+          {% elif pedido.estado_cancelacion == 'rechazado' %}
+            <div class="alert alert-danger border-0 mb-0">
+              <strong>Cancelación rechazada</strong><br>
+              <small>{{ pedido.razon_rechazo|default:"Tu solicitud de cancelación no pudo ser procesada." }}</small>
+            </div>
+          {% endif %}
+        </div>
+      </div>
+      {% endif %}
+    </aside>
+  </div>
+</div>
+{% endblock %}

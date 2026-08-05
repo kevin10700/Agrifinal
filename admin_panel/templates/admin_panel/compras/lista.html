@@ -1,0 +1,154 @@
+{% extends 'admin_panel/base.html' %}
+{% load static %}
+
+{% block title %}Compras - Panel Admin{% endblock %}
+
+{% block breadcrumb %}
+    <span class="breadcrumb-item"><a href="{% url 'admin_panel:dashboard' %}">Inicio</a></span>
+    <span class="breadcrumb-item">Compras</span>
+{% endblock %}
+
+{% block content %}
+<div class="fade-in">
+    <div class="page-header">
+        <div>
+            <h1 class="page-title">Compras</h1>
+            <p class="page-subtitle">Gestiona las órdenes de compra a proveedores</p>
+        </div>
+        <a href="{% url 'admin_panel:compra_crear' %}" class="btn btn-primary">
+            <i class="fas fa-plus"></i> Nueva Compra
+        </a>
+    </div>
+
+    <!-- Filtros -->
+    <div class="card">
+        <div class="card-body">
+            <form method="get" class="row g-3 align-items-end">
+                <div class="col-md-4">
+                    <label class="form-label">Buscar</label>
+                    <input type="text" name="q" value="{{ busqueda }}" placeholder="Factura, proveedor..." class="form-control">
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">Estado</label>
+                    <select name="estado" class="form-select">
+                        <option value="">Todos los estados</option>
+                        {% for value, label in estados %}
+                        <option value="{{ value }}" {% if estado_seleccionado == value %}selected{% endif %}>
+                            {{ label }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-2 d-flex align-items-end">
+                    <button type="submit" class="btn btn-primary w-100">
+                        <i class="fas fa-search"></i> Buscar
+                    </button>
+                </div>
+                <div class="col-md-3 d-flex justify-content-end">
+                    <a href="{% url 'admin_panel:compras_lista' %}" class="btn btn-secondary">
+                        <i class="fas fa-times"></i> Limpiar
+                    </a>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Tabla de Compras -->
+    <div class="table-container">
+        <div class="table-header">
+            <h3 class="table-title">
+                Total: {{ compras.paginator.count }} compras
+            </h3>
+            <div class="table-actions">
+                <button class="btn btn-sm btn-secondary" onclick="window.print()">
+                    <i class="fas fa-print"></i> Imprimir
+                </button>
+            </div>
+        </div>
+        <div class="table-responsive">
+            <table>
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>Fecha</th>
+                        <th>Proveedor</th>
+                        <th>Factura</th>
+                        <th>Productos</th>
+                        <th>Total</th>
+                        <th>Estado</th>
+                        <th>Acciones</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for compra in compras %}
+                    <tr>
+                        <td>#{{ compra.id_compra }}</td>
+                        <td>{{ compra.fecha_compra|date:"d/m/Y" }}</td>
+                        <td>
+                            {% if compra.proveedor %}
+                                {{ compra.proveedor.empresa }}
+                            {% else %}
+                                <span class="badge badge-info">Producto Propio</span>
+                            {% endif %}
+                        </td>
+                        <td>{{ compra.numero_factura|default:"—" }}</td>
+                        <td>
+                            {% for item in compra.items.all %}
+                                {{ item.producto.nombre }} ({{ item.cantidad }})
+                                {% if not forloop.last %}<br>{% endif %}
+                            {% empty %}
+                                <span class="text-muted">Sin productos</span>
+                            {% endfor %}
+                        </td>
+                        <td class="fw-bold">${{ compra.total|floatformat:2 }}</td>
+                        <td>
+                            {% if compra.estado == 'recibida' %}
+                                <span class="badge badge-success">Recibida</span>
+                            {% elif compra.estado == 'pendiente' %}
+                                <span class="badge badge-warning">Pendiente</span>
+                            {% elif compra.estado == 'cancelada' %}
+                                <span class="badge badge-danger">Cancelada</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <div class="d-flex gap-2">
+                                <a href="#" class="btn btn-sm btn-primary" title="Ver detalle">
+                                    <i class="fas fa-eye"></i>
+                                </a>
+                            </div>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="8" class="text-center py-4">
+                            <i class="fas fa-shopping-bag" style="font-size: 3rem; color: var(--text-muted); margin-bottom: 12px; display: block;"></i>
+                            <p class="mb-0">No hay compras registradas</p>
+                            <p class="text-muted small">Las órdenes de compra aparecerán aquí</p>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% if compras.has_other_pages %}
+        <div class="table-footer">
+            <div>
+                Mostrando {{ compras.start_index }} a {{ compras.end_index }} de {{ compras.paginator.count }} registros
+            </div>
+            <div class="d-flex gap-2">
+                {% if compras.has_previous %}
+                <a href="?page={{ compras.previous_page_number }}{% if busqueda %}&q={{ busqueda }}{% endif %}{% if estado_seleccionado %}&estado={{ estado_seleccionado }}{% endif %}" class="btn btn-sm btn-secondary">
+                    <i class="fas fa-chevron-left"></i> Anterior
+                </a>
+                {% endif %}
+                {% if compras.has_next %}
+                <a href="?page={{ compras.next_page_number }}{% if busqueda %}&q={{ busqueda }}{% endif %}{% if estado_seleccionado %}&estado={{ estado_seleccionado }}{% endif %}" class="btn btn-sm btn-secondary">
+                    Siguiente <i class="fas fa-chevron-right"></i>
+                </a>
+                {% endif %}
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,15 @@
+{% load static %}
+<div class="kpi-card">
+    <div class="kpi-icon {{ icon_type|default:'primary' }}">
+        <i class="fas {{ icon }}"></i>
+    </div>
+    <div class="kpi-content">
+        <div class="kpi-label">{{ label }}</div>
+        <div class="kpi-value">{{ value }}</div>
+        {% if change %}
+        <div class="kpi-change {{ change_type|default:'positive' }}">
+            <i class="fas fa-arrow-{{ change_type|default:'up' }}"></i> {{ change }}
+        </div>
+        {% endif %}
+    </div>
+</div>

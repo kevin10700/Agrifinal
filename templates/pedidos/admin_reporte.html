@@ -1,0 +1,40 @@
+{% extends "admin/base_site.html" %}
+{% load static %}
+
+{% block title %}Reportes - Administración{% endblock %}
+
+{% block content %}
+<div class="module" style="padding:1rem;">
+    <h1>Reportes</h1>
+    <p>Genera reportes de ventas y productos más vendidos en Excel o PDF por día, semana, mes y año.</p>
+    <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(220px,1fr)); gap:1rem; margin-top:1rem;">
+        <div style="padding:.75rem; border:1px solid #eee; border-radius:.5rem; background:var(--body-bg, #fff);">
+            <h3>Ventas</h3>
+            <ul style="list-style:none; padding:0; margin:0;">
+                <li><a href="{% url 'pedidos:exportar_ventas_pdf' periodo='dia' %}">PDF - Día</a></li>
+                <li><a href="{% url 'pedidos:exportar_ventas_excel' periodo='dia' %}">Excel - Día</a></li>
+                <li><a href="{% url 'pedidos:exportar_ventas_pdf' periodo='semana' %}">PDF - Semana</a></li>
+                <li><a href="{% url 'pedidos:exportar_ventas_excel' periodo='semana' %}">Excel - Semana</a></li>
+                <li><a href="{% url 'pedidos:exportar_ventas_pdf' periodo='mes' %}">PDF - Mes</a></li>
+                <li><a href="{% url 'pedidos:exportar_ventas_excel' periodo='mes' %}">Excel - Mes</a></li>
+                <li><a href="{% url 'pedidos:exportar_ventas_pdf' periodo='anio' %}">PDF - Año</a></li>
+                <li><a href="{% url 'pedidos:exportar_ventas_excel' periodo='anio' %}">Excel - Año</a></li>
+            </ul>
+        </div>
+        <div style="padding:.75rem; border:1px solid #eee; border-radius:.5rem; background:var(--body-bg, #fff);">
+            <h3>Productos más vendidos</h3>
+            <ul style="list-style:none; padding:0; margin:0;">
+                <li><a href="{% url 'pedidos:exportar_productos_mas_vendidos_pdf' periodo='dia' %}">PDF - Día</a></li>
+                <li><a href="{% url 'pedidos:exportar_productos_mas_vendidos' periodo='dia' %}">Excel - Día</a></li>
+                <li><a href="{% url 'pedidos:exportar_productos_mas_vendidos_pdf' periodo='semana' %}">PDF - Semana</a></li>
+                <li><a href="{% url 'pedidos:exportar_productos_mas_vendidos' periodo='semana' %}">Excel - Semana</a></li>
+                <li><a href="{% url 'pedidos:exportar_productos_mas_vendidos_pdf' periodo='mes' %}">PDF - Mes</a></li>
+                <li><a href="{% url 'pedidos:exportar_productos_mas_vendidos' periodo='mes' %}">Excel - Mes</a></li>
+                <li><a href="{% url 'pedidos:exportar_productos_mas_vendidos_pdf' periodo='anio' %}">PDF - Año</a></li>
+                <li><a href="{% url 'pedidos:exportar_productos_mas_vendidos' periodo='anio' %}">Excel - Año</a></li>
+            </ul>
+        </div>
+    </div>
+</div>
+
+{% endblock %}

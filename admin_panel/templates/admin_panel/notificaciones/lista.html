@@ -1,0 +1,103 @@
+{% extends 'admin_panel/base.html' %}
+{% load static %}
+
+{% block title %}Notificaciones - Panel Admin{% endblock %}
+
+{% block breadcrumb %}
+    <span class="breadcrumb-item"><a href="{% url 'admin_panel:dashboard' %}">Inicio</a></span>
+    <span class="breadcrumb-item">Notificaciones</span>
+{% endblock %}
+
+{% block content %}
+<div class="fade-in">
+    <div class="page-header">
+        <div>
+            <h1 class="page-title">Notificaciones del Sistema</h1>
+            <p class="page-subtitle">Historial de notificaciones enviadas a los usuarios</p>
+        </div>
+        <a href="{% url 'admin_panel:notificacion_crear' %}" class="btn btn-primary">
+            <i class="fas fa-plus"></i> Nueva Notificación
+        </a>
+    </div>
+
+    <div class="card">
+        <div class="card-body">
+            <form method="get" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; align-items: end;">
+                <div>
+                    <label style="display: block; margin-bottom: 8px; font-weight: 500; color: var(--text-secondary);">Buscar</label>
+                    <input type="text" name="q" value="{{ busqueda }}" placeholder="Mensaje, usuario..."
+                           style="width: 100%; padding: 10px 12px; border: 1px solid var(--border-color); border-radius: var(--border-radius_sm); background: var(--bg-card); color: var(--text-primary);">
+                </div>
+                <div>
+                    <label style="display: block; margin-bottom: 8px; font-weight: 500; color: var(--text-secondary);">Estado</label>
+                    <select name="filtro" style="width: 100%; padding: 10px 12px; border: 1px solid var(--border-color); border-radius: var(--border-radius_sm); background: var(--bg-card); color: var(--text-primary);">
+                        <option value="">Todas</option>
+                        <option value="leidas" {% if filtro == 'leidas' %}selected{% endif %}>Leídas</option>
+                        <option value="no_leidas" {% if filtro == 'no_leidas' %}selected{% endif %}>No leídas</option>
+                    </select>
+                </div>
+                <div style="display: flex; gap: 8px;">
+                    <button type="submit" class="btn btn-primary"><i class="fas fa-search"></i> Buscar</button>
+                    <a href="{% url 'admin_panel:notificaciones_lista' %}" class="btn btn-secondary"><i class="fas fa-times"></i> Limpiar</a>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div class="table-container">
+        <div class="table-header">
+            <h3 class="table-title">Total: {{ notificaciones|length }} notificaciones</h3>
+        </div>
+        <div class="table-responsive">
+            <table>
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Usuario</th>
+                        <th>Pedido</th>
+                        <th>Mensaje</th>
+                        <th>Estado</th>
+                        <th>Fecha</th>
+                        <th>Acciones</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for n in notificaciones %}
+                    <tr>
+                        <td>#{{ n.id_notificacion }}</td>
+                        <td>{{ n.id_usuario.nombre_completo }}</td>
+                        <td>#{{ n.id_pedido.id_pedido }}</td>
+                        <td>{{ n.mensaje|truncatechars:60 }}</td>
+                        <td>
+                            {% if n.leida %}
+                            <span class="badge badge-success">Leída</span>
+                            {% else %}
+                            <span class="badge badge-warning">No leída</span>
+                            {% endif %}
+                        </td>
+                        <td>{{ n.fecha_creacion|date:"d/m/Y H:i" }}</td>
+                        <td>
+                            <div style="display: flex; gap: 8px;">
+                                <a href="{% url 'admin_panel:notificacion_detalle' n.id_notificacion %}" class="btn btn-sm btn-primary" title="Ver detalle">
+                                    <i class="fas fa-eye"></i>
+                                </a>
+                                <a href="{% url 'admin_panel:notificacion_eliminar' n.id_notificacion %}" class="btn btn-sm btn-danger" title="Eliminar">
+                                    <i class="fas fa-trash"></i>
+                                </a>
+                            </div>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="7" style="text-align: center; padding: 60px 20px; color: var(--text-muted);">
+                            <i class="fas fa-bell" style="font-size: 3rem; margin-bottom: 12px; display: block;"></i>
+                            <p style="font-size: 1.1rem;">No hay notificaciones registradas</p>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

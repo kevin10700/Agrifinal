@@ -1,0 +1,69 @@
+{% extends 'productos/base.html' %}
+
+{% block content %}
+<div class="container">
+    <h2 class="mb-4"><i class="fas fa-clipboard-list"></i> Gestión de cancelaciones</h2>
+    
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="card bg-warning">
+                <div class="card-body text-center">
+                    <h3>{{ total_solicitudes }}</h3>
+                    <p class="mb-0">Solicitudes pendientes</p>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <h4>Solicitudes pendientes</h4>
+    {% if solicitudes %}
+    <div class="table-responsive">
+        <table class="table table-bordered">
+            <thead class="table-warning">
+                <tr>
+                    <th># Pedido</th>
+                    <th>Cliente</th>
+                    <th>Total</th>
+                    <th>Motivo</th>
+                    <th>Fecha</th>
+                    <th>Reembolso</th>
+                    <th>Acción</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for pedido in solicitudes %}
+                <tr>
+                    <td>{{ pedido.id }}</td>
+                    <td>{{ pedido.usuario.username }}</td>
+                    <td>${{ pedido.total|floatformat:2 }}</td>
+                    <td>{{ pedido.motivo_cancelacion|truncatewords:10 }}</td>
+                    <td>{{ pedido.fecha_solicitud_cancelacion|date:"d/m/Y H:i" }}</td>
+                    <td>
+                        {% if pedido.requiere_reembolso %}
+                            <span class="badge bg-success">Sí</span>
+                        {% else %}
+                            <span class="badge bg-secondary">No</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        <a href="{% url 'pedidos:admin_aprobar_cancelacion' pedido.id %}" class="btn btn-sm btn-primary">
+                            <i class="fas fa-check"></i> Gestionar
+                        </a>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <div class="alert alert-success">
+        <i class="fas fa-check-circle"></i> No hay solicitudes de cancelación pendientes.
+    </div>
+    {% endif %}
+    
+    <hr>
+    <a href="{% url 'admin:index' %}" class="btn btn-secondary">
+        <i class="fas fa-arrow-left"></i> Volver al panel de administración
+    </a>
+</div>
+{% endblock %}

@@ -1,0 +1,29 @@
+{% load static %}
+<div class="table-container">
+    <div class="table-header">
+        <h3 class="table-title">{{ title }}</h3>
+        <div class="table-actions">
+            {% block table_actions %}{% endblock %}
+        </div>
+    </div>
+    <div class="table-responsive">
+        <table>
+            <thead>
+                <tr>
+                    {% block table_header %}{% endblock %}
+                </tr>
+            </thead>
+            <tbody>
+                {% block table_body %}{% endblock %}
+            </tbody>
+        </table>
+    </div>
+    {% if show_footer %}
+    <div class="table-footer" style="padding: 12px 20px; border-top: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center;">
+        <div style="color: var(--text-secondary); font-size: 0.9rem;">
+            Mostrando {{ start }} a {{ end }} de {{ total }} registros
+        </div>
+        {% block pagination %}{% endblock %}
+    </div>
+    {% endif %}
+</div>

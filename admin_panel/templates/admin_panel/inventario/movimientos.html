@@ -1,0 +1,150 @@
+{% extends 'admin_panel/base.html' %}
+
+{% block title %}Kardex - Movimientos de Inventario{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="row justify-content-center">
+        <div class="col-lg-12">
+            <!-- Header -->
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <div>
+                    <h4 class="mb-0">📊 Kardex de Inventario</h4>
+                    <p class="text-muted mb-0">Historial completo de movimientos de entrada y salida de productos</p>
+                </div>
+                <a href="{% url 'admin_panel:inventario' %}" class="btn btn-outline-secondary">
+                    ← Volver a Inventario
+                </a>
+            </div>
+
+            <!-- Filtros -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h6 class="mb-0">🔍 Filtros de Búsqueda</h6>
+                </div>
+                <div class="card-body">
+                    <form method="GET" class="row g-3">
+                        <div class="col-md-4">
+                            <label class="form-label">Producto</label>
+                            <input type="text" class="form-control" name="producto" placeholder="Buscar por nombre..." value="{{ request.GET.producto }}">
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label">Tipo de Movimiento</label>
+                            <select class="form-select" name="tipo">
+                                <option value="">-- Todos --</option>
+                                <option value="entrada_compra" {% if request.GET.tipo == 'entrada_compra' %}selected{% endif %}>Entrada por Compra</option>
+                                <option value="entrada_devolucion" {% if request.GET.tipo == 'entrada_devolucion' %}selected{% endif %}>Entrada por Devolución</option>
+                                <option value="salida_venta" {% if request.GET.tipo == 'salida_venta' %}selected{% endif %}>Salida por Venta</option>
+                                <option value="salida_merma" {% if request.GET.tipo == 'salida_merma' %}selected{% endif %}>Salida por Merma</option>
+                                <option value="salida_ajuste" {% if request.GET.tipo == 'salida_ajuste' %}selected{% endif %}>Salida por Ajuste</option>
+                                <option value="entrada_ajuste" {% if request.GET.tipo == 'entrada_ajuste' %}selected{% endif %}>Entrada por Ajuste</option>
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label">Fecha Desde</label>
+                            <input type="date" class="form-control" name="fecha_desde" value="{{ request.GET.fecha_desde }}">
+                        </div>
+                        <div class="col-md-2 d-flex align-items-end">
+                            <button type="submit" class="btn btn-primary w-100">
+                                🔍 Buscar
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Tabla de Movimientos -->
+            <div class="card">
+                <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">📋 Historial de Movimientos</h5>
+                    <span class="badge bg-light text-dark">Total: {{ movimientos|length }} movimientos</span>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Fecha</th>
+                                    <th>Producto</th>
+                                    <th>Tipo</th>
+                                    <th>Cantidad</th>
+                                    <th>Stock Anterior</th>
+                                    <th>Stock Posterior</th>
+                                    <th>Costo Unitario</th>
+                                    <th>Referencia</th>
+                                    <th>Usuario</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for movimiento in movimientos %}
+                                <tr>
+                                    <td>{{ movimiento.fecha_movimiento|date:"d/m/Y H:i" }}</td>
+                                    <td>
+                                        <strong>{{ movimiento.producto.nombre }}</strong>
+                                    </td>
+                                    <td>
+                                        {% if 'entrada' in movimiento.tipo %}
+                                            <span class="badge bg-success">
+                                                {% if movimiento.tipo == 'entrada_compra' %}📦 Compra{% endif %}
+                                                {% if movimiento.tipo == 'entrada_devolucion' %}↩️ Devolución{% endif %}
+                                                {% if movimiento.tipo == 'entrada_ajuste' %}⚙️ Ajuste{% endif %}
+                                            </span>
+                                        {% else %}
+                                            <span class="badge bg-danger">
+                                                {% if movimiento.tipo == 'salida_venta' %}🛒 Venta{% endif %}
+                                                {% if movimiento.tipo == 'salida_merma' %}⚠️ Merma{% endif %}
+                                                {% if movimiento.tipo == 'salida_ajuste' %}⚙️ Ajuste{% endif %}
+                                            </span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <strong class="{% if 'entrada' in movimiento.tipo %}text-success{% else %}text-danger{% endif %}">
+                                            {% if 'entrada' in movimiento.tipo %}+{% endif %}{{ movimiento.cantidad }}
+                                        </strong>
+                                    </td>
+                                    <td>{{ movimiento.stock_anterior }}</td>
+                                    <td>
+                                        <strong>{{ movimiento.stock_posterior }}</strong>
+                                    </td>
+                                    <td>
+                                        {% if movimiento.costo_unitario %}
+                                            ${{ movimiento.costo_unitario|floatformat:2 }}
+                                        {% else %}
+                                            <span class="text-muted">-</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <small class="text-muted">
+                                            {% if movimiento.compra %}
+                                                Compra #{{ movimiento.compra.id_compra }}
+                                            {% elif movimiento.pedido %}
+                                                Pedido #{{ movimiento.pedido.id_pedido }}
+                                            {% else %}
+                                                {{ movimiento.observaciones|truncatechars:30 }}
+                                            {% endif %}
+                                        </small>
+                                    </td>
+                                    <td>
+                                        {% if movimiento.usuario %}
+                                            {{ movimiento.usuario.nombre_completo }}
+                                        {% else %}
+                                            <span class="text-muted">Sistema</span>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="9" class="text-center py-4">
+                                        <p class="text-muted mb-0">No hay movimientos registrados</p>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

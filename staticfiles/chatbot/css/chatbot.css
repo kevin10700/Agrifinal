@@ -1,0 +1,283 @@
+/* ============ ESTILOS DEL CHATBOT AGRIVALE ============ */
+
+#agrivale-chatbot {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  z-index: 9999;
+  font-family: Arial, sans-serif;
+}
+
+#agrivale-chat-toggle {
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  background: #2e7d32;
+  color: white;
+  border: none;
+  font-size: 26px;
+  cursor: pointer;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.3s ease;
+}
+
+#agrivale-chat-toggle:hover {
+  transform: scale(1.05);
+}
+
+#agrivale-chat-panel {
+  position: fixed;
+  bottom: 90px;
+  right: 20px;
+  width: 350px;
+  max-width: 90vw;
+  height: 460px;
+  max-height: 70vh;
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  transition: all 0.3s ease;
+}
+
+#agrivale-chat-panel,
+#agrivale-chat-entrada {
+  box-sizing: border-box;
+}
+
+#agrivale-chat-panel.oculto {
+  display: none;
+}
+
+#agrivale-chat-header {
+  background: #2e7d32;
+  color: white;
+  padding: 12px 15px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-weight: bold;
+}
+
+#agrivale-chat-header button {
+  background: none;
+  border: none;
+  color: white;
+  font-size: 16px;
+  cursor: pointer;
+  transition: opacity 0.3s ease;
+}
+
+#agrivale-chat-header button:hover {
+  opacity: 0.8;
+}
+
+#agrivale-chat-mensajes {
+  flex: 1;
+  padding: 12px;
+  overflow-y: auto;
+  background: #f4f7f4;
+}
+
+.mensaje {
+  margin-bottom: 10px;
+  padding: 8px 12px;
+  border-radius: 10px;
+  max-width: 85%;
+  font-size: 15px;
+  line-height: 1.4;
+}
+
+.mensaje.bot {
+  background: #e2f0e3;
+  color: #1b3d1c;
+  border-bottom-left-radius: 2px;
+}
+
+.mensaje.usuario {
+  background: #2e7d32;
+  color: white;
+  margin-left: auto;
+  border-bottom-right-radius: 2px;
+}
+
+#agrivale-chat-entrada {
+  display: flex;
+  align-items: center;
+  border-top: 1px solid #ddd;
+  padding: 8px;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+#agrivale-chat-atajos {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  padding: 8px 10px;
+  background: #f4f7f4;
+  border-top: 1px solid #dce7dc;
+  justify-content: center;
+}
+
+#agrivale-chat-atajos button {
+  border: 1px solid #2e7d32;
+  border-radius: 16px;
+  padding: 5px 9px;
+  background: white;
+  color: #1b5e20;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+#agrivale-chat-atajos button:hover,
+#agrivale-chat-atajos button:focus { background: #e2f0e3; }
+
+#agrivale-input-texto {
+  flex: 1;
+  border: 1px solid #ccc;
+  border-radius: 20px;
+  padding: 8px 12px;
+  font-size: 14px;
+  outline: none;
+  transition: border-color 0.3s ease;
+}
+
+#agrivale-input-texto:focus {
+  border-color: #2e7d32;
+}
+
+#agrivale-mic-btn,
+#agrivale-enviar-btn {
+  border: none;
+  background: #2e7d32;
+  color: white;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  cursor: pointer;
+  font-size: 16px;
+  flex-shrink: 0;
+  transition: all 0.3s ease;
+}
+
+#agrivale-mic-btn:hover,
+#agrivale-enviar-btn:hover {
+  background: #1b5e20;
+  transform: scale(1.05);
+}
+
+#agrivale-mic-btn.escuchando {
+  background: #c62828;
+  animation: pulso 1s infinite;
+}
+
+/* Modo oscuro */
+body.modo-oscuro #agrivale-chat-panel {
+  background: #2d2d2d;
+  border: 1px solid #404040;
+}
+
+body.modo-oscuro #agrivale-chat-header {
+  background: #2c5e2e;
+}
+
+body.modo-oscuro #agrivale-chat-mensajes {
+  background: #1a1a1a;
+}
+
+body.modo-oscuro .mensaje.bot {
+  background: #3d3d3d;
+  color: #f5f5f5;
+}
+
+body.modo-oscuro .mensaje.usuario {
+  background: #2c5e2e;
+  color: white;
+}
+
+body.modo-oscuro #agrivale-chat-entrada {
+  border-top-color: #404040;
+}
+
+body.modo-oscuro #agrivale-chat-atajos {
+  background: #1a1a1a;
+  border-top-color: #404040;
+}
+
+body.modo-oscuro #agrivale-chat-atajos button {
+  background: #3d3d3d;
+  color: #4ade80;
+  border-color: #4ade80;
+}
+
+body.modo-oscuro #agrivale-chat-atajos button:hover,
+body.modo-oscuro #agrivale-chat-atajos button:focus {
+  background: #4d4d4d;
+}
+
+body.modo-oscuro #agrivale-input-texto {
+  background: #2d2d2d;
+  border-color: #404040;
+  color: #f5f5f5;
+}
+
+body.modo-oscuro #agrivale-input-texto:focus {
+  border-color: #4ade80;
+}
+
+body.modo-oscuro #agrivale-mic-btn,
+body.modo-oscuro #agrivale-enviar-btn {
+  background: #2c5e2e;
+}
+
+body.modo-oscuro #agrivale-mic-btn:hover,
+body.modo-oscuro #agrivale-enviar-btn:hover {
+  background: #4ade80;
+}
+
+@media (max-width: 768px) {
+  #agrivale-chat-panel {
+    right: 12px;
+    bottom: 82px;
+    width: calc(100vw - 24px);
+    max-width: none;
+    height: min(560px, calc(100vh - 100px));
+  }
+  #agrivale-chat-toggle {
+    width: 56px;
+    height: 56px;
+  }
+  #agrivale-chat-mensajes {
+    padding: 10px;
+  }
+  #agrivale-chat-entrada {
+    gap: 8px;
+  }
+  #agrivale-input-texto {
+    min-width: 0;
+  }
+}
+
+@media (max-width: 480px) {
+  #agrivale-chatbot { right: 12px; bottom: 12px; }
+  #agrivale-chat-panel { right: 12px; bottom: 82px; width: calc(100vw - 24px); max-width: none; height: min(500px, calc(100vh - 100px)); }
+  #agrivale-chat-toggle { width: 56px; height: 56px; }
+}
+
+@media (max-width: 480px) and (body.modo-oscuro) {
+  #agrivale-chat-panel { border-color: #404040; }
+}
+
+@keyframes pulso {
+  0% { box-shadow: 0 0 0 0 rgba(198, 40, 40, 0.5); }
+  70% { box-shadow: 0 0 0 10px rgba(198, 40, 40, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(198, 40, 40, 0); }
+}

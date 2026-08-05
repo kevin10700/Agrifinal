@@ -1,0 +1,212 @@
+{% extends 'admin_panel/base.html' %}
+{% load static %}
+
+{% block title %}Inventario - Panel Admin{% endblock %}
+
+{% block breadcrumb %}
+    <span class="breadcrumb-item"><a href="{% url 'admin_panel:dashboard' %}">Inicio</a></span>
+    <span class="breadcrumb-item">Inventario</span>
+{% endblock %}
+
+{% block content %}
+<div class="fade-in">
+    <div class="page-header">
+        <div>
+            <h1 class="page-title">Inventario</h1>
+            <p class="page-subtitle">Gestiona el stock y movimientos de productos</p>
+        </div>
+    </div>
+
+    <!-- Alertas de Stock -->
+    <div class="kpi-grid">
+        <div class="kpi-card">
+            <div class="kpi-icon danger">
+                <i class="fas fa-exclamation-circle"></i>
+            </div>
+            <div class="kpi-content">
+                <div class="kpi-label">Productos Sin Stock</div>
+                <div class="kpi-value">{{ productos_sin_stock.count }}</div>
+            </div>
+        </div>
+
+        <div class="kpi-card">
+            <div class="kpi-icon warning">
+                <i class="fas fa-exclamation-triangle"></i>
+            </div>
+            <div class="kpi-content">
+                <div class="kpi-label">Stock Bajo (≤10)</div>
+                <div class="kpi-value">{{ productos_bajo_stock.count }}</div>
+            </div>
+        </div>
+
+        <div class="kpi-card">
+            <div class="kpi-icon success">
+                <i class="fas fa-boxes"></i>
+            </div>
+            <div class="kpi-content">
+                <div class="kpi-label">Total Productos</div>
+                <div class="kpi-value">{{ total_productos }}</div>
+            </div>
+        </div>
+
+        <div class="kpi-card">
+            <div class="kpi-icon info">
+                <i class="fas fa-dollar-sign"></i>
+            </div>
+            <div class="kpi-content">
+                <div class="kpi-label">Valor del Inventario</div>
+                <div class="kpi-value">${{ valor_inventario|floatformat:2 }}</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Productos con Stock Bajo -->
+    {% if productos_bajo_stock %}
+    <div class="card" style="margin-bottom: 24px; border-left: 4px solid var(--warning);">
+        <div class="card-header">
+            <h3 class="card-title">
+                <i class="fas fa-exclamation-triangle" style="color: var(--warning); margin-right: 8px;"></i>
+                Productos con Stock Bajo
+            </h3>
+        </div>
+        <div class="card-body" style="padding: 0;">
+            <div class="table-responsive">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Producto</th>
+                            <th>Categoría</th>
+                            <th>Stock Actual</th>
+                            <th>Acción</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for producto in productos_bajo_stock %}
+                        <tr>
+                            <td>
+                                <div style="display: flex; align-items: center; gap: 12px;">
+                                    {% if producto.imagen_principal %}
+                                    <img src="{{ producto.imagen_principal.url }}" alt="{{ producto.nombre }}" 
+                                         style="width: 40px; height: 40px; border-radius: 8px; object-fit: cover;">
+                                    {% else %}
+                                    <div style="width: 40px; height: 40px; border-radius: 8px; background: var(--bg-hover); display: flex; align-items: center; justify-content: center;">
+                                        <i class="fas fa-box" style="color: var(--text-muted);"></i>
+                                    </div>
+                                    {% endif %}
+                                    <div>
+                                        <div style="font-weight: 600; color: var(--text-primary);">{{ producto.nombre }}</div>
+                                    </div>
+                                </div>
+                            </td>
+                            <td>{{ producto.id_categoria.nombre }}</td>
+                            <td>
+                                <span class="badge badge-{% if producto.stock == 0 %}danger{% else %}warning{% endif %}">
+                                    {{ producto.stock }} {{ producto.unidad_medida }}
+                                </span>
+                            </td>
+                            <td>
+                                <a href="{% url 'admin_panel:producto_editar' producto.id_producto %}" class="btn btn-sm btn-primary">
+                                    <i class="fas fa-edit"></i> Actualizar Stock
+                                </a>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Tabla de Inventario Completo -->
+    <div class="table-container">
+        <div class="table-header">
+            <h3 class="table-title">
+                Inventario Completo
+            </h3>
+            <div class="table-actions">
+                <button class="btn btn-sm btn-secondary" onclick="window.print()">
+                    <i class="fas fa-print"></i> Imprimir
+                </button>
+            </div>
+        </div>
+        <div class="table-responsive">
+            <table>
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Producto</th>
+                        <th>Categoría</th>
+                        <th>Stock</th>
+                        <th>Precio</th>
+                        <th>Valor Total</th>
+                        <th>Estado</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for producto in productos %}
+                    <tr>
+                        <td>#{{ producto.id_producto }}</td>
+                        <td>
+                            <div style="display: flex; align-items: center; gap: 12px;">
+                                {% if producto.imagen_principal %}
+                                <img src="{{ producto.imagen_principal.url }}" alt="{{ producto.nombre }}" 
+                                     style="width: 40px; height: 40px; border-radius: 8px; object-fit: cover;">
+                                {% else %}
+                                <div style="width: 40px; height: 40px; border-radius: 8px; background: var(--bg-hover); display: flex; align-items: center; justify-content: center;">
+                                    <i class="fas fa-box" style="color: var(--text-muted);"></i>
+                                </div>
+                                {% endif %}
+                                <div>
+                                    <div style="font-weight: 600; color: var(--text-primary);">{{ producto.nombre }}</div>
+                                </div>
+                            </div>
+                        </td>
+                        <td>{{ producto.id_categoria.nombre }}</td>
+                        <td>
+                            <span class="badge badge-{% if producto.stock == 0 %}danger{% elif producto.stock <= 10 %}warning{% else %}success{% endif %}">
+                                {{ producto.stock }} {{ producto.unidad_medida }}
+                            </span>
+                        </td>
+                        <td>${{ producto.precio|floatformat:2 }}</td>
+                        <td style="font-weight: 600;">${{ producto.precio|floatformat:2 }}</td>
+                        <td>
+                            <span class="badge badge-success">
+                                <i class="fas fa-check-circle"></i> Activo
+                            </span>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="7" style="text-align: center; padding: 60px 20px; color: var(--text-muted);">
+                            <i class="fas fa-box-open" style="font-size: 3rem; margin-bottom: 12px; display: block;"></i>
+                            <p style="font-size: 1.1rem; margin-bottom: 8px;">No hay productos en inventario</p>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% if productos.has_other_pages %}
+        <div class="table-footer">
+            <div>
+                Mostrando {{ productos.start_index }} a {{ productos.end_index }} de {{ productos.paginator.count }} registros
+            </div>
+            <div style="display: flex; gap: 8px;">
+                {% if productos.has_previous %}
+                <a href="?page={{ productos.previous_page_number }}" class="btn btn-sm btn-secondary">
+                    <i class="fas fa-chevron-left"></i> Anterior
+                </a>
+                {% endif %}
+                
+                {% if productos.has_next %}
+                <a href="?page={{ productos.next_page_number }}" class="btn btn-sm btn-secondary">
+                    Siguiente <i class="fas fa-chevron-right"></i>
+                </a>
+                {% endif %}
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

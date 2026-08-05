@@ -1,0 +1,85 @@
+{% extends 'productos/base.html' %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row">
+        <div class="col-md-6 offset-md-3">
+            <!-- Tarjeta estilizada con bordes redondeados y sombra suave -->
+            <div class="card border-0 shadow-sm rounded-4 bg-white overflow-hidden">
+                
+                <!-- Encabezado con diseño premium en rojo suave -->
+                <div class="card-header border-0 bg-danger bg-opacity-10 text-danger py-4 px-4 text-center">
+                    <span class="p-3 bg-danger bg-opacity-10 rounded-circle d-inline-block mb-2">
+                        <i class="fas fa-times-circle fa-2x"></i>
+                    </span>
+                    <h3 class="fw-bold mb-1">Solicitar cancelación</h3>
+                    <!-- Corregido pedido.id a pedido.pk -->
+                    <p class="text-uppercase font-monospace text-muted small fw-bold mb-0">Pedido #{{ pedido.pk }}</p>
+                </div>
+                
+                <div class="card-body p-4">
+                    <!-- Alerta nativa estilizada -->
+                    <div class="alert alert-warning border-0 shadow-sm d-flex gap-3 rounded-3 mb-4">
+                        <i class="fas fa-exclamation-triangle fs-4 text-warning mt-1"></i>
+                        <div>
+                            <strong class="d-block mb-1">Información Importante</strong>
+                            <span class="small text-muted d-block">La cancelación queda sujeta a la aprobación de la administración. Una vez autorizada, se procesará el reembolso correspondiente si tu pago ya fue acreditado.</span>
+                        </div>
+                    </div>
+                    
+                    <!-- Formulario de solicitud -->
+                    <form method="post">
+                        {% csrf_token %}
+                        
+                        <div class="mb-4">
+                            <label class="form-label text-uppercase font-monospace text-muted small fw-bold mb-2">
+                                Motivo de la cancelación <span class="text-danger">*</span>
+                            </label>
+                            <textarea name="motivo" class="form-control border-2 border-light-subtle rounded-3 py-2 px-3 shadow-none" rows="4" required
+                                      placeholder="Por favor, detalla brevemente los motivos de la cancelación..."></textarea>
+                        </div>
+                        
+                        <!-- Caja interactiva para el Reembolso -->
+                        <div class="p-3 bg-light rounded-3 mb-4 border border-light-subtle">
+                            <div class="form-check form-switch d-flex align-items-center gap-2 ps-0">
+                                <input type="checkbox" name="requiere_reembolso" class="form-check-input ms-0" id="reembolso" style="cursor: pointer; width: 2.5em; height: 1.25em;">
+                                <label class="form-check-label fw-bold text-dark mb-0 ms-2" for="reembolso" style="cursor: pointer;">
+                                    <i class="fas fa-money-bill-wave text-success me-1"></i> Solicitar reembolso financiero
+                                </label>
+                            </div>
+                            <small class="d-block text-muted mt-2 ps-1">
+                                Activa esta casilla únicamente si ya realizaste el pago de tus productos a través de transferencia o pasarela digital.
+                            </small>
+                        </div>
+                        
+                        <!-- Botón principal de envío -->
+                        <button type="submit" class="btn btn-danger w-100 py-2.5 rounded-3 fw-bold shadow-sm mb-3 transition-up">
+                            <i class="fas fa-paper-plane me-2"></i> Enviar solicitud de cancelación
+                        </button>
+                    </form>
+                    
+                    <hr class="text-muted opacity-25 my-4">
+                    
+                    <!-- Corregido pedido.id a pedido.pk para erradicar el NoReverseMatch -->
+                    <a href="{% url 'pedidos:detalle_pedido' pedido.pk %}" class="btn btn-outline-secondary w-100 py-2 rounded-3 border-2 fw-semibold d-flex align-items-center justify-content-center gap-2 transition-up">
+                        <i class="fas fa-arrow-left small"></i> Cancelar y volver al detalle
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .transition-up {
+        transition: transform 0.2s ease, background-color 0.2s ease;
+    }
+    .transition-up:hover {
+        transform: translateY(-1px);
+    }
+    .form-control:focus {
+        border-color: #dc3545 !important;
+        box-shadow: 0 0 0 0.25rem rgba(220, 53, 69, 0.15) !important;
+    }
+</style>
+{% endblock %}

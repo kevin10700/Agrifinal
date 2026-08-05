@@ -1,0 +1,172 @@
+{% extends 'admin_panel/base.html' %}
+{% load static %}
+
+{% block title %}Clientes - Panel Admin{% endblock %}
+
+{% block breadcrumb %}
+    <span class="breadcrumb-item"><a href="{% url 'admin_panel:dashboard' %}">Inicio</a></span>
+    <span class="breadcrumb-item">Clientes</span>
+{% endblock %}
+
+{% block content %}
+<div class="fade-in">
+    <div class="page-header">
+        <div>
+            <h1 class="page-title">Clientes</h1>
+            <p class="page-subtitle">Gestiona los clientes registrados</p>
+        </div>
+    </div>
+
+    <!-- Filtros -->
+    <div class="card">
+        <div class="card-body">
+            <form method="get" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; align-items: end;">
+                <div>
+                    <label style="display: block; margin-bottom: 8px; font-weight: 500; color: var(--text-secondary);">Buscar</label>
+                    <input type="text" name="q" value="{{ busqueda }}" placeholder="Nombre, email..." 
+                           style="width: 100%; padding: 10px 12px; border: 1px solid var(--border-color); border-radius: var(--border-radius-sm); background: var(--bg-card); color: var(--text-primary);">
+                </div>
+                
+                <div>
+                    <label style="display: block; margin-bottom: 8px; font-weight: 500; color: var(--text-secondary);">Ordenar por</label>
+                    <select name="orden" style="width: 100%; padding: 10px 12px; border: 1px solid var(--border-color); border-radius: var(--border-radius-sm); background: var(--bg-card); color: var(--text-primary);">
+                        <option value="-fecha_creacion">Más recientes</option>
+                        <option value="fecha_creacion">Más antiguos</option>
+                        <option value="nombre">Nombre A-Z</option>
+                    </select>
+                </div>
+                
+                <div style="display: flex; gap: 8px;">
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-search"></i> Buscar
+                    </button>
+                    <a href="{% url 'admin_panel:clientes_lista' %}" class="btn btn-secondary">
+                        <i class="fas fa-times"></i> Limpiar
+                    </a>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Tabla de Clientes -->
+    <div class="table-container">
+        <div class="table-header">
+            <h3 class="table-title">
+                Total: {{ clientes.paginator.count }} clientes
+            </h3>
+            <div class="table-actions">
+                <button class="btn btn-sm btn-secondary" onclick="window.print()">
+                    <i class="fas fa-print"></i> Imprimir
+                </button>
+            </div>
+        </div>
+        <div class="table-responsive">
+            <table>
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Cliente</th>
+                        <th>Email</th>
+                        <th>Teléfono</th>
+                        <th>Estado</th>
+                        <th>Acciones</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for cliente in clientes %}
+                    <tr>
+                        <td>#{{ cliente.id_usuario }}</td>
+                        <td>
+                            <div style="display: flex; align-items: center; gap: 12px;">
+                                {% if cliente.foto_perfil %}
+                                <img src="{{ cliente.foto_perfil.url }}" alt="{{ cliente.nombre_completo }}" 
+                                     style="width: 40px; height: 40px; border-radius: 50%; object-fit: cover;">
+                                {% else %}
+                                <div style="width: 40px; height: 40px; border-radius: 50%; background: var(--primary-bg); display: flex; align-items: center; justify-content: center; color: var(--primary-color); font-weight: bold;">
+                                    {{ cliente.nombre|first|upper }}
+                                </div>
+                                {% endif %}
+                                <div>
+                                    <div style="font-weight: 600; color: var(--text-primary);">{{ cliente.nombre_completo }}</div>
+                                </div>
+                            </div>
+                        </td>
+                        <td>{{ cliente.email }}</td>
+                        <td>{{ cliente.telefono|default:"-" }}</td>
+                        
+                        <!-- 🔥 COLUMNA DE ESTADO (Corregida con is_active) -->
+                        <td>
+                            {% if cliente.is_active %}
+                                <span style="color: #155724; font-weight: bold; background: #d4edda; padding: 2px 8px; border-radius: 12px; font-size: 0.8rem;">
+                                    <i class="fas fa-check-circle"></i> Activo
+                                </span>
+                            {% else %}
+                                <span style="color: #6c757d; font-weight: bold; background: #e2e3e5; padding: 2px 8px; border-radius: 12px; font-size: 0.8rem;">
+                                    <i class="fas fa-ban"></i> Inactivo
+                                </span>
+                            {% endif %}
+                        </td>
+
+                        <!-- 🔥 ACCIONES DINÁMICAS (Corregidas con is_active) -->
+                        <td>
+                            <div style="display: flex; gap: 8px;">
+                                <a href="{% url 'admin_panel:cliente_detalle' cliente.id_usuario %}" class="btn btn-sm btn-primary" title="Ver detalle">
+                                    <i class="fas fa-eye"></i>
+                                </a>
+
+                                {% if cliente.is_active %}
+                                    <!-- Si está Activo: Botón Rojo para desactivar -->
+                                    <form method="POST" action="{% url 'admin_panel:cliente_eliminar' cliente.id_usuario %}" style="display: inline;">
+                                        {% csrf_token %}
+                                        <button type="submit" class="btn btn-sm btn-danger" title="Desactivar" onclick="return confirm('¿Desactivar este cliente?');">
+                                            <i class="fas fa-eye-slash"></i>
+                                        </button>
+                                    </form>
+                                {% else %}
+                                    <!-- Si está Inactivo: Botón Verde para reactivar -->
+                                    <form method="POST" action="{% url 'admin_panel:cliente_eliminar' cliente.id_usuario %}" style="display: inline;">
+                                        {% csrf_token %}
+                                        <button type="submit" class="btn btn-sm btn-success" title="Reactivar">
+                                            <i class="fas fa-eye"></i>
+                                        </button>
+                                    </form>
+                                {% endif %}
+                            </div>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="6" style="text-align: center; padding: 60px 20px; color: var(--text-muted);">
+                            <i class="fas fa-users" style="font-size: 3rem; margin-bottom: 12px; display: block;"></i>
+                            <p style="font-size: 1.1rem; margin-bottom: 8px;">No hay clientes registrados</p>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% if clientes.has_other_pages %}
+        <div class="table-footer">
+            <div>
+                Mostrando {{ clientes.start_index }} a {{ clientes.end_index }} de {{ clientes.paginator.count }} registros
+            </div>
+            <div style="display: flex; gap: 8px;">
+                {% if clientes.has_previous %}
+                <a href="?page={{ clientes.previous_page_number }}{% if busqueda %}&q={{ busqueda }}{% endif %}" 
+                   class="btn btn-sm btn-secondary">
+                    <i class="fas fa-chevron-left"></i> Anterior
+                </a>
+                {% endif %}
+                
+                {% if clientes.has_next %}
+                <a href="?page={{ clientes.next_page_number }}{% if busqueda %}&q={{ busqueda }}{% endif %}" 
+                    class="btn btn-sm btn-secondary">
+                    Siguiente <i class="fas fa-chevron-right"></i>
+                </a>
+                {% endif %}
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

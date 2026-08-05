@@ -1,0 +1,18 @@
+<header class=" "header>  
+  <div class=header-left>  
+    <button class=mobile-menu-toggle id=mobileMenuToggle>  
+      <i class=fas" "fa-bars></i>  
+    </button>  
+    <nav class=breadcrumb>  
+      <a href=" -encodedCommand JQAlACAAdQByAGwAIAAnAGEAZABtAGkAbgBfAHAAYQBuAGUAbAA6AGQAYQBzAGgAYgBvAGEAcgBkACcAIAAlACUA ">Inicio</a>  
+      {%% block breadcrumb %%}{%% endblock %%}  
+    </nav>  
+  </div>  
+  <div class=" "header-right>  
+    <div class=global-search>  
+      <i class=fas" "fa-search></i>  
+      <input type=text placeholder=Buscar... id=globalSearch>  
+    </div>  
+    <button class=header-icon-btn id=themeToggle title=Cambiar" "tema><i class=fas" "fa-moon></i></button>  
+  </div>  
+</header>  

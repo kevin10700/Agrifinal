@@ -1,0 +1,63 @@
+{% extends 'productos/base.html' %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-8 offset-md-2">
+        <div class="card">
+            <div class="card-header bg-warning">
+                <h3><i class="fas fa-gavel"></i> Gestionar cancelación</h3>
+                <p class="mb-0">Pedido #{{ pedido.id }} - {{ pedido.usuario.username }}</p>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <h6>Información del pedido</h6>
+                        <ul class="list-unstyled">
+                            <li><strong>Total:</strong> ${{ pedido.total|floatformat:2 }}</li>
+                            <li><strong>Estado actual:</strong> {{ pedido.get_estado_display }}</li>
+                            <li><strong>Fecha:</strong> {{ pedido.fecha|date:"d/m/Y H:i" }}</li>
+                        </ul>
+                    </div>
+                    <div class="col-md-6">
+                        <h6>Motivo de cancelación</h6>
+                        <div class="alert alert-info">
+                            {{ pedido.motivo_cancelacion }}
+                        </div>
+                        {% if pedido.requiere_reembolso %}
+                        <span class="badge bg-success">💰 Solicita reembolso</span>
+                        {% endif %}
+                    </div>
+                </div>
+                
+                <hr>
+                
+                <form method="post">
+                    {% csrf_token %}
+                    
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Decisión</label>
+                        <div class="d-grid gap-2">
+                            <button type="submit" name="accion" value="aprobar" class="btn btn-success">
+                                <i class="fas fa-check-circle"></i> Aprobar cancelación
+                            </button>
+                            <button type="submit" name="accion" value="rechazar" class="btn btn-danger">
+                                <i class="fas fa-times-circle"></i> Rechazar cancelación
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Motivo del rechazo (si aplica)</label>
+                        <textarea name="razon" class="form-control" rows="3" placeholder="Explica por qué se rechaza la cancelación..."></textarea>
+                    </div>
+                </form>
+                
+                <hr>
+                <a href="{% url 'pedidos:admin_cancelaciones' %}" class="btn btn-secondary">
+                    <i class="fas fa-arrow-left"></i> Volver al panel de cancelaciones
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

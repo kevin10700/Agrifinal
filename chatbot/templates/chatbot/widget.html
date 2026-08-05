@@ -1,0 +1,42 @@
+{% load static %}
+<!-- ============ WIDGET DEL CHATBOT AGRIVALE ============ -->
+<link rel="stylesheet" href="{% static 'chatbot/css/chatbot.css' %}">
+
+<div id="agrivale-chatbot">
+  <button id="agrivale-chat-toggle" title="Abrir ayuda" aria-label="Abrir asistente Agrivale" aria-expanded="false">💬</button>
+
+  <div id="agrivale-chat-panel" class="oculto">
+    <div id="agrivale-chat-header">
+      <span>Asistente Agrivale</span>
+      <div class="header-buttons">
+        <button id="agrivale-chat-minimizar" class="header-btn" aria-label="Minimizar asistente" title="Minimizar">─</button>
+        <button id="agrivale-chat-cerrar" class="header-btn" aria-label="Cerrar asistente" title="Cerrar">✕</button>
+      </div>
+    </div>
+
+    <div id="agrivale-chat-mensajes">
+      <div class="mensaje bot">
+        ¡Hola! Te ayudo a comprar paso a paso. Pregunta por un producto, su precio, ofertas, el carrito o cómo registrarte. También puedes hablar con el micrófono.
+      </div>
+    </div>
+
+    <div id="agrivale-chat-atajos" aria-label="Ayudas rápidas">
+      <button type="button" data-mensaje="Quiero ver los productos">Ver productos</button>
+      <button type="button" data-mensaje="Quiero saber los precios">Ver precios</button>
+      <button type="button" data-mensaje="Quiero registrarme" onclick="window.location.href='{% url 'usuarios:registro' %}';return false;">Registrarme</button>
+      <button type="button" data-mensaje="Quiero ver mi carrito">Mi carrito</button>
+    </div>
+
+    <div id="agrivale-chat-entrada">
+      <button id="agrivale-mic-btn" title="Hablar" aria-label="Hablar">🎤</button>
+      <input type="text" id="agrivale-input-texto" placeholder="Escribe o habla..." autocomplete="off">
+      <button id="agrivale-enviar-btn" title="Enviar" aria-label="Enviar mensaje">➤</button>
+    </div>
+  </div>
+</div>
+
+<script>
+  window.AGRIVALE_CHAT_URL = "{% url 'chatbot_mensaje' %}";
+  window.AGRIVALE_CSRF_TOKEN = "{{ csrf_token }}";
+</script>
+<script src="{% static 'chatbot/js/chatbot.js' %}"></script>

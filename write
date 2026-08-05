@@ -1,0 +1,450 @@
+import os
+
+# Header HTML
+header_content = """<header class="header">
+    <div class="header-left">
+        <button class="mobile-menu-toggle" id="mobileMenuToggle">
+            <i class="fas fa-bars"></i>
+        </button>
+        
+        <nav class="breadcrumb">
+            <a href="{% url 'admin_panel:dashboard' %}">Inicio</a>
+            {% block breadcrumb %}{% endblock %}
+        </nav>
+    </div>
+    
+    <div class="header-right">
+        <!-- Buscador Global -->
+        <div class="global-search">
+            <i class="fas fa-search"></i>
+            <input type="text" placeholder="Buscar..." id="globalSearch">
+        </div>
+        
+        <!-- Notificaciones con alertas reales -->
+        <div class="header-notifications" id="headerNotifications" style="position: relative;">
+            <a href="{% url 'admin_panel:dashboard' %}" class="header-icon-btn" title="Notificaciones" id="notifToggle">
+                <i class="fas fa-bell"></i>
+                {% if alertas_total > 0 %}
+                <span class="badge" style="background: var(--danger);">{{ alertas_total }}</span>
+                {% endif %}
+            </a>
+            {% if alertas_total > 0 %}
+            <div class="notif-dropdown" id="notifDropdown" style="display: none; position: absolute; right: 0; top: 100%; margin-top: 8px; width: 320px; max-height: 400px; overflow-y: auto; background: var(--bg-card); border: 1px solid var(--border-color); border-radius: var(--border-radius-sm); box-shadow: var(--shadow-lg); z-index: 1000;">
+                <div style="padding: 12px 16px; border-bottom: 1px solid var(--border-color); font-weight: 600; color: var(--text-primary); display: flex; justify-content: space-between; align-items: center;">
+                    <span>Alertas</span>
+                    <span style="font-size: 0.8rem; color: var(--text-muted);">{{ alertas_total }} pendientes</span>
+                </div>
+                {% if alertas.productos_sin_stock > 0 %}
+                <a href="{% url 'admin_panel:inventario' %}" style="display: flex; align-items: center; gap: 12px; padding: 12px 16px; text-decoration: none; border-bottom: 1px solid var(--border-color); color: var(--text-primary);">
+                    <i class="fas fa-exclamation-circle" style="color: var(--danger); font-size: 1.2rem;"></i>
+                    <div>
+                        <div style="font-weight: 500; font-size: 0.9rem;">Productos sin stock</div>
+                        <div style="font-size: 0.8rem; color: var(--text-muted);">{{ alertas.productos_sin_stock }} producto(s)</div>
+                    </div>
+                </a>
+                {% endif %}
+                {% if alertas.productos_bajo_stock > 0 %}
+                <a href="{% url 'admin_panel:inventario' %}" style="display: flex; align-items: center; gap: 12px; padding: 12px 16px; text-decoration: none; border-bottom: 1px solid var(--border-color); color: var(--text-primary);">
+                    <i class="fas fa-exclamation-triangle" style="color: var(--warning); font-size: 1.2rem;"></i>
+                    <div>
+                        <div style="font-weight: 500; font-size: 0.9rem;">Bajo stock</div>
+                        <div style="font-size: 0.8rem; color: var(--text-muted);">{{ alertas.productos_bajo_stock }} producto(s)</div>
+                    </div>
+                </a>
+                {% endif %}
+                {% if alertas.pedidos_pendientes > 0 %}
+                <a href="{% url 'admin_panel:pedidos_lista' %}" style="display: flex; align-items: center; gap: 12px; padding: 12px 16px; text-decoration: none; border-bottom: 1px solid var(--border-color); color: var(--text-primary);">
+                    <i class="fas fa-clock" style="color: var(--info); font-size: 1.2rem;"></i>
+                    <div>
+                        <div style="font-weight: 500; font-size: 0.9rem;">Pedidos pendientes</div>
+                        <div style="font-size: 0.8rem; color: var(--text-muted);">{{ alertas.pedidos_pendientes }} pedido(s)</div>
+                    </div>
+                </a>
+                {% endif %}
+                {% if alertas.pedidos_cancelados > 0 %}
+                <a href="{% url 'admin_panel:pedidos_lista' %}" style="display: flex; align-items: center; gap: 12px; padding: 12px 16px; text-decoration: none; color: var(--text-primary);">
+                    <i class="fas fa-times-circle" style="color: var(--danger); font-size: 1.2rem;"></i>
+                    <div>
+                        <div style="font-weight: 500; font-size: 0.9rem;">Pedidos cancelados</div>
+                        <div style="font-size: 0.8rem; color: var(--text-muted);">{{ alertas.pedidos_cancelados }} pedido(s)</div>
+                    </div>
+                </a>
+                {% endif %}
+            </div>
+            {% endif %}
+        </div>
+        
+        <!-- Toggle de Tema -->
+        <button class="header-icon-btn" id="themeToggle" title="Cambiar tema">
+            <i class="fas fa-moon"></i>
+        </button>
+        
+        <!-- Perfil de Usuario -->
+        <div class="user-profile" id="userProfile">
+            {% if user.foto_perfil %}
+                <img src="{{ user.foto_perfil.url }}" alt="{{ user.nombre_completo }}" class="user-avatar">
+            {% else %}
+                <div class="user-avatar" style="background: var(--primary-color); color: white; display: flex; align-items: center; justify-content: center; font-weight: bold;">
+                    {{ user.nombre|first|upper }}
+                </div>
+            {% endif %}
+            <div class="user-info">
+                <span class="user-name">{{ user.nombre_completo }}</span>
+                <span class="user-role">Administrador</span>
+            </div>
+            <i class="fas fa-chevron-down" style="font-size: 0.8rem; color: var(--text-muted);"></i>
+        </div>
+        
+        <!-- Cerrar Sesion -->
+        <a href="{% url 'usuarios:logout' %}" class="header-icon-btn" title="Cerrar sesion">
+            <i class="fas fa-sign-out-alt"></i>
+        </a>
+    </div>
+</header>
+
+<script>
+document.addEventListener("DOMContentLoaded", () => {
+    const notifToggle = document.getElementById("notifToggle");
+    const notifDropdown = document.getElementById("notifDropdown");
+    if (notifToggle && notifDropdown) {
+        notifToggle.addEventListener("click", (e) => {
+            e.preventDefault();
+            notifDropdown.style.display = notifDropdown.style.display === "none" ? "block" : "none";
+        });
+        document.addEventListener("click", (e) => {
+            if (!notifToggle.contains(e.target) && !notifDropdown.contains(e.target)) {
+                notifDropdown.style.display = "none";
+            }
+        });
+    }
+});
+</script>
+"""
+
+# Configuracion HTML
+config_content = """{% extends 'admin_panel/base.html' %}
+{% load static %}
+
+{% block title %}Configuracion - Panel Admin{% endblock %}
+
+{% block breadcrumb %}
+    <span class="breadcrumb-item"><a href="{% url 'admin_panel:dashboard' %}">Inicio</a></span>
+    <span class="breadcrumb-item">Configuracion</span>
+{% endblock %}
+
+{% block content %}
+<div class="fade-in">
+    <div class="page-header">
+        <div>
+            <h1 class="page-title">Configuracion</h1>
+            <p class="page-subtitle">Configura los parametros del sistema</p>
+        </div>
+    </div>
+
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(340px, 1fr)); gap: 24px;">
+        <!-- Informacion del Negocio -->
+        <div class="card">
+            <div class="card-header">
+                <h3 class="card-title"><i class="fas fa-store" style="color: var(--primary-color);"></i> Informacion del Negocio</h3>
+            </div>
+            <div class="card-body">
+                <div style="display: grid; gap: 16px;">
+                    <div>
+                        <label style="display: block; margin-bottom: 8px; font-weight: 500; color: var(--text-secondary);">Nombre del negocio</label>
+                        <input type="text" value="AGRIVALE" readonly style="width: 100%; padding: 10px 12px; border: 1px solid var(--border-color); border-radius: var(--border-radius-sm); background: var(--bg-body); color: var(--text-primary);">
+                    </div>
+                    <div>
+                        <label style="display: block; margin-bottom: 8px; font-weight: 500; color: var(--text-secondary);">Moneda</label>
+                        <select style="width: 100%; padding: 10px 12px; border: 1px solid var(--border-color); border-radius: var(--border-radius-sm); background: var(--bg-card); color: var(--text-primary);">
+                            <option selected>MXN (Peso Mexicano)</option>
+                            <option>USD (Dolar)</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label style="display: block; margin-bottom: 8px; font-weight: 500; color: var(--text-secondary);">Zona horaria</label>
+                        <input type="text" value="America/Mexico_City (UTC-6)" readonly style="width: 100%; padding: 10px 12px; border: 1px solid var(--border-color); border-radius: var(--border-radius-sm); background: var(--bg-body); color: var(--text-primary);">
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Apariencia -->
+        <div class="card">
+            <div class="card-header">
+                <h3 class="card-title"><i class="fas fa-palette" style="color: var(--primary-color);"></i> Apariencia</h3>
+            </div>
+            <div class="card-body">
+                <div style="display: grid; gap: 16px;">
+                    <div>
+                        <label style="display: block; margin-bottom: 8px; font-weight: 500; color: var(--text-secondary);">Tema</label>
+                        <div style="display: flex; gap: 12px;">
+                            <button class="btn btn-secondary" onclick="document.documentElement.setAttribute('data-theme', 'light'); localStorage.setItem('admin_panel_theme', 'light');">
+                                <i class="fas fa-sun"></i> Claro
+                            </button>
+                            <button class="btn btn-secondary" onclick="document.documentElement.setAttribute('data-theme', 'dark'); localStorage.setItem('admin_panel_theme', 'dark');">
+                                <i class="fas fa-moon"></i> Oscuro
+                            </button>
+                        </div>
+                    </div>
+                    <div>
+                        <label style="display: block; margin-bottom: 8px; font-weight: 500; color: var(--text-secondary);">Color primario</label>
+                        <div style="display: flex; gap: 8px; align-items: center;">
+                            <div style="width: 32px; height: 32px; border-radius: 6px; background: #2d8a4e; cursor: pointer; border: 2px solid var(--border-color);"></div>
+                            <span style="color: var(--text-muted); font-size: 0.85rem;">Verde Agrivale (#2d8a4e)</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Notificaciones -->
+        <div class="card">
+            <div class="card-header">
+                <h3 class="card-title"><i class="fas fa-bell" style="color: var(--primary-color);"></i> Notificaciones</h3>
+            </div>
+            <div class="card-body">
+                <div style="display: grid; gap: 16px;">
+                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                        <div>
+                            <div style="font-weight: 500; color: var(--text-primary);">Alertas de stock bajo</div>
+                            <div style="font-size: 0.85rem; color: var(--text-muted);">Notificar cuando un producto tenga 10 o menos unidades</div>
+                        </div>
+                        <label style="position: relative; display: inline-block; width: 44px; height: 24px;">
+                            <input type="checkbox" checked style="opacity: 0; width: 0; height: 0;">
+                            <span style="position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background: var(--primary-color); border-radius: 24px; transition: 0.3s;">
+                                <span style="position: absolute; height: 18px; width: 18px; right: 3px; top: 3px; background: white; border-radius: 50%; transition: 0.3s;"></span>
+                            </span>
+                        </label>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                        <div>
+                            <div style="font-weight: 500; color: var(--text-primary);">Pedidos nuevos</div>
+                            <div style="font-size: 0.85rem; color: var(--text-muted);">Notificar cuando llegue un nuevo pedido</div>
+                        </div>
+                        <label style="position: relative; display: inline-block; width: 44px; height: 24px;">
+                            <input type="checkbox" checked style="opacity: 0; width: 0; height: 0;">
+                            <span style="position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background: var(--primary-color); border-radius: 24px; transition: 0.3s;">
+                                <span style="position: absolute; height: 18px; width: 18px; right: 3px; top: 3px; background: white; border-radius: 50%; transition: 0.3s;"></span>
+                            </span>
+                        </label>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                        <div>
+                            <div style="font-weight: 500; color: var(--text-primary);">Pedidos cancelados</div>
+                            <div style="font-size: 0.85rem; color: var(--text-muted);">Notificar cuando se cancele un pedido</div>
+                        </div>
+                        <label style="position: relative; display: inline-block; width: 44px; height: 24px;">
+                            <input type="checkbox" style="opacity: 0; width: 0; height: 0;">
+                            <span style="position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background: var(--border-color); border-radius: 24px; transition: 0.3s;">
+                                <span style="position: absolute; height: 18px; width: 18px; left: 3px; top: 3px; background: white; border-radius: 50%; transition: 0.3s;"></span>
+                            </span>
+                        </label>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Seguridad -->
+        <div class="card">
+            <div class="card-header">
+                <h3 class="card-title"><i class="fas fa-shield-alt" style="color: var(--primary-color);"></i> Seguridad</h3>
+            </div>
+            <div class="card-body">
+                <div style="display: grid; gap: 16px;">
+                    <div>
+                        <label style="display: block; margin-bottom: 8px; font-weight: 500; color: var(--text-secondary);">Sesion expira en</label>
+                        <select style="width: 100%; padding: 10px 12px; border: 1px solid var(--border-color); border-radius: var(--border-radius-sm); background: var(--bg-card); color: var(--text-primary);">
+                            <option>30 minutos</option>
+                            <option selected>1 hora</option>
+                            <option>2 horas</option>
+                            <option>4 horas</option>
+                        </select>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                        <div>
+                            <div style="font-weight: 500; color: var(--text-primary);">Autenticacion de dos factores</div>
+                            <div style="font-size: 0.85rem; color: var(--text-muted);">Capa extra de seguridad al iniciar sesion</div>
+                        </div>
+                        <label style="position: relative; display: inline-block; width: 44px; height: 24px;">
+                            <input type="checkbox" style="opacity: 0; width: 0; height: 0;">
+                            <span style="position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background: var(--border-color); border-radius: 24px; transition: 0.3s;">
+                                <span style="position: absolute; height: 18px; width: 18px; left: 3px; top: 3px; background: white; border-radius: 50%; transition: 0.3s;"></span>
+                            </span>
+                        </label>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Sistema -->
+        <div class="card">
+            <div class="card-header">
+                <h3 class="card-title"><i class="fas fa-server" style="color: var(--primary-color);"></i> Sistema</h3>
+            </div>
+            <div class="card-body">
+                <div style="display: grid; gap: 12px;">
+                    <div style="display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid var(--border-color);">
+                        <span style="color: var(--text-secondary);">Version del sistema</span>
+                        <span style="font-weight: 600; color: var(--text-primary);">1.0.0</span>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid var(--border-color);">
+                        <span style="color: var(--text-secondary);">Django</span>
+                        <span style="font-weight: 600; color: var(--text-primary);">6.0.5</span>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid var(--border-color);">
+                        <span style="color: var(--text-secondary);">Python</span>
+                        <span style="font-weight: 600; color: var(--text-primary);">3.14</span>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; padding: 8px 0;">
+                        <span style="color: var(--text-secondary);">Base de datos</span>
+                        <span style="font-weight: 600; color: var(--text-primary);">MySQL</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Acciones -->
+        <div class="card">
+            <div class="card-header">
+                <h3 class="card-title"><i class="fas fa-tools" style="color: var(--primary-color);"></i> Acciones</h3>
+            </div>
+            <div class="card-body">
+                <div style="display: grid; gap: 12px;">
+                    <button class="btn btn-secondary" onclick="Toast.show('Cache limpiada correctamente', 'success')">
+                        <i class="fas fa-broom"></i> Limpiar cache
+                    </button>
+                    <button class="btn btn-secondary" onclick="Toast.show('Regenerando indices...', 'info')">
+                        <i class="fas fa-sync"></i> Regenerar indices
+                    </button>
+                    <a href="{% url 'admin_panel:logout' %}" class="btn btn-danger">
+                        <i class="fas fa-sign-out-alt"></i> Cerrar sesion
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+"""
+
+# Perfil HTML
+perfil_content = """{% extends 'admin_panel/base.html' %}
+{% load static %}
+
+{% block title %}Mi Perfil - Panel Admin{% endblock %}
+
+{% block breadcrumb %}
+    <span class="breadcrumb-item"><a href="{% url 'admin_panel:dashboard' %}">Inicio</a></span>
+    <span class="breadcrumb-item">Mi Perfil</span>
+{% endblock %}
+
+{% block content %}
+<div class="fade-in">
+    <div class="page-header">
+        <div>
+            <h1 class="page-title">Mi Perfil</h1>
+            <p class="page-subtitle">Gestiona tu informacion personal</p>
+        </div>
+    </div>
+
+    <div style="display: grid; grid-template-columns: 340px 1fr; gap: 24px; align-items: start;">
+        <!-- Tarjeta de perfil -->
+        <div class="card" style="text-align: center;">
+            <div class="card-body" style="padding: 32px;">
+                {% if user.foto_perfil %}
+                <img src="{{ user.foto_perfil.url }}" alt="{{ user.nombre_completo }}" style="width: 120px; height: 120px; border-radius: 50%; object-fit: cover; margin-bottom: 16px; border: 4px solid var(--primary-color);">
+                {% else %}
+                <div style="width: 120px; height: 120px; border-radius: 50%; background: var(--primary-color); color: white; display: flex; align-items: center; justify-content: center; font-size: 3rem; font-weight: bold; margin: 0 auto 16px;">
+                    {{ user.nombre|first|upper }}
+                </div>
+                {% endif %}
+                <h2 style="color: var(--text-primary); margin-bottom: 4px;">{{ user.nombre_completo }}</h2>
+                <p style="color: var(--text-muted); margin-bottom: 16px;">{{ user.email }}</p>
+                <span class="badge badge-primary" style="font-size: 0.85rem; padding: 6px 16px;">
+                    <i class="fas fa-shield-alt"></i> Administrador
+                </span>
+                <div style="margin-top: 24px; padding-top: 24px; border-top: 1px solid var(--border-color); display: grid; gap: 12px; text-align: left;">
+                    <div style="display: flex; justify-content: space-between;">
+                        <span style="color: var(--text-muted); font-size: 0.85rem;">Usuario</span>
+                        <span style="font-weight: 500; color: var(--text-primary);">{{ user.username }}</span>
+                    </div>
+                    <div style="display: flex; justify-content: space-between;">
+                        <span style="color: var(--text-muted); font-size: 0.85rem;">Telefono</span>
+                        <span style="font-weight: 500; color: var(--text-primary);">{{ user.telefono|default:"No registrado" }}</span>
+                    </div>
+                    <div style="display: flex; justify-content: space-between;">
+                        <span style="color: var(--text-muted); font-size: 0.85rem;">Miembro desde</span>
+                        <span style="font-weight: 500; color: var(--text-primary);">{{ user.date_joined|date:"d/m/Y" }}</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Formulario de edicion -->
+        <div class="card">
+            <div class="card-header">
+                <h3 class="card-title"><i class="fas fa-user-edit" style="color: var(--primary-color);"></i> Editar Informacion</h3>
+            </div>
+            <div class="card-body">
+                <form method="post" enctype="multipart/form-data">
+                    {% csrf_token %}
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 16px;">
+                        <div>
+                            <label style="display: block; margin-bottom: 8px; font-weight: 500; color: var(--text-secondary);">Nombre(s)</label>
+                            <input type="text" name="nombre" value="{{ user.nombre }}" style="width: 100%; padding: 10px 12px; border: 1px solid var(--border-color); border-radius: var(--border-radius-sm); background: var(--bg-card); color: var(--text-primary);">
+                        </div>
+                        <div>
+                            <label style="display: block; margin-bottom: 8px; font-weight: 500; color: var(--text-secondary);">Apellido paterno</label>
+                            <input type="text" name="apellido_paterno" value="{{ user.apellido_paterno }}" style="width: 100%; padding: 10px 12px; border: 1px solid var(--border-color); border-radius: var(--border-radius-sm); background: var(--bg-card); color: var(--text-primary);">
+                        </div>
+                        <div>
+                            <label style="display: block; margin-bottom: 8px; font-weight: 500; color: var(--text-secondary);">Apellido materno</label>
+                            <input type="text" name="apellido_materno" value="{{ user.apellido_materno }}" style="width: 100%; padding: 10px 12px; border: 1px solid var(--border-color); border-radius: var(--border-radius-sm); background: var(--bg-card); color: var(--text-primary);">
+                        </div>
+                        <div>
+                            <label style="display: block; margin-bottom: 8px; font-weight: 500; color: var(--text-secondary);">Correo electronico</label>
+                            <input type="email" name="email" value="{{ user.email }}" style="width: 100%; padding: 10px 12px; border: 1px solid var(--border-color); border-radius: var(--border-radius-sm); background: var(--bg-card); color: var(--text-primary);">
+                        </div>
+                        <div>
+                            <label style="display: block; margin-bottom: 8px; font-weight: 500; color: var(--text-secondary);">Telefono</label>
+                            <input type="tel" name="telefono" value="{{ user.telefono }}" style="width: 100%; padding: 10px 12px; border: 1px solid var(--border-color); border-radius: var(--border-radius-sm); background: var(--bg-card); color: var(--text-primary);">
+                        </div>
+                        <div>
+                            <label style="display: block; margin-bottom: 8px; font-weight: 500; color: var(--text-secondary);">Fecha de nacimiento</label>
+                            <input type="date" name="fecha_nacimiento" value="{{ user.fecha_nacimiento|date:'Y-m-d' }}" style="width: 100%; padding: 10px 12px; border: 1px solid var(--border-color); border-radius: var(--border-radius-sm); background: var(--bg-card); color: var(--text-primary);">
+                        </div>
+                        <div style="grid-column: 1 / -1;">
+                            <label style="display: block; margin-bottom: 8px; font-weight: 500; color: var(--text-secondary);">Foto de perfil</label>
+                            <input type="file" name="foto_perfil" accept="image/*" style="width: 100%; padding: 10px; border: 1px solid var(--border-color); border-radius: var(--border-radius-sm); background: var(--bg-card); color: var(--text-primary);">
+                        </div>
+                    </div>
+                    <div style="display: flex; gap: 12px; justify-content: flex-end; margin-top: 24px; padding-top: 20px; border-top: 1px solid var(--border-color);">
+                        <button type="reset" class="btn btn-secondary">
+                            <i class="fas fa-undo"></i> Restablecer
+                        </button>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-save"></i> Guardar Cambios
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+"""
+
+# Escribir archivos
+base = r'admin_panel/templates/admin_panel'
+
+with open(os.path.join(base, 'partials', 'header.html'), 'w', encoding='utf-8') as f:
+    f.write(header_content)
+print('Header escrito correctamente')
+
+with open(os.path.join(base, 'configuracion', 'index.html'), 'w', encoding='utf-8') as f:
+    f.write(config_content)
+print('Configuracion escrita correctamente')
+
+with open(os.path.join(base, 'perfil', 'index.html'), 'w', encoding='utf-8') as f:
+    f.write(perfil_content)
+print('Perfil escrito correctamente')

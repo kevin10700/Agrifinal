@@ -1,0 +1,82 @@
+{% extends 'admin_panel/base.html' %}
+{% load static %}
+
+{% block title %}Editar Categoría - Panel Admin{% endblock %}
+
+{% block breadcrumb %}
+    <span class="breadcrumb-item"><a href="{% url 'admin_panel:dashboard' %}">Inicio</a></span>
+    <span class="breadcrumb-item"><a href="{% url 'admin_panel:categorias_lista' %}">Categorías</a></span>
+    <span class="breadcrumb-item">Editar: {{ categoria.nombre }}</span>
+{% endblock %}
+
+{% block content %}
+<div class="fade-in">
+    <div class="page-header">
+        <div>
+            <h1 class="page-title">Editar Categoría</h1>
+            <p class="page-subtitle">Modifica la información de la categoría "{{ categoria.nombre }}"</p>
+        </div>
+        <a href="{% url 'admin_panel:categorias_lista' %}" class="btn btn-secondary">
+            <i class="fas fa-arrow-left"></i> Volver
+        </a>
+    </div>
+
+    <div class="card">
+        <div class="card-body">
+            <form method="post">
+                {% csrf_token %}
+
+                <div class="form-grid">
+                    <div class="form-group-full">
+                        <h3 class="form-section-title">
+                            <i class="fas fa-info-circle"></i> Información de la Categoría
+                        </h3>
+                        <div class="form-row">
+                            <div class="form-col">
+                                <label class="form-label">Nombre *</label>
+                                <input type="text" name="nombre" required class="form-control" value="{{ categoria.nombre }}" placeholder="Ej: Fertilizantes">
+                            </div>
+
+                            <div class="form-col">
+                                <label class="form-label">Slug</label>
+                                <input type="text" name="slug" class="form-control" value="{{ categoria.slug }}" placeholder="Se genera automáticamente">
+                                <small class="form-text">
+                                    <i class="fas fa-info-circle"></i> Si se deja vacío, se genera automáticamente a partir del nombre.
+                                </small>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-col">
+                            <label class="form-label">Orden</label>
+                            <input type="number" name="orden" value="{{ categoria.orden|default:0 }}" class="form-control" placeholder="0">
+                            <small class="form-text">
+                                <i class="fas fa-info-circle"></i> Número para ordenar la categoría en las listas.
+                            </small>
+                        </div>
+
+                        <div class="form-col">
+                            <label class="form-label">Icono (clase FontAwesome)</label>
+                            <input type="text" name="icono" class="form-control" value="{{ categoria.icono|default:'' }}" placeholder="Ej: fa-seedling">
+                            <small class="form-text">
+                                <i class="fas fa-info-circle"></i> Clase del icono de FontAwesome (ej: fa-seedling, fa-tractor).
+                            </small>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Botones de Acción -->
+                <div class="form-actions">
+                    <a href="{% url 'admin_panel:categorias_lista' %}" class="btn btn-secondary">
+                        <i class="fas fa-times"></i> Cancelar
+                    </a>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-save"></i> Guardar Cambios
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

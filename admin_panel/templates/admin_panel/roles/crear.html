@@ -1,0 +1,110 @@
+{% extends 'admin_panel/base.html' %}
+{% load static %}
+
+{% block title %}Nuevo Rol - Panel Admin{% endblock %}
+
+{% block breadcrumb %}
+    <span class="breadcrumb-item"><a href="{% url 'admin_panel:dashboard' %}">Inicio</a></span>
+    <span class="breadcrumb-item"><a href="{% url 'admin_panel:roles_lista' %}">Roles de Panel</a></span>
+    <span class="breadcrumb-item">Nuevo Rol</span>
+{% endblock %}
+
+{% block content %}
+<div class="fade-in">
+    <div class="page-header">
+        <div>
+            <h1 class="page-title">Nuevo Rol</h1>
+            <p class="page-subtitle">Define un nuevo rol con permisos para el panel</p>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-body">
+            <form method="post" style="max-width: 800px;">
+                {% csrf_token %}
+                
+                <div style="margin-bottom: 24px;">
+                    <label style="display: block; margin-bottom: 8px; font-weight: 600; color: var(--text-primary);">Nombre del Rol *</label>
+                    <input type="text" name="nombre" required maxlength="100"
+                           style="width: 100%; padding: 10px 12px; border: 1px solid var(--border-color); border-radius: var(--border-radius_sm); background: var(--bg-card); color: var(--text-primary);">
+                </div>
+                
+                <div style="margin-bottom: 24px;">
+                    <label style="display: block; margin-bottom: 8px; font-weight: 600; color: var(--text-primary);">Descripción</label>
+                    <textarea name="descripcion" rows="3"
+                              style="width: 100%; padding: 10px 12px; border: 1px solid var(--border-color); border-radius: var(--border-radius_sm); background: var(--bg-card); color: var(--text-primary);"></textarea>
+                </div>
+
+                <div style="margin-bottom: 24px;">
+                    <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
+                        <input type="checkbox" name="activo" checked>
+                        <span style="font-weight: 600; color: var(--text-primary);">Rol activo</span>
+                    </label>
+                </div>
+
+                <h3 style="margin-bottom: 16px; color: var(--text-primary);">Permisos del Panel</h3>
+                
+                <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 12px; margin-bottom: 24px;">
+                    <label style="display: flex; align-items: center; gap: 8px; padding: 10px; background: var(--bg-hover); border-radius: var(--border-radius_sm); cursor: pointer;">
+                        <input type="checkbox" name="puede_gestionar_productos" checked>
+                        <span>Gestionar Productos</span>
+                    </label>
+                    <label style="display: flex; align-items: center; gap: 8px; padding: 10px; background: var(--bg-hover); border-radius: var(--border-radius_sm); cursor: pointer;">
+                        <input type="checkbox" name="puede_gestionar_pedidos" checked>
+                        <span>Gestionar Pedidos</span>
+                    </label>
+                    <label style="display: flex; align-items: center; gap: 8px; padding: 10px; background: var(--bg-hover); border-radius: var(--border-radius_sm); cursor: pointer;">
+                        <input type="checkbox" name="puede_gestionar_clientes" checked>
+                        <span>Gestionar Clientes</span>
+                    </label>
+                    <label style="display: flex; align-items: center; gap: 8px; padding: 10px; background: var(--bg-hover); border-radius: var(--border-radius_sm); cursor: pointer;">
+                        <input type="checkbox" name="puede_gestionar_proveedores" checked>
+                        <span>Gestionar Proveedores</span>
+                    </label>
+                    <label style="display: flex; align-items: center; gap: 8px; padding: 10px; background: var(--bg-hover); border-radius: var(--border-radius_sm); cursor: pointer;">
+                        <input type="checkbox" name="puede_gestionar_compras" checked>
+                        <span>Gestionar Compras</span>
+                    </label>
+                    <label style="display: flex; align-items: center; gap: 8px; padding: 10px; background: var(--bg-hover); border-radius: var(--border-radius_sm); cursor: pointer;">
+                        <input type="checkbox" name="puede_gestionar_pagos" checked>
+                        <span>Gestionar Pagos</span>
+                    </label>
+                    <label style="display: flex; align-items: center; gap: 8px; padding: 10px; background: var(--bg-hover); border-radius: var(--border-radius_sm); cursor: pointer;">
+                        <input type="checkbox" name="puede_gestionar_envios" checked>
+                        <span>Gestionar Envíos</span>
+                    </label>
+                    <label style="display: flex; align-items: center; gap: 8px; padding: 10px; background: var(--bg-hover); border-radius: var(--border-radius_sm); cursor: pointer;">
+                        <input type="checkbox" name="puede_gestionar_inventario" checked>
+                        <span>Gestionar Inventario</span>
+                    </label>
+                    <label style="display: flex; align-items: center; gap: 8px; padding: 10px; background: var(--bg-hover); border-radius: var(--border-radius_sm); cursor: pointer;">
+                        <input type="checkbox" name="puede_gestionar_direcciones_envio">
+                        <span>Gestionar Direcciones de Envío</span>
+                    </label>
+                    <label style="display: flex; align-items: center; gap: 8px; padding: 10px; background: var(--bg-hover); border-radius: var(--border-radius_sm); cursor: pointer;">
+                        <input type="checkbox" name="puede_ver_reportes" checked>
+                        <span>Ver Reportes</span>
+                    </label>
+                    <label style="display: flex; align-items: center; gap: 8px; padding: 10px; background: var(--bg-hover); border-radius: var(--border-radius_sm); cursor: pointer;">
+                        <input type="checkbox" name="puede_ver_dashboard" checked>
+                        <span>Ver Dashboard</span>
+                    </label>
+                    <label style="display: flex; align-items: center; gap: 8px; padding: 10px; background: var(--bg-hover); border-radius: var(--border-radius_sm); cursor: pointer;">
+                        <input type="checkbox" name="puede_gestionar_configuracion">
+                        <span>Gestionar Configuración</span>
+                    </label>
+                </div>
+
+                <div style="display: flex; gap: 12px;">
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-save"></i> Crear Rol
+                    </button>
+                    <a href="{% url 'admin_panel:roles_lista' %}" class="btn btn-secondary">
+                        <i class="fas fa-times"></i> Cancelar
+                    </a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

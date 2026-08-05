@@ -1,0 +1,225 @@
+<!-- pedidos/templates/pedidos/subir_comprobante.html -->
+{% extends 'productos/base.html' %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <!-- Mostrar mensajes -->
+            {% if messages %}
+                {% for message in messages %}
+                    <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                        {{ message }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    </div>
+                {% endfor %}
+            {% endif %}
+
+            <div class="card border-0 shadow-sm rounded-4">
+                <div class="card-body p-5">
+                    <div class="text-center mb-4">
+                        <h2 class="fw-bold">
+                            <i class="fas fa-upload text-primary me-2"></i> Subir Comprobante de Pago
+                        </h2>
+                        <p class="text-muted">Pedido #{{ pedido.id_pedido }}</p>
+                        <span class="badge bg-warning fs-6">Pendiente de pago</span>
+                    </div>
+
+                    <hr>
+
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle me-2"></i>
+                        <strong>Instrucciones:</strong> Sube una foto o captura de tu comprobante de pago para que podamos validar tu transacción.
+                    </div>
+
+                    <form method="post" enctype="multipart/form-data" class="mt-4" id="uploadForm">
+                        {% csrf_token %}
+                        
+                        <div class="mb-4">
+                            <label class="form-label fw-bold">Comprobante de pago</label>
+                            <div class="drop-zone p-5 text-center border-2 border-dashed rounded-3 bg-light" id="dropZone">
+                                <i class="fas fa-cloud-upload-alt fa-3x text-muted mb-3"></i>
+                                <p class="text-muted">Arrastra y suelta tu comprobante aquí o haz clic para seleccionar</p>
+                                <p class="text-muted small">Formatos permitidos: JPG, PNG, PDF (máx. 5MB)</p>
+                                <input type="file" name="comprobante" id="id_comprobante" class="d-none" accept=".jpg,.jpeg,.png,.pdf">
+                                <button type="button" class="btn btn-primary" onclick="document.getElementById('id_comprobante').click()">
+                                    <i class="fas fa-folder-open me-2"></i> Seleccionar archivo
+                                </button>
+                            </div>
+                            <div id="fileInfo" class="mt-2 d-none">
+                                <div class="alert alert-success">
+                                    <i class="fas fa-check-circle me-2"></i>
+                                    Archivo seleccionado: <span id="fileName"></span>
+                                </div>
+                            </div>
+                            {% if form.comprobante.errors %}
+                                <div class="alert alert-danger mt-2">
+                                    {% for error in form.comprobante.errors %}
+                                        <i class="fas fa-exclamation-circle me-2"></i> {{ error }}
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+
+                        <div class="card bg-light p-3 mb-4">
+                            <h6 class="fw-bold">Resumen del Pedido</h6>
+                            <div class="row mt-2">
+                                <div class="col-md-6">
+                                    <p><strong>Total a pagar:</strong> <span class="fw-bold text-success">${{ pedido.total|floatformat:2 }}</span></p>
+                                </div>
+                                <div class="col-md-6">
+                                    <p><strong>Método de pago:</strong> 
+                                        <span class="badge bg-secondary">
+                                            {% if pago.metodo == 'transferencia' %}
+                                                Transferencia Bancaria
+                                            {% elif pago.metodo == 'oxxo' %}
+                                                Pago en OXXO
+                                            {% elif pago.metodo == 'tarjeta' %}
+                                                Tarjeta de Crédito/Débito
+                                            {% endif %}
+                                        </span>
+                                    </p>
+                                </div>
+                            </div>
+                            {% if pago.metodo == 'transferencia' %}
+                            <div class="mt-2">
+                                <p><strong>Referencia:</strong> <code class="bg-dark text-white p-2 rounded">{{ pago.referencia }}</code></p>
+                            </div>
+                            {% elif pago.metodo == 'oxxo' %}
+                            <div class="mt-2">
+                                <p><strong>Referencia OXXO:</strong> <code class="bg-dark text-white p-2 rounded">{{ pago.referencia_oxxo }}</code></p>
+                                <p><strong>Vence:</strong> {{ pago.fecha_vencimiento_oxxo|date:"d/m/Y H:i" }} hrs</p>
+                            </div>
+                            {% endif %}
+                        </div>
+
+                        <div class="d-flex gap-3">
+                            <button type="submit" class="btn btn-success btn-lg flex-grow-1" id="submitBtn">
+                                <i class="fas fa-upload me-2"></i> Subir comprobante
+                            </button>
+                            <a href="{% url 'pedidos:detalle_pedido' pedido.id_pedido %}" class="btn btn-outline-secondary btn-lg">
+                                <i class="fas fa-times me-2"></i> Cancelar
+                            </a>
+                        </div>
+                    </form>
+
+                    <div class="mt-4 text-center">
+                        <small class="text-muted">
+                            <i class="fas fa-lock me-1"></i> 
+                            Tu información está segura. El comprobante será validado en un plazo de 24-48 horas.
+                        </small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.drop-zone {
+    cursor: pointer;
+    transition: all 0.3s ease;
+    border-color: #dee2e6;
+}
+
+.drop-zone:hover {
+    background-color: #f8f9fa !important;
+    border-color: #0d6efd;
+}
+
+.drop-zone.dragover {
+    background-color: #e7f1ff !important;
+    border-color: #0d6efd;
+}
+
+.border-dashed {
+    border-style: dashed !important;
+}
+
+code {
+    font-size: 0.9rem;
+    letter-spacing: 1px;
+}
+</style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const dropZone = document.getElementById('dropZone');
+    const fileInput = document.getElementById('id_comprobante');
+    const fileInfo = document.getElementById('fileInfo');
+    const fileName = document.getElementById('fileName');
+    const submitBtn = document.getElementById('submitBtn');
+
+    // Click en la zona para abrir selector de archivos
+    dropZone.addEventListener('click', function(e) {
+        if (e.target.tagName !== 'BUTTON') {
+            fileInput.click();
+        }
+    });
+
+    // Drag and drop
+    dropZone.addEventListener('dragover', function(e) {
+        e.preventDefault();
+        dropZone.classList.add('dragover');
+    });
+
+    dropZone.addEventListener('dragleave', function(e) {
+        e.preventDefault();
+        dropZone.classList.remove('dragover');
+    });
+
+    dropZone.addEventListener('drop', function(e) {
+        e.preventDefault();
+        dropZone.classList.remove('dragover');
+        
+        if (e.dataTransfer.files.length) {
+            fileInput.files = e.dataTransfer.files;
+            updateFileInfo(fileInput.files[0]);
+        }
+    });
+
+    // Selección de archivo
+    fileInput.addEventListener('change', function() {
+        if (this.files.length) {
+            updateFileInfo(this.files[0]);
+        } else {
+            fileInfo.classList.add('d-none');
+        }
+    });
+
+    function updateFileInfo(file) {
+        const validTypes = ['image/jpeg', 'image/png', 'image/jpg', 'application/pdf'];
+        const maxSize = 5 * 1024 * 1024; // 5MB
+
+        if (!validTypes.includes(file.type)) {
+            alert('Formato no válido. Solo se permiten JPG, PNG y PDF.');
+            fileInput.value = '';
+            fileInfo.classList.add('d-none');
+            return;
+        }
+
+        if (file.size > maxSize) {
+            alert('El archivo es demasiado grande. Máximo 5MB.');
+            fileInput.value = '';
+            fileInfo.classList.add('d-none');
+            return;
+        }
+
+        fileName.textContent = file.name;
+        fileInfo.classList.remove('d-none');
+    }
+
+    // Validación antes de enviar
+    document.getElementById('uploadForm').addEventListener('submit', function(e) {
+        if (!fileInput.files.length) {
+            e.preventDefault();
+            alert('Por favor, selecciona un comprobante de pago.');
+        } else {
+            // Deshabilitar el botón para evitar múltiples envíos
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i> Subiendo...';
+        }
+    });
+});
+</script>
+{% endblock %}

@@ -1,0 +1,16 @@
+{% load static %}
+<div class="form-actions" style="display: flex; gap: 12px; justify-content: flex-end; margin-top: 20px; padding-top: 20px; border-top: 1px solid var(--border-color);">
+    {% if cancel_url %}
+    <a href="{{ cancel_url }}" class="btn btn-secondary">
+        <i class="fas fa-times"></i> Cancelar
+    </a>
+    {% endif %}
+    
+    {% if submit_label %}
+    <button type="submit" class="btn btn-primary">
+        <i class="fas fa-save"></i> {{ submit_label }}
+    </button>
+    {% endif %}
+    
+    {% block extra_actions %}{% endblock %}
+</div>

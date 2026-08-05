@@ -1,0 +1,19 @@
+# Entorno virtual
+.venv/
+
+# Archivos compilados / cache de Python
+__pycache__/
+*.pyc
+*.pyo
+
+# Bases de datos locales
+db.sqlite3
+db.sqbpro
+
+# Multimedia y logs
+media/
+*.log
+
+# Variables de entorno y credenciales
+.env
+.env.*

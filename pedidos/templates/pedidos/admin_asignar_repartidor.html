@@ -1,0 +1,42 @@
+{% extends 'productos/base.html' %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-6 offset-md-3">
+        <div class="card">
+            <div class="card-header bg-primary text-white">
+                <h3><i class="fas fa-user-plus"></i> Asignar repartidor</h3>
+                <p class="mb-0">Entrega #{{ entrega.id }} - Pedido #{{ entrega.pedido.id }}</p>
+            </div>
+            <div class="card-body">
+                <form method="post">
+                    {% csrf_token %}
+                    
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Seleccionar repartidor</label>
+                        <select name="repartidor_id" class="form-select" required>
+                            <option value="">-- Selecciona un repartidor --</option>
+                            {% for repartidor in repartidores_disponibles %}
+                                <option value="{{ repartidor.id }}">
+                                    {{ repartidor.nombre }} - {{ repartidor.vehiculo }} ({{ repartidor.placa }})
+                                </option>
+                            {% empty %}
+                                <option value="">No hay repartidores disponibles</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    
+                    <button type="submit" class="btn btn-primary w-100">
+                        <i class="fas fa-check"></i> Asignar repartidor
+                    </button>
+                </form>
+                
+                <hr>
+                <a href="{% url 'pedidos:admin_entregas' %}" class="btn btn-secondary w-100">
+                    <i class="fas fa-arrow-left"></i> Volver al panel de entregas
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

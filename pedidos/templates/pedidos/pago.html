@@ -1,0 +1,103 @@
+{% extends 'productos/base.html' %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-8 offset-md-2">
+        <div class="card">
+            <div class="card-header bg-success text-white">
+                <h3><i class="fas fa-credit-card"></i> Procesar pago</h3>
+                <p class="mb-0">Pedido #{{ pedido.id }}</p>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <!-- Resumen del pedido -->
+                    <div class="col-md-5">
+                        <div class="card bg-light">
+                            <div class="card-body">
+                                <h5>Resumen del pedido</h5>
+                                <hr>
+                                <div class="mb-2">
+                                    <strong>Productos:</strong>
+                                    {% for item in pedido.items.all %}
+                                    <div class="d-flex justify-content-between">
+                                        <span>{{ item.producto.nombre }} x {{ item.cantidad }}</span>
+                                        <span>${{ item.get_subtotal|floatformat:2 }}</span>
+                                    </div>
+                                    {% endfor %}
+                                </div>
+                                <hr>
+                                <div class="d-flex justify-content-between">
+                                    <strong>Total:</strong>
+                                    <strong class="text-success h4">${{ total|floatformat:2 }}</strong>
+                                </div>
+                                <div class="mt-3">
+                                    <small class="text-muted">
+                                        <i class="fas fa-lock"></i> Pago seguro
+                                    </small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Formulario de pago -->
+                    <div class="col-md-7">
+                        <form method="post">
+                            {% csrf_token %}
+                            
+                            <div class="mb-3">
+                                <label class="form-label fw-bold">Método de pago</label>
+                                {{ form.metodo }}
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label class="form-label fw-bold">{{ form.nombre_titular.label }}</label>
+                                {{ form.nombre_titular }}
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label class="form-label fw-bold">{{ form.ultimos_digitos.label }}</label>
+                                {{ form.ultimos_digitos }}
+                                <small class="text-muted d-block">Solo los últimos 4 dígitos de tu tarjeta</small>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label class="form-label fw-bold">{{ form.fecha_expiracion.label }}</label>
+                                {{ form.fecha_expiracion }}
+                            </div>
+                            
+                            <!-- Mostrar errores del formulario -->
+                            {% if form.errors %}
+                            <div class="alert alert-danger">
+                                <ul class="mb-0">
+                                    {% for field, errors in form.errors.items %}
+                                        {% for error in errors %}
+                                            <li>{{ error }}</li>
+                                        {% endfor %}
+                                    {% endfor %}
+                                </ul>
+                            </div>
+                            {% endif %}
+                            
+                            <button type="submit" class="btn btn-success w-100 btn-lg">
+                                <i class="fas fa-check-circle"></i> Pagar ahora
+                            </button>
+                            
+                            <div class="mt-3 text-center">
+                                <a href="{% url 'pedidos:detalle_pedido' pedido.id %}" class="btn btn-secondary">
+                                    <i class="fas fa-arrow-left"></i> Volver al pedido
+                                </a>
+                            </div>
+                        </form>
+                        
+                        <div class="alert alert-info mt-3">
+                            <i class="fas fa-info-circle"></i>
+                            <strong>¿Cómo funciona?</strong>
+                            <p class="mb-0">Este es un formulario de prueba. En producción se integrará con PayPal, Mercado Pago u otra pasarela de pago.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

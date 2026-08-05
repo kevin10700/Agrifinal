@@ -1,0 +1,235 @@
+{% extends 'admin_panel/base.html' %}
+{% load static %}
+
+{% block title %}Productos - Panel Admin{% endblock %}
+
+{% block breadcrumb %}
+    <span class="breadcrumb-item"><a href="{% url 'admin_panel:dashboard' %}">Inicio</a></span>
+    <span class="breadcrumb-item">Productos</span>
+{% endblock %}
+
+{% block content %}
+<div class="fade-in">
+    <div class="page-header">
+        <div>
+            <h1 class="page-title">Productos</h1>
+            <p class="page-subtitle">Gestiona el catálogo de productos</p>
+        </div>
+        <a href="{% url 'admin_panel:producto_crear' %}" class="btn btn-primary">
+            <i class="fas fa-plus"></i> Nuevo Producto
+        </a>
+    </div>
+
+    <!-- Filtros -->
+    <div class="card">
+        <div class="card-body">
+            <form method="get" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; align-items: end;">
+                <div>
+                    <label style="display: block; margin-bottom: 8px; font-weight: 500; color: var(--text-secondary);">Buscar</label>
+                    <input type="text" name="q" value="{{ busqueda }}" placeholder="Nombre o descripción..." 
+                           style="width: 100%; padding: 10px 12px; border: 1px solid var(--border-color); border-radius: var(--border-radius-sm); background: var(--bg-card); color: var(--text-primary);">
+                </div>
+                
+                <div>
+                    <label style="display: block; margin-bottom: 8px; font-weight: 500; color: var(--text-secondary);">Categoría</label>
+                    <select name="categoria" style="width: 100%; padding: 10px 12px; border: 1px solid var(--border-color); border-radius: var(--border-radius-sm); background: var(--bg-card); color: var(--text-primary);">
+                        <option value="">Todas las categorías</option>
+                        {% for categoria in categorias %}
+                        <option value="{{ categoria.id_categoria }}" {% if categoria_seleccionada == categoria.id_categoria|stringformat:"s" %}selected{% endif %}>
+                            {{ categoria.nombre }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                
+                <div>
+                    <label style="display: block; margin-bottom: 8px; font-weight: 500; color: var(--text-secondary);">Stock</label>
+                    <select name="stock" style="width: 100%; padding: 10px 12px; border: 1px solid var(--border-color); border-radius: var(--border-radius-sm); background: var(--bg-card); color: var(--text-primary);">
+                        <option value="">Todos</option>
+                        <option value="sin_stock" {% if stock_filtro == 'sin_stock' %}selected{% endif %}>Sin stock</option>
+                        <option value="bajo_stock" {% if stock_filtro == 'bajo_stock' %}selected{% endif %}>Stock bajo</option>
+                    </select>
+                </div>
+                
+                <div>
+                    <label style="display: block; margin-bottom: 8px; font-weight: 500; color: var(--text-secondary);">Ordenar por</label>
+                    <select name="orden" style="width: 100%; padding: 10px 12px; border: 1px solid var(--border-color); border-radius: var(--border-radius-sm); background: var(--bg-card); color: var(--text-primary);">
+                        <option value="-fecha_creacion">Más recientes</option>
+                        <option value="fecha_creacion">Más antiguos</option>
+                        <option value="nombre">Nombre A-Z</option>
+                        <option value="-nombre">Nombre Z-A</option>
+                        <option value="precio">Precio menor</option>
+                        <option value="-precio">Precio mayor</option>
+                        <option value="stock">Stock menor</option>
+                        <option value="-stock">Stock mayor</option>
+                    </select>
+                </div>
+                
+                <div style="display: flex; gap: 8px;">
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-search"></i> Buscar
+                    </button>
+                    <a href="{% url 'admin_panel:productos_lista' %}" class="btn btn-secondary">
+                        <i class="fas fa-times"></i> Limpiar
+                    </a>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Tabla de Productos -->
+    <div class="table-container">
+        <div class="table-header">
+            <h3 class="table-title">
+                Total: {{ productos.paginator.count }} productos
+            </h3>
+            <div class="table-actions">
+                <button class="btn btn-sm btn-secondary" onclick="window.print()">
+                    <i class="fas fa-print"></i> Imprimir
+                </button>
+            </div>
+        </div>
+        <div class="table-responsive">
+            <table>
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>PRODUCTO</th>
+                        <th>CATEGORÍA</th>
+                        <th>PRECIO</th>
+                        <th>STOCK</th>
+                        <th>ESTADO</th>
+                        <th>ACCIONES</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for producto in productos %}
+                    <tr>
+                        <td>#{{ producto.id_producto }}</td>
+                        <td>
+                            <div style="display: flex; align-items: center; gap: 12px;">
+                                {% if producto.imagen_principal %}
+                                <img src="{{ producto.imagen_principal.url }}" alt="{{ producto.nombre }}" 
+                                    style="width: 40px; height: 40px; border-radius: 8px; object-fit: cover;">
+                                {% else %}
+                                <div style="width: 40px; height: 40px; border-radius: 8px; background: var(--bg-hover); display: flex; align-items: center; justify-content: center;">
+                                    <i class="fas fa-box" style="color: var(--text-muted);"></i>
+                                </div>
+                                {% endif %}
+                                <div>
+                                    <div style="font-weight: 600; color: var(--text-primary);">{{ producto.nombre }}</div>
+                                    <div style="font-size: 0.85rem; color: var(--text-muted);">{{ producto.descripcion_corta|truncatechars:50 }}</div>
+                                </div>
+                            </div>
+                        </td>
+                        <td>{{ producto.id_categoria.nombre }}</td>
+                        <td>
+                            {% if producto.precio_oferta %}
+                            <div>
+                                <span style="text-decoration: line-through; color: var(--text-muted); font-size: 0.85rem;">${{ producto.precio|floatformat:2 }}</span>
+                                <div style="color: var(--danger); font-weight: 600;">${{ producto.precio_oferta|floatformat:2 }}</div>
+                            </div>
+                            {% else %}
+                            <span style="font-weight: 600;">${{ producto.precio|floatformat:2 }}</span>
+                            {% endif %}
+                        </td>
+                        
+                        <!-- COLUMNA STOCK (Visualización) -->
+                        <td>
+                            {% if producto.stock == 0 %}
+                                <span style="color: #dc3545; font-weight: bold; background: #f8d7da; padding: 2px 8px; border-radius: 12px; font-size: 0.8rem;">Sin stock</span>
+                            {% elif producto.stock <= 10 %}
+                                <span style="color: #856404; font-weight: bold; background: #fff3cd; padding: 2px 8px; border-radius: 12px; font-size: 0.8rem;">Bajo stock</span>
+                            {% else %}
+                                <span style="color: #155724; font-weight: bold; background: #d4edda; padding: 2px 8px; border-radius: 12px; font-size: 0.8rem;">{{ producto.stock }} {{ producto.unidad_medida }}</span>
+                            {% endif %}
+                        </td>
+
+                        <!-- 🔥 COLUMNA ESTADO (Activo / Inactivo) -->
+                        <td>
+                            {% if producto.activo %}
+                                <span style="color: #155724; font-weight: bold; background: #d4edda; padding: 2px 8px; border-radius: 12px; font-size: 0.8rem;"><i class="fas fa-check-circle"></i> Activo</span>
+                            {% else %}
+                                <span style="color: #6c757d; font-weight: bold; background: #e2e3e5; padding: 2px 8px; border-radius: 12px; font-size: 0.8rem;"><i class="fas fa-ban"></i> Inactivo</span>
+                            {% endif %}
+                        </td>
+
+                        <!-- 🔥 ACCIONES DINÁMICAS (Cambian según el estado) -->
+                        <td>
+                            <div style="display: flex; gap: 8px;">
+                                <!-- Botón Editar (Verde) -->
+                                <a href="{% url 'admin_panel:producto_editar' producto.id_producto %}" style="display: inline-flex; align-items: center; justify-content: center; width: 32px; height: 32px; border-radius: 6px; background: #198754; color: white; text-decoration: none; transition: all 0.2s;">
+                                    <i class="fas fa-edit" style="font-size: 0.9rem;"></i>
+                                </a>
+                                
+                                <!-- Botón Duplicar (Gris) -->
+                                <button onclick="duplicarProducto({{ producto.id_producto }})" style="display: inline-flex; align-items: center; justify-content: center; width: 32px; height: 32px; border-radius: 6px; background: #e9ecef; color: #495057; border: none; cursor: pointer; transition: all 0.2s;">
+                                    <i class="fas fa-copy" style="font-size: 0.9rem;"></i>
+                                </button>
+
+                                <!-- Botón dinámico: Desactivar (Rojo) o Reactivar (Verde) -->
+                                {% if producto.activo %}
+                                    <!-- Si está Activo: Botón ROJO con ojo tachado -->
+                                    <form method="POST" action="{% url 'admin_panel:producto_eliminar' producto.id_producto %}" style="display: inline;">
+                                        {% csrf_token %}
+                                        <button type="submit" onclick="return confirm('¿Desactivar este producto? Se ocultará de la tienda.');" style="display: inline-flex; align-items: center; justify-content: center; width: 32px; height: 32px; border-radius: 6px; background: #dc3545; color: white; border: none; cursor: pointer; transition: all 0.2s;">
+                                            <i class="fas fa-eye-slash" style="font-size: 0.9rem;"></i>
+                                        </button>
+                                    </form>
+                                {% else %}
+                                    <!-- Si está Inactivo: Botón VERDE con ojo abierto -->
+                                    <form method="POST" action="{% url 'admin_panel:producto_eliminar' producto.id_producto %}" style="display: inline;">
+                                        {% csrf_token %}
+                                        <button type="submit" style="display: inline-flex; align-items: center; justify-content: center; width: 32px; height: 32px; border-radius: 6px; background: #198754; color: white; border: none; cursor: pointer; transition: all 0.2s;">
+                                            <i class="fas fa-eye" style="font-size: 0.9rem;"></i>
+                                        </button>
+                                    </form>
+                                {% endif %}
+                            </div>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="7" style="text-align: center; padding: 60px 20px; color: var(--text-muted);">
+                            <i class="fas fa-box-open" style="font-size: 3rem; margin-bottom: 12px; display: block;"></i>
+                            <p style="font-size: 1.1rem; margin-bottom: 8px;">No se encontraron productos</p>
+                            <p style="font-size: 0.9rem;">Intenta ajustar los filtros de búsqueda</p>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% if productos.has_other_pages %}
+        <div class="table-footer">
+            <div>
+                Mostrando {{ productos.start_index }} a {{ productos.end_index }} de {{ productos.paginator.count }} registros
+            </div>
+            <div style="display: flex; gap: 8px;">
+                {% if productos.has_previous %}
+                <a href="?page={{ productos.previous_page_number }}{% if busqueda %}&q={{ busqueda }}{% endif %}{% if categoria_seleccionada %}&categoria={{ categoria_seleccionada }}{% endif %}{% if stock_filtro %}&stock={{ stock_filtro }}{% endif %}" 
+                    class="btn btn-sm btn-secondary">
+                    <i class="fas fa-chevron-left"></i> Anterior
+                </a>
+                {% endif %}
+                
+                {% if productos.has_next %}
+                <a href="?page={{ productos.next_page_number }}{% if busqueda %}&q={{ busqueda }}{% endif %}{% if categoria_seleccionada %}&categoria={{ categoria_seleccionada }}{% endif %}{% if stock_filtro %}&stock={{ stock_filtro }}{% endif %}" 
+                    class="btn btn-sm btn-secondary">
+                    Siguiente <i class="fas fa-chevron-right"></i>
+                </a>
+                {% endif %}
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<script>
+function duplicarProducto(id) {
+    if (confirm('¿Deseas duplicar este producto?')) {
+        window.location.href = '{% url "admin_panel:producto_crear" %}?duplicar=' + id;
+    }
+}
+</script>
+{% endblock %}

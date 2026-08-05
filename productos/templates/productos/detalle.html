@@ -1,0 +1,493 @@
+{% extends 'productos/base.html' %}
+{% load static %}
+
+{% block content %}
+<div class="container py-4">
+    <!-- Fila Principal del Producto -->
+    <div class="row g-5">
+        
+        <!-- Galería/Imagen Principal (Columna Izquierda) -->
+        <div class="col-md-6">
+            <div class="card border-0 shadow-sm rounded-4 bg-white p-3 text-center position-sticky" style="top: 20px;">
+                <div class="card-body d-flex flex-column justify-content-center align-items-center" style="min-height: 400px;">
+                    {% if producto.imagen_principal %}
+                        <img src="{{ producto.imagen_principal.url }}" class="img-fluid rounded-4 transition-zoom" alt="{{ producto.nombre }}" style="max-height: 420px; object-fit: contain;">
+                    {% else %}
+                        <div class="text-muted py-5">
+                            <i class="fas fa-image fa-6x text-light-emphasis mb-3 d-block"></i>
+                            <span class="fs-5 fw-medium">Imagen del producto próximamente</span>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        
+        <!-- Detalles de Compra e Información (Columna Derecha) -->
+        <div class="col-md-6">
+            <div class="d-flex align-items-center gap-2 mb-2">
+                {% if producto.es_organico %}
+                    <span class="badge bg-success-subtle text-success border border-success-subtle px-3 py-2 rounded-pill fw-bold">
+                        <i class="fas fa-leaf me-1"></i> Orgánico
+                    </span>
+                {% endif %}
+                
+                {% if producto.stock > 0 %}
+                    <span class="badge bg-success px-3 py-2 rounded-pill fw-bold">Disponible</span>
+                {% else %}
+                    <span class="badge bg-danger px-3 py-2 rounded-pill fw-bold">Agotado</span>
+                {% endif %}
+            </div>
+
+            <h1 class="fw-bold text-dark display-5 mb-2">{{ producto.nombre }}</h1>
+            
+            <!-- Valoración rápida -->
+            <div class="d-flex align-items-center mb-4 pb-3 border-bottom">
+                <div class="text-warning me-2 fs-5">
+                    {% for i in "12345"|make_list %}
+                        {% if forloop.counter <= promedio|floatformat:"0" %}
+                            <i class="fas fa-star"></i>
+                        {% else %}
+                            <i class="far fa-star"></i>
+                        {% endif %}
+                    {% endfor %}
+                </div>
+                <span class="fw-bold fs-5 text-dark me-2">{{ promedio|floatformat:1 }}</span>
+                <span class="text-muted me-2">•</span>
+                <a href="#comentarios" class="text-success fw-medium text-decoration-none hover-underline">
+                    {{ total_comentarios }} opiniones
+                </a>
+            </div>
+            
+            <!-- Precios -->
+            <div class="mb-4">
+                {% if producto.precio_oferta %}
+                    <div class="d-flex align-items-baseline gap-2">
+                        <span class="text-danger fs-1 fw-extrabold">${{ producto.precio_oferta }}</span>
+                        <span class="text-muted fs-4 text-decoration-line-through">${{ producto.precio }}</span>
+                        <span class="text-muted fs-5">/ {{ producto.unidad_medida }}</span>
+                    </div>
+                {% else %}
+                    <div class="d-flex align-items-baseline gap-1">
+                        <span class="text-success fs-1 fw-extrabold">${{ producto.precio }}</span>
+                        <span class="text-muted fs-5">/ {{ producto.unidad_medida }}</span>
+                    </div>
+                {% endif %}
+            </div>
+
+            <!-- Descripción Corta -->
+            <p class="text-secondary fs-5 mb-4 lead">{{ producto.descripcion_corta }}</p>
+            
+            <!-- Descripción Larga / Información del Productor -->
+            <div class="p-3 bg-light border-start border-4 border-success rounded-end-4 mb-4">
+                <h6 class="fw-bold text-dark mb-1"><i class="fas fa-info-circle text-success me-1"></i> Detalles del productor:</h6>
+                <p class="mb-0 text-muted small">{{ producto.descripcion_larga }}</p>
+            </div>
+            
+            <!-- Atributos Técnicos Limpios -->
+            <div class="card border-0 bg-light rounded-4 p-3 mb-4">
+                <div class="row g-3">
+                    <div class="col-6">
+                        <small class="text-muted d-block uppercase fw-bold fs-7">Origen</small>
+                        <span class="text-dark fw-medium"><i class="fas fa-map-marker-alt text-muted me-1"></i> {{ producto.origen|default:"No especificado" }}</span>
+                    </div>
+                    <div class="col-6">
+                        <small class="text-muted d-block uppercase fw-bold fs-7">Temporada</small>
+                        <span class="text-dark fw-medium"><i class="fas fa-calendar-alt text-muted me-1"></i> {{ producto.temporada|default:"Todo el año" }}</span>
+                    </div>
+                    <div class="col-6">
+                        <small class="text-muted d-block uppercase fw-bold fs-7">Certificaciones</small>
+                        <span class="text-dark fw-medium"><i class="fas fa-certificate text-muted me-1"></i> {{ producto.certificaciones|default:"Ninguna" }}</span>
+                    </div>
+                    <div class="col-6">
+                        <small class="text-muted d-block uppercase fw-bold fs-7">Disponibilidad</small>
+                        <span class="text-dark fw-medium">
+                            <i class="fas fa-boxes text-muted me-1"></i> 
+                            {% if producto.stock > 0 %}
+                                {{ producto.stock }} {{ producto.unidad_medida }}
+                            {% else %}
+                                <span class="text-danger fw-bold">Agotado</span>
+                            {% endif %}
+                        </span>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Garantía de Frescura -->
+            <div class="p-3 bg-success-subtle border border-success-subtle rounded-4 mb-4">
+                <div class="d-flex align-items-center gap-3">
+                    <div class="text-success">
+                        <i class="fas fa-shield-alt fa-2x"></i>
+                    </div>
+                    <div>
+                        <strong class="text-success-emphasis d-block">Garantía del Campo Agrivale</strong>
+                        <small class="text-success-emphasis opacity-75">Productos del campo 100% frescos. Si no cumple tus expectativas, te devolvemos tu dinero.</small>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Formulario de Compra / Acciones -->
+            {% if producto.stock > 0 %}
+            <form method="post" action="{% url 'pedidos:agregar' producto.id_producto %}">
+                {% csrf_token %}
+                <div class="row g-3">
+                    <!-- Selector de Cantidad -->
+                    <div class="col-4 col-lg-3">
+                        <label class="form-label small fw-bold text-muted">Cantidad</label>
+                        <input type="number" name="cantidad" class="form-control form-control-lg bg-light border-0 fw-bold text-center rounded-3" value="1" min="1" max="{{ producto.stock }}">
+                    </div>
+                    
+                    <!-- Botón Tradicional: Agregar al Carrito -->
+                    <div class="col-8 col-lg-9 d-flex align-items-end">
+                        <button type="submit" class="btn btn-outline-success btn-lg w-100 py-3 fw-bold rounded-3 shadow-sm transition-up">
+                            <i class="fas fa-shopping-cart me-2"></i> Agregar al carrito
+                        </button>
+                    </div>
+
+                    <!-- NUEVO BOTÓN: Comprar Ahora (Ocupa todo el ancho inferior) -->
+                    <div class="col-12 mt-2">
+                        <a href="{% url 'productos:comprar_ahora' producto.id_producto %}" class="btn btn-success btn-lg w-100 py-3 fw-bold rounded-3 shadow-sm transition-up">
+                            <i class="fas fa-bolt me-2"></i> Comprar ahora
+                        </a>
+                    </div>
+                </div>
+            </form>
+            {% endif %}
+
+            <!-- Botón de Favoritos -->
+            {% if user.is_authenticated %}
+            <div class="mt-3">
+                <button type="button" id="btn-favorito" class="btn btn-outline-danger w-100 py-2 fw-bold rounded-3 shadow-sm" data-producto-id="{{ producto.id_producto }}">
+                    <i class="far fa-heart me-2"></i> <span id="texto-favorito">Agregar a favoritos</span>
+                </button>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Sección de Opiniones y Reseñas -->
+    <div id="comentarios" class="row mt-5 pt-5">
+        <div class="col-12">
+            <h3 class="fw-bold text-dark mb-4 pb-2 border-bottom d-flex align-items-center justify-content-between">
+                <span><i class="fas fa-star text-warning me-2"></i>Opiniones de los clientes</span>
+                <span class="fs-6 text-muted fw-normal">({{ total_comentarios }} calificaciones)</span>
+            </h3>
+            
+            <div class="row g-4 mt-2">
+                <!-- Panel de Métricas Izquierda -->
+                <div class="col-md-4">
+                    <div class="card border-0 shadow-sm rounded-4 p-4 text-center bg-white mb-3">
+                        <div class="card-body">
+                            <h2 class="display-3 fw-black text-dark mb-0">{{ promedio|floatformat:1 }}</h2>
+                            <div class="text-warning fs-4 my-2">
+                                {% for i in "12345"|make_list %}
+                                    {% if forloop.counter <= promedio|floatformat:"0" %}
+                                        <i class="fas fa-star"></i>
+                                    {% else %}
+                                        <i class="far fa-star"></i>
+                                    {% endif %}
+                                {% endfor %}
+                            </div>
+                            <p class="text-muted mb-0 fw-medium">Promedio del producto</p>
+                        </div>
+                    </div>
+                    
+                    <!-- Barras de Distribución -->
+                    <div class="card border-0 shadow-sm rounded-4 p-4 bg-white">
+                        <div class="card-body p-0">
+                            <h6 class="fw-bold text-dark mb-3">Distribución de estrellas</h6>
+                            
+                            {% for estrellas, porcentaje in porcentajes.items|dictsortreversed:"0" %}
+                            <div class="d-flex align-items-center mb-2">
+                                <span class="text-muted small fw-bold" style="width: 35px;">{{ estrellas }} ★</span>
+                                <div class="progress flex-grow-1 rounded-pill bg-light" style="height: 10px;">
+                                    <div class="progress-bar bg-warning rounded-pill" style="width: {{ porcentaje }}%"></div>
+                                </div>
+                                <span class="text-muted small fw-bold text-end" style="width: 45px;">{{ porcentaje }}%</span>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Lista de Comentarios Derecha -->
+                <div class="col-md-8">
+                    <!-- Filtros y Ordenamiento -->
+                    <div class="d-flex flex-wrap gap-2 justify-content-between align-items-center mb-4 p-3 bg-light rounded-4">
+                        <div class="btn-group rounded-3 overflow-hidden shadow-sm border-0" role="group">
+                            <a href="?estrellas=5#comentarios" class="btn btn-sm btn-white text-dark border-light fw-medium">5 ★</a>
+                            <a href="?estrellas=4#comentarios" class="btn btn-sm btn-white text-dark border-light fw-medium">4 ★</a>
+                            <a href="?estrellas=3#comentarios" class="btn btn-sm btn-white text-dark border-light fw-medium">3 ★</a>
+                            <a href="?estrellas=2#comentarios" class="btn btn-sm btn-white text-dark border-light fw-medium">2 ★</a>
+                            <a href="?estrellas=1#comentarios" class="btn btn-sm btn-white text-dark border-light fw-medium">1 ★</a>
+                            <a href="{% url 'productos:detalle' producto.slug %}#comentarios" class="btn btn-sm btn-success fw-medium">Todos</a>
+                        </div>
+                        
+                        <div>
+                            <select class="form-select form-select-sm border-0 bg-white shadow-sm rounded-3 fw-medium p-2" onchange="location=this.value;">
+                                <option value="?orden=recientes#comentarios" {% if orden == 'recientes' %}selected{% endif %}>Más recientes</option>
+                                <option value="?orden=mejores#comentarios" {% if orden == 'mejores' %}selected{% endif %}>Mejores calificaciones</option>
+                                <option value="?orden=peores#comentarios" {% if orden == 'peores' %}selected{% endif %}>Peores calificaciones</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <!-- Render de opiniones -->
+                    {% if comentarios %}
+                        {% for comentario in comentarios %}
+                        <div class="card border-0 shadow-sm rounded-4 mb-3 bg-white p-3">
+                            <div class="card-body">
+                                <div class="d-flex justify-content-between align-items-start flex-wrap gap-2">
+                                    <div>
+                                        <div class="text-warning small mb-1">
+                                            {% for i in "12345"|make_list %}
+                                                {% if forloop.counter <= comentario.calificacion %}
+                                                    <i class="fas fa-star"></i>
+                                                {% else %}
+                                                    <i class="far fa-star"></i>
+                                                {% endif %}
+                                            {% endfor %}
+                                        </div>
+                                        {% if comentario.titulo %}
+                                            <h5 class="fw-bold text-dark mb-0">{{ comentario.titulo }}</h5>
+                                        {% endif %}
+                                    </div>
+                                    <div class="text-md-end">
+                                        <span class="text-muted d-block fs-7">{{ comentario.fecha_creacion|date:"d/m/Y" }}</span>
+                                        
+                                        <!-- 🔥 CAMBIO DE SEGURIDAD AQUÍ: Validamos si el usuario existe -->
+                                        <span class="text-secondary small fw-medium">por 
+                                            {% if comentario.id_usuario %}
+                                                <strong>{{ comentario.id_usuario.username }}</strong>
+                                            {% else %}
+                                                <em style="color: #999; font-weight: normal;">Usuario eliminado</em>
+                                            {% endif %}
+                                        </span>
+
+                                        {% if comentario.compra_verificada %}
+                                            <span class="badge bg-success-subtle text-success border border-success-subtle ms-1 rounded-pill">
+                                                <i class="fas fa-check-circle"></i> Verificada
+                                            </span>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                                
+                                <p class="text-secondary mt-3 mb-3">{{ comentario.comentario }}</p>
+                                
+                                <!-- Fotos añadidas por clientes en comentarios -->
+                                <div class="row g-2">
+                                    {% if comentario.imagen_1 %}
+                                    <div class="col-4 col-sm-3 col-md-2">
+                                        <img src="{{ comentario.imagen_1.url }}" class="img-fluid rounded-3 border img-hover-zoom" alt="Foto cliente" style="height: 80px; width: 100%; object-fit: cover;">
+                                    </div>
+                                    {% endif %}
+                                    {% if comentario.imagen_2 %}
+                                    <div class="col-4 col-sm-3 col-md-2">
+                                        <img src="{{ comentario.imagen_2.url }}" class="img-fluid rounded-3 border img-hover-zoom" alt="Foto cliente" style="height: 80px; width: 100%; object-fit: cover;">
+                                    </div>
+                                    {% endif %}
+                                    {% if comentario.imagen_3 %}
+                                    <div class="col-4 col-sm-3 col-md-2">
+                                        <img src="{{ comentario.imagen_3.url }}" class="img-fluid rounded-3 border img-hover-zoom" alt="Foto cliente" style="height: 80px; width: 100%; object-fit: cover;">
+                                    </div>
+                                    {% endif %}
+                                </div>
+                                
+                                <!-- Respuesta Oficial del Vendedor -->
+                                {% if comentario.respuesta_vendedor %}
+                                <div class="mt-3 p-3 bg-light border-start border-4 border-success rounded-end-3">
+                                    <div class="d-flex justify-content-between align-items-center mb-1">
+                                        <strong class="text-success small"><i class="fas fa-store me-1"></i> Respuesta de Agrivale:</strong>
+                                        <small class="text-muted fs-7">{{ comentario.fecha_respuesta|date:"d/m/Y" }}</small>
+                                    </div>
+                                    <p class="mb-0 text-muted small">{{ comentario.respuesta_vendedor }}</p>
+                                </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        {% endfor %}
+                        
+                        <!-- Paginación -->
+                        {% if comentarios.has_other_pages %}
+                        <nav class="mt-4">
+                            <ul class="pagination justify-content-center">
+                                {% if comentarios.has_previous %}
+                                <li class="page-item">
+                                    <a class="page-link border-0 shadow-sm rounded-3 mx-1 text-success" href="?page={{ comentarios.previous_page_number }}#comentarios">&laquo;</a>
+                                </li>
+                                {% endif %}
+                                
+                                {% for i in comentarios.paginator.page_range %}
+                                    {% if comentarios.number == i %}
+                                        <li class="page-item active"><span class="page-link border-0 bg-success text-white shadow-sm rounded-3 mx-1">{{ i }}</span></li>
+                                    {% else %}
+                                        <li class="page-item"><a class="page-link border-0 text-dark shadow-sm rounded-3 mx-1 bg-white" href="?page={{ i }}#comentarios">{{ i }}</a></li>
+                                    {% endif %}
+                                {% endfor %}
+                                
+                                {% if comentarios.has_next %}
+                                <li class="page-item">
+                                    <a class="page-link border-0 shadow-sm rounded-3 mx-1 text-success" href="?page={{ comentarios.next_page_number }}#comentarios">&raquo;</a>
+                                </li>
+                                {% endif %}
+                            </ul>
+                        </nav>
+                        {% endif %}
+                        
+                    {% else %}
+                        <div class="card border-0 shadow-sm text-center p-5 bg-white rounded-4">
+                            <div class="card-body">
+                                <i class="fas fa-comment-dots fa-3x text-muted mb-3"></i>
+                                <h5 class="fw-bold text-dark">Aún no hay opiniones</h5>
+                                <p class="text-muted mb-0 small">Sé la primera persona en compartir su experiencia con este producto.</p>
+                            </div>
+                        </div>
+                    {% endif %}
+                    
+                    <!-- Botón para Opinar -->
+                    <div class="mt-4 text-end">
+                        {% if user.is_authenticated %}
+                            <a href="{% url 'productos:agregar_comentario' producto.id_producto %}" class="btn btn-outline-success px-4 py-2 fw-bold rounded-3 shadow-sm transition-up">
+                                <i class="fas fa-pen me-2"></i> Escribir mi opinión
+                            </a>
+                        {% else %}
+                            <div class="alert alert-light border shadow-sm text-start rounded-3 d-flex align-items-center gap-2">
+                                <i class="fas fa-info-circle text-primary"></i>
+                                <span class="small">¿Adquiriste este producto? <a href="{% url 'usuarios:login' %}" class="text-success fw-bold text-decoration-none hover-underline">Inicia sesión</a> para dejar tu opinión.</span>
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Carrusel / Bloque de Productos Relacionados -->
+    {% if relacionados %}
+    <div class="row mt-5 pt-5">
+        <div class="col-12 mb-4">
+            <h3 class="fw-bold text-dark mb-0">Productos recomendados para ti</h3>
+            <p class="text-muted small mb-0">Otros usuarios también compraron estos frescos de Agrivale.</p>
+        </div>
+        
+        {% for relacionado in relacionados %}
+        <div class="col-6 col-md-3 mb-4">
+            <div class="card border-0 shadow-sm h-100 rounded-4 overflow-hidden bg-white product-card-hover">
+                <div class="card-body p-3 d-flex flex-column justify-content-between">
+                    <div>
+                        <h6 class="fw-bold text-dark mb-1 text-truncate">{{ relacionado.nombre }}</h6>
+                        <p class="text-success fw-bold mb-3">${{ relacionado.get_precio_actual }}</p>
+                    </div>
+                    <a href="{% url 'productos:detalle' relacionado.slug %}" class="btn btn-sm btn-outline-success w-100 py-2 rounded-3 fw-medium">
+                        Ver producto
+                    </a>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+</div>
+
+<!-- Estilos CSS Embebidos Recomendados para esta vista -->
+<style>
+    .fw-extrabold { font-weight: 800; }
+    .fw-black { font-weight: 900; }
+    .fs-7 { font-size: 0.785rem; }
+    .btn-white { background-color: #fff; border: 1px solid #dee2e6; }
+    .btn-white:hover { background-color: #f8f9fa; }
+    .uppercase { text-transform: uppercase; letter-spacing: 0.5px; }
+    
+    /* Animaciones suaves */
+    .transition-up {
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+    .transition-up:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 .5rem 1rem rgba(0,0,0,.15)!important;
+    }
+    .transition-zoom {
+        transition: transform 0.3s ease;
+    }
+    .transition-zoom:hover {
+        transform: scale(1.03);
+    }
+    .product-card-hover {
+        transition: box-shadow 0.25s ease, transform 0.25s ease;
+    }
+    .product-card-hover:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 .75rem 1.5rem rgba(0,0,0,.08)!important;
+    }
+    .img-hover-zoom {
+        transition: transform 0.2s ease;
+        cursor: pointer;
+    }
+    .img-hover-zoom:hover {
+        transform: scale(1.08);
+    }
+    .hover-underline:hover {
+        text-decoration: underline !important;
+    }
+</style>
+
+<!-- Script para Favoritos -->
+{% if user.is_authenticated %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const btnFavorito = document.getElementById('btn-favorito');
+    const productoId = btnFavorito ? btnFavorito.dataset.productoId : null;
+    
+    if (btnFavorito && productoId) {
+        // Verificar si el producto ya es favorito al cargar
+        fetch(`/favoritos/verificar/${productoId}/`, {
+            method: 'GET',
+            headers: {
+                'X-CSRFToken': '{{ csrf_token }}',
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            const icono = btnFavorito.querySelector('i');
+            const texto = document.getElementById('texto-favorito');
+            
+            if (data.es_favorito) {
+                icono.classList.remove('far');
+                icono.classList.add('fas');
+                texto.textContent = 'Eliminar de favoritos';
+            } else {
+                icono.classList.remove('fas');
+                icono.classList.add('far');
+                texto.textContent = 'Agregar a favoritos';
+            }
+        })
+        .catch(() => {}); // Ignorar errores en la verificación inicial
+
+        btnFavorito.addEventListener('click', function() {
+            fetch(`/favoritos/toggle/${productoId}/`, {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': '{{ csrf_token }}',
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                const icono = btnFavorito.querySelector('i');
+                const texto = document.getElementById('texto-favorito');
+                
+                if (data.es_favorito) {
+                    icono.classList.remove('far');
+                    icono.classList.add('fas');
+                    texto.textContent = 'Eliminar de favoritos';
+                } else {
+                    icono.classList.remove('fas');
+                    icono.classList.add('far');
+                    texto.textContent = 'Agregar a favoritos';
+                }
+            })
+            .catch(error => console.error('Error:', error));
+        });
+    }
+});
+</script>
+{% endif %}
+{% endblock %}

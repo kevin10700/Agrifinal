@@ -1,0 +1,128 @@
+{% extends 'admin_panel/base.html' %}
+{% load static %}
+
+{% block title %}Usuarios de Panel - Panel Admin{% endblock %}
+
+{% block breadcrumb %}
+    <span class="breadcrumb-item"><a href="{% url 'admin_panel:dashboard' %}">Inicio</a></span>
+    <span class="breadcrumb-item">Usuarios de Panel</span>
+{% endblock %}
+
+{% block content %}
+<div class="fade-in">
+    <div class="page-header">
+        <div>
+            <h1 class="page-title">Usuarios de Panel</h1>
+            <p class="page-subtitle">Gestiona los roles de los usuarios del panel administrativo</p>
+        </div>
+        <a href="{% url 'admin_panel:usuario_panel_crear' %}" class="btn btn-primary">
+            <i class="fas fa-plus"></i> Asignar Rol
+        </a>
+    </div>
+
+    <div class="card">
+        <div class="card-body">
+            <form method="get" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; align-items: end;">
+                <div>
+                    <label style="display: block; margin-bottom: 8px; font-weight: 500; color: var(--text-secondary);">Buscar</label>
+                    <input type="text" name="q" value="{{ busqueda }}" placeholder="Usuario, email, username..."
+                           style="width: 100%; padding: 10px 12px; border: 1px solid var(--border-color); border-radius: var(--border-radius_sm); background: var(--bg-card); color: var(--text-primary);">
+                </div>
+                <div style="display: flex; gap: 8px;">
+                    <button type="submit" class="btn btn-primary"><i class="fas fa-search"></i> Buscar</button>
+                    <a href="{% url 'admin_panel:usuarios_panel_lista' %}" class="btn btn-secondary"><i class="fas fa-times"></i> Limpiar</a>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div class="table-container">
+        <div class="table-header">
+            <h3 class="table-title">Total: {{ usuarios_panel|length }} usuarios</h3>
+        </div>
+        <div class="table-responsive">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Usuario</th>
+                        <th>Email</th>
+                        <th>Tipo</th>
+                        <th>Rol Asignado</th>
+                        <th>Fecha Asignación</th>
+                        <th>Acciones</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in usuarios_panel %}
+                    <tr>
+                        <td>
+                            <div style="display: flex; align-items: center; gap: 12px;">
+                                <div style="width: 40px; height: 40px; border-radius: 50%; background: var(--primary-bg); display: flex; align-items: center; justify-content: center; color: var(--primary-color);">
+                                    <i class="fas fa-user"></i>
+                                </div>
+                                <div>
+                                    <div style="font-weight: 600;">{{ item.usuario.nombre_completo }}</div>
+                                    <div style="font-size: 0.85rem; color: var(--text-muted);">@{{ item.usuario.username }}</div>
+                                </div>
+                            </div>
+                        </td>
+                        <td>{{ item.usuario.email }}</td>
+                        <td>
+                            {% if item.tipo_usuario == 'superadmin' %}
+                            <span class="badge" style="background: #8e44ad; color: white;">
+                                <i class="fas fa-crown"></i> {{ item.tipo_label }}
+                            </span>
+                            {% elif item.tipo_usuario == 'panel_admin' %}
+                            <span class="badge badge-primary">
+                                <i class="fas fa-user-shield"></i> {{ item.tipo_label }}
+                            </span>
+                            {% elif item.tipo_usuario == 'staff' %}
+                            <span class="badge" style="background: #e67e22; color: white;">
+                                <i class="fas fa-user-cog"></i> {{ item.tipo_label }}
+                            </span>
+                            {% else %}
+                            <span class="badge badge-secondary">
+                                <i class="fas fa-user"></i> {{ item.tipo_label }}
+                            </span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if item.rol %}
+                            <span class="badge badge-success">{{ item.rol.nombre }}</span>
+                            {% else %}
+                            <span class="badge badge-secondary">Sin rol</span>
+                            {% endif %}
+                        </td>
+                        <td>{{ item.fecha_asignacion|date:"d/m/Y H:i"|default:"-" }}</td>
+                        <td>
+                            <div style="display: flex; gap: 8px;">
+                                {% if item.up_id %}
+                                <a href="{% url 'admin_panel:usuario_panel_editar' item.up_id %}" class="btn btn-sm btn-primary" title="Editar rol">
+                                    <i class="fas fa-edit"></i>
+                                </a>
+                                <a href="{% url 'admin_panel:usuario_panel_eliminar' item.up_id %}" class="btn btn-sm btn-danger" title="Quitar rol">
+                                    <i class="fas fa-trash"></i>
+                                </a>
+                                {% else %}
+                                <a href="{% url 'admin_panel:usuario_panel_crear' %}" class="btn btn-sm btn-success" title="Asignar rol">
+                                    <i class="fas fa-plus"></i>
+                                </a>
+                                {% endif %}
+                            </div>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="6" style="text-align: center; padding: 60px 20px; color: var(--text-muted);">
+                            <i class="fas fa-users-gear" style="font-size: 3rem; margin-bottom: 12px; display: block;"></i>
+                            <p style="font-size: 1.1rem; margin-bottom: 8px;">No hay usuarios registrados</p>
+                            <p style="font-size: 0.9rem;">Los usuarios aparecerán aquí automáticamente</p>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

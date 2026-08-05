@@ -1,0 +1,199 @@
+{% extends 'admin_panel/base.html' %}
+{% load static %}
+
+{% block title %}Nuevo Producto - Panel Admin{% endblock %}
+
+{% block breadcrumb %}
+    <span class="breadcrumb-item"><a href="{% url 'admin_panel:dashboard' %}">Inicio</a></span>
+    <span class="breadcrumb-item"><a href="{% url 'admin_panel:productos_lista' %}">Productos</a></span>
+    <span class="breadcrumb-item">Nuevo</span>
+{% endblock %}
+
+{% block content %}
+<div class="fade-in">
+    <div class="page-header">
+        <div>
+            <h1 class="page-title">Nuevo Producto</h1>
+            <p class="page-subtitle">Completa la información del producto. El stock inicial será 0; usa el módulo de Compras para abastecer.</p>
+        </div>
+        <a href="{% url 'admin_panel:productos_lista' %}" class="btn btn-secondary">
+            <i class="fas fa-arrow-left"></i> Volver
+        </a>
+    </div>
+
+    <div class="card">
+        <div class="card-body">
+            <form method="post" enctype="multipart/form-data">
+                {% csrf_token %}
+
+                <div class="form-grid">
+                    <!-- Información Básica -->
+                    <div class="form-group-full">
+                        <h3 class="form-section-title">
+                            <i class="fas fa-info-circle"></i> Información Básica
+                        </h3>
+                        <div class="form-row">
+                            <div class="form-col">
+                                <label class="form-label">Nombre *</label>
+                                <input type="text" name="nombre" required class="form-control" placeholder="Ej: Ferilizante DAP 50kg">
+                            </div>
+
+                            <div class="form-col">
+                                <label class="form-label">Categoría *</label>
+                                <select name="categoria" required class="form-select">
+                                    <option value="">Seleccionar categoría</option>
+                                    {% for categoria in categorias %}
+                                    <option value="{{ categoria.id_categoria }}">{{ categoria.nombre }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Descripción -->
+                    <div class="form-group-full">
+                        <label class="form-label">Descripción Corta *</label>
+                        <input type="text" name="descripcion_corta" required maxlength="300" class="form-control" placeholder="Breve descripción del producto...">
+                    </div>
+
+                    <div class="form-group-full">
+                        <label class="form-label">Descripción Larga</label>
+                        <textarea name="descripcion_larga" rows="4" class="form-control" placeholder="Descripción detallada del producto..."></textarea>
+                    </div>
+
+                    <!-- Precios -->
+                    <div class="form-row">
+                        <div class="form-col">
+                            <label class="form-label">Precio de Venta *</label>
+                            <div class="input-group">
+                                <span class="input-group-text">$</span>
+                                <input type="number" name="precio" step="0.01" required class="form-control" placeholder="0.00">
+                            </div>
+                        </div>
+
+                        <div class="form-col">
+                            <label class="form-label">Precio Oferta</label>
+                            <div class="input-group">
+                                <span class="input-group-text">$</span>
+                                <input type="number" name="precio_oferta" step="0.01" class="form-control" placeholder="0.00">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Stock (solo lectura - siempre 0 al crear) -->
+                    <div class="form-row">
+                        <div class="form-col">
+                            <label class="form-label">Stock Inicial</label>
+                            <input type="number" value="0" readonly disabled class="form-control readonly-field">
+                            <small class="form-text">
+                                <i class="fas fa-info-circle"></i> El stock inicial es 0. Se actualiza automáticamente al registrar compras y ventas.
+                            </small>
+                        </div>
+
+                        <div class="form-col">
+                            <label class="form-label">Unidad de Medida</label>
+                            <select name="unidad_medida" class="form-select">
+                                <option value="kg">Kilogramo</option>
+                                <option value="unidad">Unidad</option>
+                                <option value="libra">Libra</option>
+                                <option value="docena">Docena</option>
+                                <option value="caja">Caja</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- IMAGEN CON VISTA PREVIA Y CANCELACIÓN -->
+                    <div class="form-group-full">
+                        <label class="form-label">Imagen Principal</label>
+                        
+                        <!-- Input para subir la imagen -->
+                        <input type="file" name="imagen_principal" id="id_imagen_principal" accept="image/*" class="form-control">
+                        <small class="form-text"><i class="fas fa-info-circle"></i> Selecciona una imagen para el producto.</small>
+
+                        <!-- 🔥 Contenedor de Previsualización (se oculta por defecto) -->
+                        <div id="preview-container" style="margin-top: 15px; display: none; position: relative; width: fit-content;">
+                            <img id="image-preview" src="#" alt="Vista previa" 
+                                style="max-width: 200px; max-height: 200px; border-radius: 8px; border: 2px solid var(--border-color); padding: 4px; background: white;">
+                            
+                            <!-- Botón para cancelar la selección -->
+                            <button type="button" id="cancel-image-btn" 
+                                    style="position: absolute; top: -10px; right: -10px; width: 30px; height: 30px; border-radius: 50%; background: #dc3545; color: white; border: 2px solid white; font-weight: bold; cursor: pointer; box-shadow: 0 2px 5px rgba(0,0,0,0.2);">
+                                &times;
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Características -->
+                    <div class="form-group-full">
+                        <h3 class="form-section-title">
+                            <i class="fas fa-star"></i> Características
+                        </h3>
+                        <div class="checkbox-group">
+                            <label class="checkbox-item">
+                                <input type="checkbox" name="es_destacado">
+                                <span>Producto Destacado</span>
+                            </label>
+                            <label class="checkbox-item">
+                                <input type="checkbox" name="es_nuevo">
+                                <span>Producto Nuevo</span>
+                            </label>
+                            <label class="checkbox-item">
+                                <input type="checkbox" name="es_organico">
+                                <span>Producto Orgánico</span>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Botones de Acción -->
+                <div class="form-actions">
+                    <a href="{% url 'admin_panel:productos_lista' %}" class="btn btn-secondary">
+                        <i class="fas fa-times"></i> Cancelar
+                    </a>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-save"></i> Guardar Producto
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- JAVASCRIPT PARA LA VISTA PREVIA Y CANCELACIÓN -->
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const inputFile = document.getElementById('id_imagen_principal');
+    const previewContainer = document.getElementById('preview-container');
+    const imagePreview = document.getElementById('image-preview');
+    const cancelBtn = document.getElementById('cancel-image-btn');
+
+    // 1. Cuando el usuario selecciona un archivo
+    if (inputFile) {
+        inputFile.addEventListener('change', function() {
+            const file = this.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    imagePreview.src = e.target.result;
+                    previewContainer.style.display = 'block';
+                }
+                reader.readAsDataURL(file);
+            } else {
+                // Si el usuario abre el explorador y cierra sin elegir nada
+                previewContainer.style.display = 'none';
+                imagePreview.src = '#';
+            }
+        });
+    }
+
+    // 2. Botón de cancelar (borra la selección y oculta la previsualización)
+    if (cancelBtn) {
+        cancelBtn.addEventListener('click', function() {
+            inputFile.value = ''; // Limpia el input file
+            previewContainer.style.display = 'none';
+            imagePreview.src = '#';
+        });
+    }
+});
+</script>
+{% endblock %}

@@ -1,0 +1,129 @@
+{% extends 'productos/base.html' %}
+
+{% block content %}
+<div class="container py-4">
+  <div class="row g-4">
+    <div class="col-lg-7">
+      <div class="card border-0 shadow-sm rounded-4 p-4 checkout-card">
+        <div class="card-body">
+          <h2 class="fw-bold text-dark mb-4"><i class="fas fa-shipping-fast text-success me-2"></i> Datos de envío</h2>
+          <form method="post" id="checkout-form">
+            {% csrf_token %}
+            {% if form.non_field_errors %}<div class="alert alert-danger">{{ form.non_field_errors }}</div>{% endif %}
+
+            <h4 class="fw-bold text-dark mb-3">Datos del cliente</h4>
+            <div class="row g-3 mb-4">
+              <div class="col-12">{% include 'pedidos/partials/checkout_field.html' with field=form.nombre_receptor %}</div>
+              <div class="col-md-6">{% include 'pedidos/partials/checkout_field.html' with field=form.correo %}</div>
+              
+              <!-- 🔥 CAMBIO AQUÍ: Bloque del teléfono con validación de 10 dígitos -->
+              <div class="col-md-6">
+                {% include 'pedidos/partials/checkout_field.html' with field=form.telefono_contacto %}
+                <script>
+                    document.addEventListener('DOMContentLoaded', function() {
+                        const telInput = document.querySelector('input[name="telefono_contacto"]');
+                        if (telInput) {
+                            telInput.setAttribute('maxlength', '10');
+                            telInput.setAttribute('pattern', '[0-9]{10}');
+                            telInput.setAttribute('title', 'Ingresa exactamente 10 números sin espacios.');
+                            telInput.placeholder = '10 dígitos';
+
+                            telInput.addEventListener('input', function() {
+                                this.value = this.value.replace(/[^0-9]/g, '');
+                                if (this.value.length > 10) {
+                                    this.value = this.value.slice(0, 10);
+                                }
+                            });
+                        }
+                    });
+                </script>
+              </div>
+              <!-- 🔥 FIN DEL CAMBIO -->
+
+            </div>
+
+            <hr class="my-4">
+            <h4 class="fw-bold text-dark mb-3">Dirección de entrega</h4>
+            <div class="row g-3">
+              {{ form.pais }}
+              <div class="col-md-4"><label class="form-label fw-bold text-dark">País</label><input class="form-control bg-light" value="México" readonly></div>
+              <div class="col-md-8">{% include 'pedidos/partials/checkout_field.html' with field=form.estado %}</div>
+              <div class="col-md-6">{% include 'pedidos/partials/checkout_field.html' with field=form.municipio %}</div>
+              <div class="col-md-6">{% include 'pedidos/partials/checkout_field.html' with field=form.codigo_postal %}</div>
+              <div class="col-12">{% include 'pedidos/partials/checkout_field.html' with field=form.colonia %}<datalist id="colonias-list"></datalist></div>
+              <div class="col-md-6">{% include 'pedidos/partials/checkout_field.html' with field=form.calle %}</div>
+              <div class="col-md-3">{% include 'pedidos/partials/checkout_field.html' with field=form.numero_exterior %}</div>
+              <div class="col-md-3">{% include 'pedidos/partials/checkout_field.html' with field=form.numero_interior %}</div>
+              <div class="col-12">{% include 'pedidos/partials/checkout_field.html' with field=form.referencias %}</div>
+            </div>
+
+            {{ form.transportista }}{{ form.servicio }}
+            <div class="shipping-quote-box rounded-4 p-3 mt-4 mb-4">
+              <div class="d-flex flex-column flex-md-row justify-content-between gap-2 align-items-md-center">
+                <div><h5 class="fw-bold mb-1"><i class="fas fa-truck text-success me-2"></i> Cotiza tu envío</h5><span id="quote-message" class="small text-muted">Usamos el peso y dimensiones de tus productos.</span></div>
+                <button type="button" id="quote-button" class="btn btn-outline-success fw-bold">Cotizar envío</button>
+              </div>
+              <div id="shipping-options" class="mt-3"></div>
+            </div>
+
+            <hr class="my-4">
+            <h4 class="fw-bold text-dark mb-3">Método de pago</h4>
+            <div class="row g-3 mb-3">
+              {% for radio in form.metodo_pago %}
+                <div class="col-12">
+                  <input class="d-none payment-radio" type="radio" name="metodo_pago" id="{{ radio.id_for_label }}" value="{{ radio.data.value }}" {% if radio.data.selected %}checked{% endif %} required>
+                  <label for="{{ radio.id_for_label }}" class="btn btn-outline-success w-100 p-3 rounded-4 text-start d-flex align-items-center payment-option">
+                    {% if radio.data.value == 'transferencia' %}<i class="fas fa-university fs-3 me-3 text-success"></i>{% elif radio.data.value == 'oxxo' %}<i class="fas fa-store fs-3 me-3 text-primary"></i>{% else %}<i class="fas fa-credit-card fs-3 me-3 text-info"></i>{% endif %}
+                    <span><span class="fs-5 fw-bold d-block text-dark">{{ radio.choice_label }}</span><small class="text-muted">{% if radio.data.value == 'transferencia' %}Paga desde tu cuenta bancaria{% elif radio.data.value == 'oxxo' %}Genera una referencia para pagar en OXXO{% elif radio.data.value == 'mercadopago' %}Paga de forma segura en Mercado Pago Checkout Pro{% else %}Pago seguro con tarjeta mediante Stripe{% endif %}</small></span>
+                    <span class="badge bg-success ms-auto fs-6 selected-badge">Seleccionado</span>
+                  </label>
+                </div>
+              {% endfor %}
+            </div>
+            {{ form.metodo_pago.errors }}
+            <div class="alert alert-info border-0 small mb-4"><i class="fas fa-info-circle me-2"></i>Stripe y Mercado Pago funcionan de forma independiente. Serás redirigido al proveedor que selecciones.</div>
+            <button type="submit" class="btn btn-success btn-lg w-100 py-3 fw-bold rounded-3 shadow-sm fs-5"><i class="fas fa-check-circle me-2"></i> Confirmar pedido y continuar</button>
+          </form>
+        </div>
+      </div>
+    </div>
+    <div class="col-lg-5">
+      <div class="card border-0 shadow-sm rounded-4 p-4 bg-light position-sticky" style="top:20px;">
+        <h4 class="fw-bold text-dark mb-4">Productos seleccionados</h4>
+        <div style="max-height:240px;overflow-y:auto" class="pe-2">
+          {% for item in items %}<div class="d-flex justify-content-between align-items-center mb-3"><div><h6 class="mb-0 fw-bold text-dark fs-5">{{ item.id_producto.nombre }}</h6><small class="text-muted">Cantidad: {{ item.cantidad }}</small></div><span class="fw-bold text-secondary fs-5">${{ item.get_subtotal|floatformat:2 }}</span></div>{% endfor %}
+        </div>
+        <hr class="text-muted my-3">
+        <div class="d-flex justify-content-between align-items-center mb-2"><span class="fs-5 text-muted">Subtotal:</span><span class="fs-5 fw-bold text-dark">${{ subtotal|floatformat:2 }}</span></div>
+        <div class="d-flex justify-content-between align-items-center mb-2"><span class="fs-5 text-muted">Envío:</span><span class="fs-5 fw-bold text-dark" id="shipping-price">—</span></div>
+        <div class="d-flex justify-content-between align-items-center mt-3"><span class="fs-4 text-dark fw-bold">Total a pagar:</span><span class="fs-2 fw-bold text-success" id="total-price">${{ subtotal|floatformat:2 }}</span></div>
+        <p class="small text-muted mb-0 mt-3"><i class="fas fa-weight-hanging me-1"></i>Peso calculado: {{ paquete.peso }} kg</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+{{ paquete|json_script:"package-data" }}
+<script>
+(() => {
+  const form = document.getElementById('checkout-form'), quoteButton = document.getElementById('quote-button'), optionsContainer = document.getElementById('shipping-options'), message = document.getElementById('quote-message');
+  const packageData = JSON.parse(document.getElementById('package-data').textContent), subtotal = Number('{{ subtotal }}');
+  const selectedCarrier = document.getElementById('id_transportista'), selectedService = document.getElementById('id_servicio'), csrf = document.querySelector('[name=csrfmiddlewaretoken]').value;
+  const money = value => '$' + Number(value).toFixed(2), escapeHtml = value => String(value ?? '').replace(/[&<>'"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[c]));
+  const errorText = error => { if (typeof error === 'string') return error; if (Array.isArray(error)) return error.join(' '); if (error && typeof error === 'object') return Object.values(error).flat().join(' '); return 'Ocurrió un error al consultar Envia.'; };
+  const fieldValue = id => document.getElementById(id).value;
+  let enviaStateCode = '';
+  const address = () => ({pais: 'MX', codigo_postal: fieldValue('id_codigo_postal'), nombre: fieldValue('id_nombre_receptor'), telefono: fieldValue('id_telefono_contacto'), calle: [fieldValue('id_calle'),fieldValue('id_numero_exterior')].filter(Boolean).join(' '), ciudad: fieldValue('id_municipio'), estado: enviaStateCode || fieldValue('id_estado')});
+  const postalCode = document.getElementById('id_codigo_postal');
+  postalCode.addEventListener('change', async () => { const code = postalCode.value.trim(); if (code.length !== 5) return; const status = document.getElementById('quote-message'); status.className='small text-muted'; status.textContent='Validando código postal…'; try { const response=await fetch(`/shipping/codigo-postal/${encodeURIComponent(code)}/`); const data=await response.json(); if (!response.ok) throw new Error(errorText(data.error)); document.getElementById('id_estado').value=data.estado; document.getElementById('id_municipio').value=data.municipio; enviaStateCode=data.estado_codigo || ''; const colonia=document.getElementById('id_colonia'), list=document.getElementById('colonias-list'); list.innerHTML=''; (data.colonias || []).forEach(nombre=>{const option=document.createElement('option');option.value=nombre;list.appendChild(option);}); colonia.setAttribute('list','colonias-list'); if ((data.colonias || []).length === 1) colonia.value=data.colonias[0]; status.textContent=(data.colonias || []).length > 1 ? 'Código postal validado. Selecciona tu colonia.' : 'Código postal validado. Completa calle y número.'; } catch(error) { status.textContent=error.message; status.className='small text-danger'; }});
+  // Una dirección guardada ya trae el CP rellenado y no dispara "change".
+  // Validarlo al cargar asegura que Envia reciba MX en lugar de "México".
+  if (postalCode.value.trim().length === 5) postalCode.dispatchEvent(new Event('change'));
+  quoteButton.addEventListener('click', async () => { selectedCarrier.value=''; selectedService.value=''; message.className='small text-muted'; message.textContent='Consultando opciones de envío…'; optionsContainer.innerHTML=''; try { const response=await fetch('{% url "shipping:cotizar" %}',{method:'POST',headers:{'Content-Type':'application/json','X-CSRFToken':csrf},body:JSON.stringify({destino:address(),paquete:packageData})}); const data=await response.json(); if(!response.ok) throw new Error(errorText(data.error)); if(!data.opciones.length) throw new Error('No hay servicios disponibles para esta dirección.'); if(data.tipo==='local'){const option=data.opciones[0],days=option.dias_estimados??'Por confirmar'; selectedCarrier.value=option.transportista;selectedService.value=option.servicio;message.textContent='Tu dirección cuenta con reparto propio de Agrivale.';optionsContainer.innerHTML=`<div class="shipping-option border border-success rounded-3 p-3 d-flex justify-content-between align-items-center"><span><strong>🚚 Reparto Agrivale</strong><small class="d-block">Entrega estimada: ${escapeHtml(days)}</small></span><strong class="text-success">${money(option.precio)}</strong></div>`;document.getElementById('shipping-price').textContent=money(option.precio);document.getElementById('total-price').textContent=money(subtotal+Number(option.precio));return;} message.textContent='Selecciona una opción de envío.'; data.opciones.forEach((option,index)=>{const id=`shipping-${index}`,days=option.dias_estimados??'Por confirmar'; optionsContainer.insertAdjacentHTML('beforeend',`<label class="shipping-option border rounded-3 p-3 d-flex justify-content-between align-items-center mb-2" for="${id}"><span><input type="radio" name="shipping-choice" id="${id}" data-carrier="${escapeHtml(option.transportista)}" data-service="${escapeHtml(option.servicio)}" data-price="${Number(option.precio)}" required> <strong>${escapeHtml(option.transportista)}</strong><small class="d-block ms-4">${escapeHtml(option.servicio)} · ${days} días estimados</small></span><strong class="text-success">${money(option.precio)}</strong></label>`);}); document.querySelectorAll('[name=shipping-choice]').forEach(input=>input.addEventListener('change',e=>{const c=e.target;selectedCarrier.value=c.dataset.carrier;selectedService.value=c.dataset.service;document.getElementById('shipping-price').textContent=money(c.dataset.price);document.getElementById('total-price').textContent=money(subtotal+Number(c.dataset.price));})); } catch(error) {message.textContent=error.message;message.className='small text-danger';}});
+  form.addEventListener('submit',event=>{if(!selectedCarrier.value||!selectedService.value){event.preventDefault();message.textContent='Primero cotiza y selecciona un envío.';message.className='small text-danger';}});
+})();
+</script>
+<style>
+  .payment-option,.shipping-option{transition:all .25s ease;cursor:pointer;border-width:2px!important;background:#fff}.payment-option:hover,.shipping-option:hover{transform:translateX(4px);box-shadow:0 4px 15px rgba(0,0,0,.08)}.payment-radio:checked+.payment-option{border-color:#198754!important;background:#effaf3}.selected-badge{display:none}.payment-radio:checked+.payment-option .selected-badge{display:inline-block}.shipping-quote-box{background:#f6fbf7;border:1px solid #d6eadb}
+</style>
+{% endblock %}

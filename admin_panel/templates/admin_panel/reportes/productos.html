@@ -1,0 +1,218 @@
+{% extends 'admin_panel/base.html' %}
+{% load static %}
+
+{% block title %}Reporte de Productos - Panel Admin{% endblock %}
+
+{% block extra_css %}
+<style>
+    .reporte-container {
+        max-width: 900px;
+        margin: 0 auto;
+    }
+
+    .reporte-header {
+        text-align: center;
+        margin-bottom: 32px;
+    }
+
+    .reporte-header i {
+        font-size: 3rem;
+        color: var(--success);
+        margin-bottom: 16px;
+    }
+
+    .reporte-header h2 {
+        font-size: 1.5rem;
+        color: var(--text-primary);
+        margin-bottom: 8px;
+    }
+
+    .reporte-header p {
+        color: var(--text-secondary);
+        font-size: 0.95rem;
+    }
+
+    .periodo-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 16px;
+        margin-bottom: 32px;
+    }
+
+    .periodo-card {
+        background: var(--bg-card);
+        border: 1px solid var(--border-color);
+        border-radius: var(--border-radius);
+        padding: 24px;
+        text-align: center;
+        transition: all var(--transition-fast);
+    }
+
+    .periodo-card:hover {
+        transform: translateY(-4px);
+        box-shadow: var(--shadow-lg);
+        border-color: var(--success);
+    }
+
+    .periodo-card i {
+        font-size: 2rem;
+        margin-bottom: 12px;
+    }
+
+    .periodo-card h4 {
+        font-size: 1rem;
+        color: var(--text-primary);
+        margin-bottom: 4px;
+    }
+
+    .periodo-card p {
+        font-size: 0.85rem;
+        color: var(--text-muted);
+        margin-bottom: 16px;
+    }
+
+    .formato-botones {
+        display: flex;
+        gap: 8px;
+        justify-content: center;
+    }
+
+    .formato-btn {
+        padding: 8px 16px;
+        border-radius: var(--border-radius-sm);
+        border: 1px solid var(--border-color);
+        text-decoration: none;
+        font-size: 0.8rem;
+        font-weight: 500;
+        transition: all var(--transition-fast);
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+    }
+
+    .formato-btn.pdf {
+        color: #e74c3c;
+        background: var(--bg-body);
+    }
+
+    .formato-btn.pdf:hover {
+        background: #e74c3c;
+        color: white;
+        border-color: #e74c3c;
+    }
+
+    .formato-btn.excel {
+        color: #27ae60;
+        background: var(--bg-body);
+    }
+
+    .formato-btn.excel:hover {
+        background: #27ae60;
+        color: white;
+        border-color: #27ae60;
+    }
+</style>
+{% endblock %}
+
+{% block breadcrumb %}
+    <span class="breadcrumb-item"><a href="{% url 'admin_panel:dashboard' %}">Inicio</a></span>
+    <span class="breadcrumb-item"><a href="{% url 'admin_panel:reportes' %}">Reportes</a></span>
+    <span class="breadcrumb-item">Productos</span>
+{% endblock %}
+
+{% block content %}
+<div class="fade-in">
+    <div class="page-header">
+        <div>
+            <h1 class="page-title">Reporte de Productos</h1>
+            <p class="page-subtitle">Exporta reportes de productos más vendidos por período</p>
+        </div>
+        <a href="{% url 'admin_panel:reportes' %}" class="btn btn-secondary">
+            <i class="fas fa-arrow-left"></i> Volver a Reportes
+        </a>
+    </div>
+
+    <div class="reporte-container">
+        <div class="reporte-header">
+            <i class="fas fa-box"></i>
+            <h2>Exportar Reporte de Productos Más Vendidos</h2>
+            <p>Selecciona el período y formato para generar el reporte de productos más vendidos</p>
+        </div>
+
+        <div class="periodo-grid">
+            <!-- Día -->
+            <div class="periodo-card">
+                <i class="fas fa-calendar-day" style="color: var(--success);"></i>
+                <h4>Día</h4>
+                <p>Productos más vendidos del día</p>
+                <div class="formato-botones">
+                    <a href="{% url 'pedidos:exportar_productos_mas_vendidos_pdf' periodo='dia' %}" class="formato-btn pdf">
+                        <i class="fas fa-file-pdf"></i> PDF
+                    </a>
+                    <a href="{% url 'pedidos:exportar_productos_mas_vendidos' periodo='dia' %}" class="formato-btn excel">
+                        <i class="fas fa-file-excel"></i> Excel
+                    </a>
+                </div>
+            </div>
+
+            <!-- Semana -->
+            <div class="periodo-card">
+                <i class="fas fa-calendar-week" style="color: var(--success);"></i>
+                <h4>Semana</h4>
+                <p>Productos más vendidos de la semana</p>
+                <div class="formato-botones">
+                    <a href="{% url 'pedidos:exportar_productos_mas_vendidos_pdf' periodo='semana' %}" class="formato-btn pdf">
+                        <i class="fas fa-file-pdf"></i> PDF
+                    </a>
+                    <a href="{% url 'pedidos:exportar_productos_mas_vendidos' periodo='semana' %}" class="formato-btn excel">
+                        <i class="fas fa-file-excel"></i> Excel
+                    </a>
+                </div>
+            </div>
+
+            <!-- Mes -->
+            <div class="periodo-card">
+                <i class="fas fa-calendar-alt" style="color: var(--success);"></i>
+                <h4>Mes</h4>
+                <p>Productos más vendidos del mes</p>
+                <div class="formato-botones">
+                    <a href="{% url 'pedidos:exportar_productos_mas_vendidos_pdf' periodo='mes' %}" class="formato-btn pdf">
+                        <i class="fas fa-file-pdf"></i> PDF
+                    </a>
+                    <a href="{% url 'pedidos:exportar_productos_mas_vendidos' periodo='mes' %}" class="formato-btn excel">
+                        <i class="fas fa-file-excel"></i> Excel
+                    </a>
+                </div>
+            </div>
+
+            <!-- Año -->
+            <div class="periodo-card">
+                <i class="fas fa-calendar" style="color: var(--success);"></i>
+                <h4>Año</h4>
+                <p>Productos más vendidos del año</p>
+                <div class="formato-botones">
+                    <a href="{% url 'pedidos:exportar_productos_mas_vendidos_pdf' periodo='anio' %}" class="formato-btn pdf">
+                        <i class="fas fa-file-pdf"></i> PDF
+                    </a>
+                    <a href="{% url 'pedidos:exportar_productos_mas_vendidos' periodo='anio' %}" class="formato-btn excel">
+                        <i class="fas fa-file-excel"></i> Excel
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <div class="card" style="margin-top: 16px;">
+            <div class="card-body" style="display: flex; align-items: flex-start; gap: 12px; background: #d4edda; border-radius: var(--border-radius-sm); border-left: 4px solid var(--success);">
+                <i class="fas fa-info-circle" style="color: var(--success); font-size: 1.2rem; margin-top: 2px;"></i>
+                <div>
+                    <p style="margin: 0; font-size: 0.85rem; color: var(--text-secondary); line-height: 1.5;">
+                        Los reportes se generan automáticamente en el formato seleccionado. 
+                        <strong>PDF</strong> para visualización e impresión, <strong>Excel</strong> para análisis y edición de datos.
+                        Los archivos se descargan directamente al hacer clic.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

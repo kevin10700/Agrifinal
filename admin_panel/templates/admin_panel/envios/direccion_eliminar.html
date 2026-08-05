@@ -1,0 +1,32 @@
+{% extends 'admin_panel/base.html' %}
+{% load static %}
+
+{% block title %}Eliminar Dirección - Panel Admin{% endblock %}
+
+{% block breadcrumb %}
+    <span class="breadcrumb-item"><a href="{% url 'admin_panel:dashboard' %}">Inicio</a></span>
+    <span class="breadcrumb-item"><a href="{% url 'admin_panel:direcciones_envio_lista' %}">Direcciones de Envío</a></span>
+    <span class="breadcrumb-item">Eliminar</span>
+{% endblock %}
+
+{% block content %}
+<div class="fade-in">
+    <div class="card" style="max-width: 500px; margin: 40px auto;">
+        <div class="card-body" style="text-align: center; padding: 40px;">
+            <i class="fas fa-trash" style="font-size: 4rem; color: var(--danger); margin-bottom: 20px;"></i>
+            <h3 style="margin-bottom: 16px;">¿Eliminar dirección?</h3>
+            <p style="color: var(--text-secondary); margin-bottom: 8px;">
+                Se eliminará <strong>{{ direccion.nombre_referencia }}</strong> de {{ direccion.id_usuario.nombre_completo }}.
+            </p>
+            <p style="color: var(--text-muted); margin-bottom: 24px;">Esta acción no se puede deshacer.</p>
+            <form method="post">
+                {% csrf_token %}
+                <div style="display: flex; gap: 12px; justify-content: center;">
+                    <button type="submit" class="btn btn-danger"><i class="fas fa-trash"></i> Sí, Eliminar</button>
+                    <a href="{% url 'admin_panel:direcciones_envio_lista' %}" class="btn btn-secondary"><i class="fas fa-times"></i> Cancelar</a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

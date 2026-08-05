@@ -1,0 +1,63 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="es-mx" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
+    <meta name="description" content="Panel Administrativo AGRIVALE">
+    <title>{% block title %}Panel Admin - AGRIVALE{% endblock %}</title>
+    
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- CSS del Panel Administrativo -->
+    <link rel="stylesheet" href="{% static 'admin_panel/css/variables.css' %}">
+    <link rel="stylesheet" href="{% static 'admin_panel/css/layout.css' %}">
+    <link rel="stylesheet" href="{% static 'admin_panel/css/components.css' %}">
+    <link rel="stylesheet" href="{% static 'admin_panel/css/admin-panel.css' %}">
+    
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    
+    {% block extra_css %}{% endblock %}
+</head>
+<body>
+    <div class="admin-wrapper">
+        <!-- Sidebar -->
+        {% include 'admin_panel/partials/sidebar.html' %}
+        
+        <!-- Contenido Principal -->
+        <div class="main-content">
+            <!-- Header -->
+            {% include 'admin_panel/partials/header.html' %}
+            
+    <!-- Mensajes Django (Toast) -->
+    <div id="messages-container" style="display: none;">
+        {% if messages %}
+        <script id="django-messages" type="application/json">[
+            {% for message in messages %}
+            {
+                "text": "{{ message.message|escapejs }}",
+                "tags": "{{ message.tags|escapejs }}"
+            }{% if not forloop.last %},{% endif %}
+            {% endfor %}
+        ]</script>
+        {% endif %}
+    </div>
+
+    <!-- Contenido de la página -->
+    <main class="page-content">
+        {% block content %}{% endblock %}
+    </main>
+            
+            <!-- Footer -->
+            {% include 'admin_panel/partials/footer.html' %}
+        </div>
+    </div>
+    
+    <!-- JavaScript -->
+    <script src="{% static 'admin_panel/js/admin-panel.js' %}"></script>
+    
+    {% block extra_js %}{% endblock %}
+</body>
+</html>

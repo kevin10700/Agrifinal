@@ -1,0 +1,330 @@
+{% extends 'admin_panel/base.html' %}
+
+{% block title %}Nueva Compra{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="row justify-content-center">
+        <div class="col-lg-11">
+            <!-- Header -->
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <div>
+                    <h4 class="mb-0">Registrar Nueva Compra</h4>
+                    <p class="text-muted mb-0">Registra una compra a proveedor y actualiza el inventario automáticamente</p>
+                </div>
+                <a href="{% url 'admin_panel:compras_lista' %}" class="btn btn-outline-secondary">
+                    ← Volver a Compras
+                </a>
+            </div>
+
+            <form method="POST">
+                {% csrf_token %}
+
+                <!-- Información de la Compra -->
+                <div class="card mb-4">
+                    <div class="card-header bg-primary text-white">
+                        <h5 class="mb-0">Información de la Compra</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row g-3">
+                            <div class="col-md-4">
+                                <label class="form-label fw-bold">¿A quién le compras? *</label>
+                                <select class="form-select" name="proveedor" id="proveedor-select" required>
+                                    <option value="">Elige una opcion</option>
+                                    {% for prov in proveedores %}
+                                    <option value="{{ prov.id_proveedor }}">{{ prov.empresa }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label fw-bold">Fecha de Compra *</label>
+                                <input type="date" class="form-control" name="fecha" value="{{ fecha_hoy }}" required>
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label fw-bold">Número de Factura</label>
+                                <input type="text" class="form-control" name="factura" placeholder="Ej: FAC-001234">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Productos de la Compra -->
+                <div class="card mb-4">
+                    <div class="card-header bg-success text-white d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0">Productos de la Compra</h5>
+                        <button type="button" class="btn btn-light btn-sm" onclick="agregarProducto()">
+                            + Agregar Producto
+                        </button>
+                    </div>
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table class="table table-hover align-middle" style="table-layout: fixed; width: 100%;">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th style="width: 25%;">PRODUCTO</th>
+                                        <th id="th-costales" style="width: 10%;">COSTALES</th>
+                                        <th id="th-peso-costal" style="width: 12%;">KG / COSTAL</th>
+                                        <th style="width: 15%;">CANTIDAD (KG / UD)</th>
+                                        <th style="width: 18%;">COSTO UNITARIO ($)</th>
+                                        <th style="width: 12%;">SUBTOTAL</th>
+                                        <th style="width: 8%;">ACCIÓN</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="productos-container">
+                                    <tr class="producto-item">
+                                        <td>
+                                            <select class="form-select producto-select" name="producto[]" required>
+                                                <option value="">-- Selecciona un producto --</option>
+                                                {% for prod in productos %}
+                                                <option value="{{ prod.id_producto }}" data-stock="{{ prod.stock }}" data-unidad="{{ prod.get_unidad_medida_display }}">
+                                                    {{ prod.nombre }} (Stock: {{ prod.stock }})
+                                                </option>
+                                                {% endfor %}
+                                            </select>
+                                        </td>
+                                        
+                                        <td id="fila-costales">
+                                            <input type="number" class="form-control costales-input" min="1" value="1" placeholder="Costales">
+                                        </td>
+                                        <td id="fila-peso-costal">
+                                            <input type="number" class="form-control peso-costal-input" min="0.01" step="0.01" value="25.00" placeholder="kg/costal">
+                                        </td>
+                                        
+                                        <td>
+                                            <input type="number" class="form-control cantidad-input" name="cantidad[]" required min="0.01" step="any" value="1" placeholder="Cantidad" style="text-align: center;">
+                                        </td>
+
+                                        <td>
+                                            <div class="input-group">
+                                                <span class="input-group-text">$</span>
+                                                <input type="number" step="0.01" class="form-control precio-input" name="precio[]" required min="0.01" value="0.00" placeholder="0.00">
+                                            </div>
+                                        </td>
+                                        <td class="subtotal-cell fw-bold text-primary" style="text-align: center;">$0.00</td>
+                                        <td class="text-center">
+                                            <button type="button" class="btn btn-sm btn-danger" onclick="eliminarFila(this)" title="Eliminar">
+                                                <i class="fas fa-trash"></i>
+                                            </button>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Resumen y Total -->
+                <div class="row mb-4">
+                    <div class="col-md-6 offset-md-6">
+                        <div class="card border-primary">
+                            <div class="card-body">
+                                <div class="d-flex justify-content-between align-items-center mb-2">
+                                    <span class="text-muted">Subtotal:</span>
+                                    <span class="fw-bold" id="subtotal-general">$0.00</span>
+                                </div>
+                                <div class="d-flex justify-content-between align-items-center mb-2">
+                                    <span class="text-muted">Productos:</span>
+                                    <span class="fw-bold" id="total-productos">0</span>
+                                </div>
+                                <hr>
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <h5 class="mb-0">Total de la Compra:</h5>
+                                    <h3 class="mb-0 text-primary fw-bold" id="total-general">$0.00</h3>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Observaciones -->
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h6 class="mb-0">Notas Adicionales (Opcional)</h6>
+                    </div>
+                    <div class="card-body">
+                        <textarea class="form-control" name="observaciones" rows="3" placeholder="Escribe notas adicionales sobre esta compra..."></textarea>
+                    </div>
+                </div>
+
+                <!-- Botones de Accion -->
+                <div class="d-flex justify-content-between">
+                    <a href="{% url 'admin_panel:compras_lista' %}" class="btn btn-outline-secondary btn-lg">
+                        ← Cancelar
+                    </a>
+                    <button type="submit" class="btn btn-success btn-lg">
+                        Guardar Compra y Actualizar Stock
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+
+<script>
+function calcularSubtotal(cantidad, precio) {
+    return (parseFloat(cantidad) || 0) * (parseFloat(precio) || 0);
+}
+
+function actualizarCantidad(fila) {
+    var esKg = false;
+    
+    // Obtenemos la unidad desde el atributo data-unidad del select
+    var selectProducto = fila.querySelector('.producto-select');
+    var opcionSeleccionada = selectProducto.options[selectProducto.selectedIndex];
+    var unidad = opcionSeleccionada.getAttribute('data-unidad');
+    
+    if (unidad) {
+        esKg = unidad.toLowerCase() === 'kilogramo';
+    }
+    
+    var cantidadInput = fila.querySelector('.cantidad-input');
+    var costalesInput = fila.querySelector('.costales-input');
+    var pesoCostalInput = fila.querySelector('.peso-costal-input');
+    
+    cantidadInput.removeAttribute('readonly');
+    
+    if (esKg) {
+        var costales = parseFloat(costalesInput.value) || 0;
+        var pesoCostal = parseFloat(pesoCostalInput.value) || 0;
+        var totalCantidad = costales * pesoCostal;
+        
+        cantidadInput.value = totalCantidad.toFixed(2);
+        cantidadInput.step = '0.01';
+        
+        document.getElementById('fila-costales').style.display = 'table-cell';
+        document.getElementById('fila-peso-costal').style.display = 'table-cell';
+        document.getElementById('th-costales').style.display = 'table-cell';
+        document.getElementById('th-peso-costal').style.display = 'table-cell';
+    } else {
+        cantidadInput.step = '1';
+        cantidadInput.min = '1';  // 🔥 LÍNEA AGREGADA: Evita números con decimales y negativos
+        
+        document.getElementById('fila-costales').style.display = 'none';
+        document.getElementById('fila-peso-costal').style.display = 'none';
+        document.getElementById('th-costales').style.display = 'none';
+        document.getElementById('th-peso-costal').style.display = 'none';
+    }
+    
+    actualizarTotales();
+}
+
+function actualizarTotales() {
+    var filas = document.querySelectorAll('.producto-item');
+    var totalGeneral = 0;
+    var totalProductos = 0;
+    
+    filas.forEach(function(fila) {
+        var cantidad = fila.querySelector('.cantidad-input').value;
+        var precio = fila.querySelector('.precio-input').value;
+        var subtotal = calcularSubtotal(cantidad, precio);
+        var subtotalCell = fila.querySelector('.subtotal-cell');
+        
+        if (subtotalCell) {
+            subtotalCell.textContent = '$' + subtotal.toFixed(2);
+        }
+        
+        if (cantidad > 0 && precio > 0) {
+            totalGeneral += subtotal;
+            totalProductos++;
+        }
+    });
+    
+    document.getElementById('total-general').textContent = '$' + totalGeneral.toFixed(2);
+    document.getElementById('subtotal-general').textContent = '$' + totalGeneral.toFixed(2);
+    document.getElementById('total-productos').textContent = totalProductos;
+}
+
+function agregarProducto() {
+    var tbody = document.getElementById('productos-container');
+    var nuevaFila = document.createElement('tr');
+    nuevaFila.className = 'producto-item';
+    
+    nuevaFila.innerHTML = 
+        '<td>' +
+            '<select class="form-select producto-select" name="producto[]" required>' +
+                '<option value="">-- Selecciona un producto --</option>' +
+                '{% for prod in productos %}' +
+                '<option value="{{ prod.id_producto }}" data-stock="{{ prod.stock }}" data-unidad="{{ prod.get_unidad_medida_display }}">{{ prod.nombre }} (Stock: {{ prod.stock }})</option>' +
+                '{% endfor %}' +
+            '</select>' +
+        '</td>' +
+        '<td id="fila-costales">' +
+            '<input type="number" class="form-control costales-input" min="1" value="1" placeholder="Costales">' +
+        '</td>' +
+        '<td id="fila-peso-costal">' +
+            '<input type="number" class="form-control peso-costal-input" min="0.01" step="0.01" value="25.00" placeholder="kg/costal">' +
+        '</td>' +
+        '<td>' +
+            '<input type="number" class="form-control cantidad-input" name="cantidad[]" required min="0.01" step="any" value="1" placeholder="Cantidad">' +
+        '</td>' +
+        '<td>' +
+            '<div class="input-group">' +
+                '<span class="input-group-text">$</span>' +
+                '<input type="number" step="0.01" class="form-control precio-input" name="precio[]" required min="0.01" value="0.00" placeholder="0.00">' +
+            '</div>' +
+        '</td>' +
+        '<td class="subtotal-cell fw-bold text-primary" style="text-align: center;">$0.00</td>' +
+        '<td class="text-center">' +
+            '<button type="button" class="btn btn-sm btn-danger" onclick="eliminarFila(this)" title="Eliminar">' +
+                '<i class="fas fa-trash"></i>' +
+            '</button>' +
+        '</td>';
+    
+    tbody.appendChild(nuevaFila);
+    
+    var costales = nuevaFila.querySelector('.costales-input');
+    var pesoCostal = nuevaFila.querySelector('.peso-costal-input');
+    var cantidad = nuevaFila.querySelector('.cantidad-input');
+    var precioInput = nuevaFila.querySelector('.precio-input');
+    var selectProducto = nuevaFila.querySelector('.producto-select');
+    
+    costales.addEventListener('input', function() { actualizarCantidad(this.closest('tr')); });
+    pesoCostal.addEventListener('input', function() { actualizarCantidad(this.closest('tr')); });
+    cantidad.addEventListener('input', actualizarTotales);
+    precioInput.addEventListener('input', actualizarTotales);
+    precioInput.addEventListener('change', actualizarTotales);
+    
+    selectProducto.addEventListener('change', function() {
+        actualizarCantidad(this.closest('tr'));
+    });
+    
+    actualizarCantidad(nuevaFila);
+}
+
+function eliminarFila(boton) {
+    var fila = boton.closest('tr');
+    fila.remove();
+    actualizarTotales();
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+    var filas = document.querySelectorAll('.producto-item');
+    
+    filas.forEach(function(fila) {
+        var costales = fila.querySelector('.costales-input');
+        var pesoCostal = fila.querySelector('.peso-costal-input');
+        var cantidad = fila.querySelector('.cantidad-input');
+        var precioInput = fila.querySelector('.precio-input');
+        var selectProducto = fila.querySelector('.producto-select');
+        
+        costales.addEventListener('input', function() { actualizarCantidad(this.closest('tr')); });
+        pesoCostal.addEventListener('input', function() { actualizarCantidad(this.closest('tr')); });
+        cantidad.addEventListener('input', actualizarTotales);
+        precioInput.addEventListener('input', actualizarTotales);
+        precioInput.addEventListener('change', actualizarTotales);
+        
+        selectProducto.addEventListener('change', function() {
+            actualizarCantidad(this.closest('tr'));
+        });
+        
+        actualizarCantidad(fila);
+    });
+    
+    actualizarTotales();
+});
+</script>
+{% endblock %}

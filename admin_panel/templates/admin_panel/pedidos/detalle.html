@@ -1,0 +1,163 @@
+{% extends 'admin_panel/base.html' %}
+{% load static %}
+
+{% block title %}Pedido #{{ pedido.id_pedido }} - Panel Admin{% endblock %}
+
+{% block breadcrumb %}
+    <span class="breadcrumb-item"><a href="{% url 'admin_panel:dashboard' %}">Inicio</a></span>
+    <span class="breadcrumb-item"><a href="{% url 'admin_panel:pedidos_lista' %}">Pedidos</a></span>
+    <span class="breadcrumb-item">#{{ pedido.id_pedido }}</span>
+{% endblock %}
+
+{% block content %}
+<div class="fade-in">
+    <div class="page-header">
+        <div>
+            <h1 class="page-title">Pedido #{{ pedido.id_pedido }}</h1>
+            <p class="page-subtitle">Detalle completo del pedido</p>
+        </div>
+        <div>
+            <a href="{% url 'admin_panel:pedidos_lista' %}" class="btn btn-secondary">
+                <i class="fas fa-arrow-left"></i> Volver
+            </a>
+        </div>
+    </div>
+
+    <div class="row" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(350px, 1fr)); gap: 20px; margin-bottom: 24px;">
+        <!-- Información del Cliente -->
+        <div class="card">
+            <div class="card-header">
+                <h3 class="card-title">
+                    <i class="fas fa-user" style="color: var(--primary-color); margin-right: 8px;"></i>
+                    Cliente
+                </h3>
+            </div>
+            <div class="card-body">
+                <p style="margin-bottom: 8px;"><strong>Nombre:</strong> {{ pedido.id_usuario.nombre_completo }}</p>
+                <p style="margin-bottom: 8px;"><strong>Email:</strong> {{ pedido.id_usuario.email }}</p>
+                <p style="margin-bottom: 8px;"><strong>Teléfono:</strong> {{ pedido.telefono_contacto }}</p>
+                <p><strong>Dirección:</strong> {{ pedido.direccion_entrega }}</p>
+            </div>
+        </div>
+
+        <!-- Estado del Pedido -->
+        <div class="card">
+            <div class="card-header">
+                <h3 class="card-title">
+                    <i class="fas fa-info-circle" style="color: var(--info); margin-right: 8px;"></i>
+                    Estado del Pedido
+                </h3>
+            </div>
+            <div class="card-body">
+                <p style="margin-bottom: 8px;">
+                    <strong>Estado:</strong> 
+                    <span class="badge badge-{% if pedido.estado == 'entregado' %}success{% elif pedido.estado == 'cancelado' %}danger{% else %}info{% endif %}">
+                        {{ pedido.get_estado_display }}
+                    </span>
+                </p>
+                <p style="margin-bottom: 8px;">
+                    <strong>Pago:</strong> 
+                    <span class="badge badge-{% if pedido.estado_pago == 'pagado' %}success{% else %}warning{% endif %}">
+                        {{ pedido.get_estado_pago_display }}
+                    </span>
+                </p>
+                <p style="margin-bottom: 8px;"><strong>Fecha:</strong> {{ pedido.fecha_pedido|date:"d/m/Y H:i" }}</p>
+                <p><strong>Total:</strong> <strong style="font-size: 1.2rem; color: var(--primary-color);">${{ pedido.total|floatformat:2 }}</strong></p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Timeline -->
+    <div class="card" style="margin-bottom: 24px;">
+        <div class="card-header">
+            <h3 class="card-title">
+                <i class="fas fa-clock" style="color: var(--warning); margin-right: 8px;"></i>
+                Timeline del Pedido
+            </h3>
+        </div>
+        <div class="card-body">
+            <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 16px;">
+                {% for estado in pedido.ESTADOS_PEDIDO %}
+                <div style="flex: 1; min-width: 120px; text-align: center; padding: 12px; border-radius: 8px; background: {% if pedido.estado == estado.0 %}var(--primary-bg){% else %}var(--bg-hover){% endif %}; border: 2px solid {% if pedido.estado == estado.0 %}var(--primary-color){% else %}transparent{% endif %};">
+                    <i class="fas fa-{% if pedido.estado == estado.0 %}check-circle{% else %}circle{% endif %}" 
+                       style="font-size: 1.5rem; color: {% if pedido.estado == estado.0 %}var(--primary-color){% else %}var(--text-muted){% endif %}; margin-bottom: 8px; display: block;"></i>
+                    <div style="font-size: 0.85rem; font-weight: 600; color: var(--text-primary);">{{ estado.1 }}</div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Productos del Pedido -->
+    <div class="card" style="margin-bottom: 24px;">
+        <div class="card-header">
+            <h3 class="card-title">
+                <i class="fas fa-box" style="color: var(--success); margin-right: 8px;"></i>
+                Productos del Pedido
+            </h3>
+        </div>
+        <div class="card-body" style="padding: 0;">
+            <div class="table-responsive">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Producto</th>
+                            <th>Cantidad</th>
+                            <th>Precio Unit.</th>
+                            <th>Subtotal</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for item in items %}
+                        <tr>
+                            <td>
+                                <div style="display: flex; align-items: center; gap: 12px;">
+                                    {% if item.id_producto.imagen_principal %}
+                                    <img src="{{ item.id_producto.imagen_principal.url }}" alt="{{ item.id_producto.nombre }}" 
+                                         style="width: 40px; height: 40px; border-radius: 8px; object-fit: cover;">
+                                    {% else %}
+                                    <div style="width: 40px; height: 40px; border-radius: 8px; background: var(--bg-hover); display: flex; align-items: center; justify-content: center;">
+                                        <i class="fas fa-box" style="color: var(--text-muted);"></i>
+                                    </div>
+                                    {% endif %}
+                                    <div>
+                                        <div style="font-weight: 600; color: var(--text-primary);">{{ item.id_producto.nombre }}</div>
+                                    </div>
+                                </div>
+                            </td>
+                            <td>{{ item.cantidad }}</td>
+                            <td>${{ item.precio_unitario|floatformat:2 }}</td>
+                            <td><strong>${{ item.get_subtotal|floatformat:2 }}</strong></td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Resumen -->
+    <div class="row" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px;">
+        <div class="card">
+            <div class="card-header">
+                <h3 class="card-title">Resumen de Pago</h3>
+            </div>
+            <div class="card-body">
+                <div style="display: flex; justify-content: space-between; margin-bottom: 12px; padding-bottom: 12px; border-bottom: 1px solid var(--border-color);">
+                    <span>Subtotal:</span>
+                    <strong>${{ pedido.subtotal|floatformat:2 }}</strong>
+                </div>
+                <div style="display: flex; justify-content: space-between; margin-bottom: 12px; padding-bottom: 12px; border-bottom: 1px solid var(--border-color);">
+                    <span>Envío:</span>
+                    <strong>${{ pedido.costo_envio|floatformat:2 }}</strong>
+                </div>
+                <div style="display: flex; justify-content: space-between; font-size: 1.2rem; color: var(--primary-color);">
+                    <strong>Total:</strong>
+                    <strong>${{ pedido.total|floatformat:2 }}</strong>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</div>
+{% endblock %}

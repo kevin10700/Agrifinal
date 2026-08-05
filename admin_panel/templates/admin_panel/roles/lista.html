@@ -1,0 +1,105 @@
+{% extends 'admin_panel/base.html' %}
+{% load static %}
+
+{% block title %}Roles de Panel - Panel Admin{% endblock %}
+
+{% block breadcrumb %}
+    <span class="breadcrumb-item"><a href="{% url 'admin_panel:dashboard' %}">Inicio</a></span>
+    <span class="breadcrumb-item">Roles de Panel</span>
+{% endblock %}
+
+{% block content %}
+<div class="fade-in">
+    <div class="page-header">
+        <div>
+            <h1 class="page-title">Roles de Panel</h1>
+            <p class="page-subtitle">Gestiona los roles y permisos del panel administrativo</p>
+        </div>
+        <a href="{% url 'admin_panel:rol_crear' %}" class="btn btn-primary">
+            <i class="fas fa-plus"></i> Nuevo Rol
+        </a>
+    </div>
+
+    <div class="card">
+        <div class="card-body">
+            <form method="get" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; align-items: end;">
+                <div>
+                    <label style="display: block; margin-bottom: 8px; font-weight: 500; color: var(--text-secondary);">Buscar</label>
+                    <input type="text" name="q" value="{{ busqueda }}" placeholder="Nombre del rol..."
+                           style="width: 100%; padding: 10px 12px; border: 1px solid var(--border-color); border-radius: var(--border-radius_sm); background: var(--bg-card); color: var(--text-primary);">
+                </div>
+                <div style="display: flex; gap: 8px;">
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-search"></i> Buscar
+                    </button>
+                    <a href="{% url 'admin_panel:roles_lista' %}" class="btn btn-secondary">
+                        <i class="fas fa-times"></i> Limpiar
+                    </a>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div class="table-container">
+        <div class="table-header">
+            <h3 class="table-title">Total: {{ roles|length }} roles</h3>
+        </div>
+        <div class="table-responsive">
+            <table>
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Nombre</th>
+                        <th>Descripción</th>
+                        <th>Permisos</th>
+                        <th>Estado</th>
+                        <th>Acciones</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for rol in roles %}
+                    <tr>
+                        <td>#{{ rol.id }}</td>
+                        <td><strong>{{ rol.nombre }}</strong></td>
+                        <td>{{ rol.descripcion|default:"-"|truncatechars:60 }}</td>
+                        <td>
+                            <div style="display: flex; gap: 4px; flex-wrap: wrap;">
+                                {% if rol.puede_gestionar_productos %}<span class="badge badge-success">Prod</span>{% endif %}
+                                {% if rol.puede_gestionar_pedidos %}<span class="badge badge-success">Ped</span>{% endif %}
+                                {% if rol.puede_gestionar_clientes %}<span class="badge badge-success">Cli</span>{% endif %}
+                                {% if rol.puede_ver_reportes %}<span class="badge badge-info">Rep</span>{% endif %}
+                            </div>
+                        </td>
+                        <td>
+                            {% if rol.activo %}
+                            <span class="badge badge-success">Activo</span>
+                            {% else %}
+                            <span class="badge badge-danger">Inactivo</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <div style="display: flex; gap: 8px;">
+                                <a href="{% url 'admin_panel:rol_editar' rol.id %}" class="btn btn-sm btn-primary" title="Editar">
+                                    <i class="fas fa-edit"></i>
+                                </a>
+                                <a href="{% url 'admin_panel:rol_eliminar' rol.id %}" class="btn btn-sm btn-danger" title="Eliminar">
+                                    <i class="fas fa-trash"></i>
+                                </a>
+                            </div>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="6" style="text-align: center; padding: 60px 20px; color: var(--text-muted);">
+                            <i class="fas fa-user-shield" style="font-size: 3rem; margin-bottom: 12px; display: block;"></i>
+                            <p style="font-size: 1.1rem; margin-bottom: 8px;">No hay roles registrados</p>
+                            <p style="font-size: 0.9rem;">Crea el primer rol de panel</p>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

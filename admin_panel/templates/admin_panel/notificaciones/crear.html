@@ -1,0 +1,103 @@
+{% extends 'admin_panel/base.html' %}
+{% load static %}
+
+{% block title %}Nueva Notificación - Panel Admin{% endblock %}
+
+{% block breadcrumb %}
+    <span class="breadcrumb-item"><a href="{% url 'admin_panel:dashboard' %}">Inicio</a></span>
+    <span class="breadcrumb-item"><a href="{% url 'admin_panel:notificaciones_lista' %}">Notificaciones</a></span>
+    <span class="breadcrumb-item">Nueva Notificación</span>
+{% endblock %}
+
+{% block content %}
+<div class="fade-in">
+    <div class="page-header">
+        <div>
+            <h1 class="page-title">Nueva Notificación</h1>
+            <p class="page-subtitle">Crea una notificación manual para el sistema</p>
+        </div>
+    </div>
+
+    <div class="card" style="max-width: 700px;">
+        <div class="card-body">
+            <form method="post">
+                {% csrf_token %}
+                
+                <div style="margin-bottom: 24px;">
+                    <label style="display: block; margin-bottom: 8px; font-weight: 600; color: var(--text-primary);">Usuario *</label>
+                    <select name="id_usuario" id="id_usuario" required onchange="filtrarPedidos()" style="width: 100%; padding: 10px 12px; border: 1px solid var(--border-color); border-radius: var(--border-radius_sm); background: var(--bg-card); color: var(--text-primary);">
+                        <option value="">Selecciona un usuario...</option>
+                        {% for u in usuarios %}
+                        <option value="{{ u.id_usuario }}" data-name="{{ u.nombre_completo }}">{{ u.nombre_completo }} (@{{ u.username }})</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                
+                <div style="margin-bottom: 24px;">
+                    <label style="display: block; margin-bottom: 8px; font-weight: 600; color: var(--text-primary);">Pedido relacionado *</label>
+                    <select name="id_pedido" id="id_pedido" required style="width: 100%; padding: 10px 12px; border: 1px solid var(--border-color); border-radius: var(--border-radius_sm); background: var(--bg-card); color: var(--text-primary);">
+                        <option value="">Primero selecciona un usuario...</option>
+                        {% for p in pedidos %}
+                        <option value="{{ p.id_pedido }}" data-user="{{ p.id_usuario_id }}">#{{ p.id_pedido }} - {{ p.id_usuario.nombre_completo }} ({{ p.get_estado_display }})</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div style="margin-bottom: 24px;">
+                    <label style="display: block; margin-bottom: 8px; font-weight: 600; color: var(--text-primary);">Mensaje *</label>
+                    <textarea name="mensaje" required rows="5" placeholder="Escribe el mensaje de la notificación..."
+                              style="width: 100%; padding: 10px 12px; border: 1px solid var(--border-color); border-radius: var(--border-radius_sm); background: var(--bg-card); color: var(--text-primary);"></textarea>
+                </div>
+
+                <div style="margin-bottom: 24px;">
+                    <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
+                        <input type="checkbox" name="leida">
+                        <span style="font-weight: 600; color: var(--text-primary);">Marcar como leída</span>
+                    </label>
+                </div>
+
+                <div style="display: flex; gap: 12px;">
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-save"></i> Crear Notificación
+                    </button>
+                    <a href="{% url 'admin_panel:notificaciones_lista' %}" class="btn btn-secondary">
+                        <i class="fas fa-times"></i> Cancelar
+                    </a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+function filtrarPedidos() {
+    var usuarioId = document.getElementById('id_usuario').value;
+    var pedidoSelect = document.getElementById('id_pedido');
+    var options = pedidoSelect.options;
+    
+    // Resetear el select
+    pedidoSelect.innerHTML = '<option value="">Selecciona un pedido...</option>';
+    
+    if (!usuarioId) {
+        pedidoSelect.innerHTML = '<option value="">Primero selecciona un usuario...</option>';
+        return;
+    }
+    
+    // Mostrar solo los pedidos del usuario seleccionado
+    var hayPedidos = false;
+    {% for p in pedidos %}
+    if ("{{ p.id_usuario_id }}" === usuarioId) {
+        var opt = document.createElement('option');
+        opt.value = "{{ p.id_pedido }}";
+        opt.text = "#{{ p.id_pedido }} - {{ p.get_estado_display }} - ${{ p.total|floatformat:2 }}";
+        pedidoSelect.appendChild(opt);
+        hayPedidos = true;
+    }
+    {% endfor %}
+    
+    if (!hayPedidos) {
+        pedidoSelect.innerHTML = '<option value="">Este usuario no tiene pedidos</option>';
+    }
+}
+</script>
+{% endblock %}

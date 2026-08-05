@@ -1,0 +1,62 @@
+{% extends 'admin_panel/base.html' %}
+{% load static %}
+
+{% block title %}Eliminar Zona de Reparto - AGRIVALE{% endblock %}
+
+{% block breadcrumb %}
+    <span class="breadcrumb-item">Envíos</span>
+    <span class="breadcrumb-item"><a href="{% url 'admin_panel:direcciones_envio' %}">Zonas de Reparto</a></span>
+    <span class="breadcrumb-item">Eliminar</span>
+{% endblock %}
+
+{% block content %}
+<div class="fade-in">
+    <div class="page-header">
+        <div>
+            <h1 class="page-title">Eliminar Zona de Reparto</h1>
+            <p class="page-subtitle">Confirmación de eliminación</p>
+        </div>
+        <a href="{% url 'admin_panel:direcciones_envio' %}" class="btn btn-secondary">
+            <i class="fas fa-arrow-left"></i> Volver
+        </a>
+    </div>
+
+    <div class="card">
+        <div class="card-body" style="padding: 40px;">
+            <div style="display: flex; align-items: center; gap: 16px; margin-bottom: 24px;">
+                <div style="width: 60px; height: 60px; border-radius: 12px; background: rgba(231, 76, 60, 0.1); display: flex; align-items: center; justify-content: center; color: var(--danger);">
+                    <i class="fas fa-exclamation-triangle" style="font-size: 2rem;"></i>
+                </div>
+                <div>
+                    <h3 style="color: var(--text-primary); margin-bottom: 4px;">¿Estás seguro de eliminar esta zona?</h3>
+                    <p style="color: var(--text-secondary); margin-bottom: 0;">Esta acción no se puede deshacer.</p>
+                </div>
+            </div>
+
+            <div style="background: var(--bg-hover); border-radius: 8px; padding: 20px; margin-bottom: 24px;">
+                <div style="display: flex; align-items: center; gap: 16px; flex-wrap: wrap;">
+                    <div style="width: 40px; height: 40px; border-radius: 8px; background: var(--primary-bg); display: flex; align-items: center; justify-content: center; color: var(--primary-color);">
+                        <i class="fas fa-map-marker-alt"></i>
+                    </div>
+                    <div>
+                        <div style="font-weight: 600; color: var(--text-primary);">{{ zona.nombre }}</div>
+                        <div style="font-size: 0.85rem; color: var(--text-muted);">{{ zona.municipio }}, {{ zona.estado }} | CP: {{ zona.codigo_postal_inicio }}-{{ zona.codigo_postal_fin }} | Costo: ${{ zona.costo_envio }}</div>
+                    </div>
+                </div>
+            </div>
+
+            <form method="post">
+                {% csrf_token %}
+                <div style="display: flex; gap: 12px; justify-content: flex-end;">
+                    <a href="{% url 'admin_panel:direcciones_envio' %}" class="btn btn-secondary">
+                        <i class="fas fa-times"></i> Cancelar
+                    </a>
+                    <button type="submit" class="btn btn-danger">
+                        <i class="fas fa-trash"></i> Eliminar Zona
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

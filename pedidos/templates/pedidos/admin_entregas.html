@@ -1,0 +1,122 @@
+{% extends 'productos/base.html' %}
+
+{% block content %}
+<div class="container">
+    <h2 class="mb-4"><i class="fas fa-truck"></i> Panel de entregas</h2>
+    
+    <!-- Estadísticas -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="card bg-primary text-white">
+                <div class="card-body text-center">
+                    <h3>{{ total_entregas }}</h3>
+                    <p class="mb-0">Total de entregas</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-warning text-dark">
+                <div class="card-body text-center">
+                    <h3>{{ pendientes }}</h3>
+                    <p class="mb-0">Pendientes de asignación</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-info text-white">
+                <div class="card-body text-center">
+                    <h3>{{ en_ruta }}</h3>
+                    <p class="mb-0">En ruta</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-success text-white">
+                <div class="card-body text-center">
+                    <h3>{{ entregadas }}</h3>
+                    <p class="mb-0">Entregadas</p>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Botones de acción -->
+    <div class="mb-3">
+        <a href="{% url 'pedidos:admin_crear_entrega' 0 %}" class="btn btn-success">
+            <i class="fas fa-plus"></i> Crear nueva entrega
+        </a>
+    </div>
+    
+    <!-- Lista de entregas -->
+    <div class="table-responsive">
+        <table class="table table-bordered table-hover">
+            <thead class="table-dark">
+                <tr>
+                    <th># Entrega</th>
+                    <th>Pedido</th>
+                    <th>Cliente</th>
+                    <th>Repartidor</th>
+                    <th>Estado</th>
+                    <th>Fecha asignación</th>
+                    <th>Acciones</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for entrega in entregas %}
+                <tr>
+                    <td>{{ entrega.id }}</td>
+                    <td>#{{ entrega.pedido.id }}</td>
+                    <td>{{ entrega.pedido.usuario.username }}</td>
+                    <td>
+                        {% if entrega.repartidor %}
+                            {{ entrega.repartidor.nombre }}
+                        {% else %}
+                            <span class="text-muted">Sin asignar</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        <span class="badge 
+                            {% if entrega.estado == 'entregado' %}bg-success
+                            {% elif entrega.estado == 'en_ruta' %}bg-info
+                            {% elif entrega.estado == 'asignado' %}bg-primary
+                            {% elif entrega.estado == 'incidente' %}bg-danger
+                            {% else %}bg-warning text-dark{% endif %}">
+                            {{ entrega.get_estado_display }}
+                        </span>
+                    </td>
+                    <td>{{ entrega.fecha_asignacion|date:"d/m/Y H:i"|default:"-" }}</td>
+                    <td>
+                        <div class="btn-group btn-group-sm">
+                            <a href="{% url 'pedidos:admin_detalle_entrega' entrega.id %}" class="btn btn-info">
+                                <i class="fas fa-eye"></i>
+                            </a>
+                            {% if entrega.estado == 'pendiente' %}
+                                <a href="{% url 'pedidos:admin_asignar_repartidor' entrega.id %}" class="btn btn-primary">
+                                    <i class="fas fa-user-plus"></i>
+                                </a>
+                            {% endif %}
+                            {% if entrega.estado != 'entregado' %}
+                                <a href="{% url 'pedidos:admin_actualizar_entrega' entrega.id %}" class="btn btn-warning">
+                                    <i class="fas fa-edit"></i>
+                                </a>
+                            {% endif %}
+                        </div>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="7" class="text-center text-muted">
+                        No hay entregas registradas.
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    
+    <hr>
+    <a href="{% url 'admin:index' %}" class="btn btn-secondary">
+        <i class="fas fa-arrow-left"></i> Volver al panel de administración
+    </a>
+</div>
+{% endblock %}

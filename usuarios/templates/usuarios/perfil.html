@@ -1,0 +1,23 @@
+{% extends 'productos/base.html' %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-6 offset-md-3">
+        <div class="card">
+            <div class="card-header bg-success text-white">
+                <h3>Mi Perfil</h3>
+            </div>
+            <div class="card-body">
+                <form method="post">
+                    {% csrf_token %}
+                    {{ form.as_p }}
+                    <button type="submit" class="btn btn-success w-100">Actualizar Perfil</button>
+                </form>
+                <button type="button" class="btn btn-outline-success w-100 mt-3" onclick="localStorage.removeItem('agrivale_onboarding_completado'); window.iniciarTutorialAgrivale(true);">
+                    Ver tutorial de nuevo
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,10 @@
+<footer class="footer">
+    <div class="d-flex justify-content-between align-items-center">
+        <div>
+            © 2026 <strong>AGRIVALE</strong> - Panel Administrativo. Todos los derechos reservados.
+        </div>
+        <div>
+            <span style="color: var(--text-muted);">Versión 1.0.0</span>
+        </div>
+    </div>
+</footer>

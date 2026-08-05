@@ -1,0 +1,91 @@
+{% extends 'admin_panel/base.html' %}
+{% load static %}
+
+{% block title %}Direcciones de Envío - Panel Admin{% endblock %}
+
+{% block breadcrumb %}
+    <span class="breadcrumb-item"><a href="{% url 'admin_panel:dashboard' %}">Inicio</a></span>
+    <span class="breadcrumb-item">Direcciones de Envío</span>
+{% endblock %}
+
+{% block content %}
+<div class="fade-in">
+    <div class="page-header">
+        <div>
+            <h1 class="page-title">Direcciones de Envío</h1>
+            <p class="page-subtitle">Direcciones registradas por los usuarios</p>
+        </div>
+        <a href="{% url 'admin_panel:direccion_envio_crear' %}" class="btn btn-primary">
+            <i class="fas fa-plus"></i> Nueva Dirección
+        </a>
+    </div>
+
+    <div class="card">
+        <div class="card-body">
+            <form method="get" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; align-items: end;">
+                <div>
+                    <label style="display: block; margin-bottom: 8px; font-weight: 500; color: var(--text-secondary);">Buscar</label>
+                    <input type="text" name="q" value="{{ busqueda }}" placeholder="Calle, colonia, usuario..."
+                           style="width: 100%; padding: 10px 12px; border: 1px solid var(--border-color); border-radius: var(--border-radius_sm); background: var(--bg-card); color: var(--text-primary);">
+                </div>
+                <div style="display: flex; gap: 8px;">
+                    <button type="submit" class="btn btn-primary"><i class="fas fa-search"></i> Buscar</button>
+                    <a href="{% url 'admin_panel:direcciones_envio_lista' %}" class="btn btn-secondary"><i class="fas fa-times"></i> Limpiar</a>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div class="table-container">
+        <div class="table-header">
+            <h3 class="table-title">Total: {{ direcciones|length }} direcciones</h3>
+        </div>
+        <div class="table-responsive">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Usuario</th>
+                        <th>Referencia</th>
+                        <th>Dirección</th>
+                        <th>Principal</th>
+                        <th>Acciones</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for d in direcciones %}
+                    <tr>
+                        <td>{{ d.id_usuario.nombre_completo }}</td>
+                        <td><strong>{{ d.nombre_referencia }}</strong></td>
+                        <td>{{ d.calle }} {{ d.numero_exterior }}, {{ d.colonia }}, {{ d.municipio }}, {{ d.estado }}</td>
+                        <td>
+                            {% if d.es_principal %}
+                            <span class="badge badge-success">Sí</span>
+                            {% else %}
+                            <span class="badge badge-secondary">No</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <div style="display: flex; gap: 8px;">
+                                <a href="{% url 'admin_panel:direccion_envio_editar' d.id_direccion %}" class="btn btn-sm btn-primary" title="Editar">
+                                    <i class="fas fa-edit"></i>
+                                </a>
+                                <a href="{% url 'admin_panel:direccion_envio_eliminar' d.id_direccion %}" class="btn btn-sm btn-danger" title="Eliminar">
+                                    <i class="fas fa-trash"></i>
+                                </a>
+                            </div>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="5" style="text-align: center; padding: 60px 20px; color: var(--text-muted);">
+                            <i class="fas fa-location-dot" style="font-size: 3rem; margin-bottom: 12px; display: block;"></i>
+                            <p style="font-size: 1.1rem;">No hay direcciones de envío registradas</p>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

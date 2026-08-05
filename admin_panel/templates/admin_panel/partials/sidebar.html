@@ -1,0 +1,166 @@
+{% load static %}
+<aside class="sidebar" id="sidebar">
+    <div class="sidebar-header">
+        <a href="{% url 'admin_panel:dashboard' %}" class="sidebar-logo">
+            <i class="fas fa-leaf"></i>
+            <span>AGRIVALE</span>
+        </a>
+        <button class="sidebar-toggle" id="sidebarToggle" title="Colapsar menú">
+            <i class="fas fa-chevron-left"></i>
+        </button>
+    </div>
+    
+    <nav class="sidebar-nav">
+        <!-- Dashboard -->
+        <div class="nav-section">
+            <div class="nav-section-title">Principal</div>
+            <a href="{% url 'admin_panel:dashboard' %}" class="nav-item {% if request.resolver_match.url_name == 'dashboard' %}active{% endif %}">
+                <i class="fas fa-home"></i>
+                <span>Dashboard</span>
+            </a>
+        </div>
+        
+        <!-- Catálogo -->
+        <div class="nav-section">
+            <div class="nav-section-title">Catálogo</div>
+            <a href="{% url 'admin_panel:productos_lista' %}" class="nav-item {% if 'productos' in request.path %}active{% endif %}">
+                <i class="fas fa-box"></i>
+                <span>Productos</span>
+            </a>
+            <a href="{% url 'admin_panel:categorias_lista' %}" class="nav-item {% if 'categorias' in request.path %}active{% endif %}">
+                <i class="fas fa-tags"></i>
+                <span>Categorías</span>
+            </a>
+            <a href="{% url 'admin_panel:inventario' %}" class="nav-item {% if 'inventario' in request.path %}active{% endif %}">
+                <i class="fas fa-warehouse"></i>
+                <span>Inventario</span>
+            </a>
+            <a href="{% url 'admin_panel:comentarios_lista' %}" class="nav-item {% if 'comentarios' in request.path %}active{% endif %}">
+                <i class="fas fa-star"></i>
+                <span>Comentarios</span>
+            </a>
+        </div>
+        
+        <!-- Comercial -->
+        <div class="nav-section">
+            <div class="nav-section-title">Comercial</div>
+            <!-- Dropdown de Pedidos -->
+            <div class="nav-dropdown">
+                <a href="#" class="nav-item dropdown-toggle {% if 'pedidos' in request.path %}active{% endif %}" id="pedidosDropdown" data-dropdown="pedidos">
+                    <i class="fas fa-shopping-cart"></i>
+                    <span>Pedidos</span>
+                    <i class="fas fa-chevron-down dropdown-icon" style="font-size: 0.7rem; margin-left: auto; transition: transform 0.2s;"></i>
+                </a>
+                <div class="dropdown-menu" id="pedidosDropdownMenu">
+                    <a href="{% url 'admin_panel:pedidos_lista' %}" class="dropdown-item {% if request.resolver_match.url_name == 'pedidos_lista' %}active{% endif %}">
+                        <i class="fas fa-list"></i> Lista de Pedidos
+                    </a>
+                    <a href="{% url 'admin_panel:pedidos_lista' %}?estado=pendiente" class="dropdown-item {% if 'pedidos' in request.path and 'estado=pendiente' in request.path %}active{% endif %}">
+                        <i class="fas fa-clock"></i> Pendientes
+                    </a>
+                    <a href="{% url 'admin_panel:pedidos_lista' %}?estado=preparando" class="dropdown-item {% if 'pedidos' in request.path and 'estado=preparando' in request.path %}active{% endif %}">
+                        <i class="fas fa-box-open"></i> En Preparación
+                    </a>
+                    <a href="{% url 'admin_panel:pedidos_lista' %}?estado=enviado" class="dropdown-item {% if 'pedidos' in request.path and 'estado=enviado' in request.path %}active{% endif %}">
+                        <i class="fas fa-shipping-fast"></i> Enviados
+                    </a>
+                    <a href="{% url 'admin_panel:pedidos_lista' %}?estado=entregado" class="dropdown-item {% if 'pedidos' in request.path and 'estado=entregado' in request.path %}active{% endif %}">
+                        <i class="fas fa-check-circle"></i> Entregados
+                    </a>
+                    <a href="{% url 'admin_panel:pedidos_lista' %}?estado=cancelado" class="dropdown-item {% if 'pedidos' in request.path and 'estado=cancelado' in request.path %}active{% endif %}">
+                        <i class="fas fa-times-circle"></i> Cancelados
+                    </a>
+                    <a href="{% url 'admin_panel:pedidos_lista' %}" class="dropdown-item">
+                        <i class="fas fa-boxes-stacked"></i> Ítems de pedido
+                    </a>
+                    <a href="{% url 'admin_panel:pedidos_lista' %}" class="dropdown-item">
+                        <i class="fas fa-cart-plus"></i> Ítems de carrito
+                    </a>
+                </div>
+            </div>
+            <a href="{% url 'admin_panel:clientes_lista' %}" class="nav-item {% if 'clientes' in request.path %}active{% endif %}">
+                <i class="fas fa-users"></i>
+                <span>Clientes</span>
+            </a>
+            <a href="{% url 'admin_panel:proveedores_lista' %}" class="nav-item {% if 'proveedores' in request.path %}active{% endif %}">
+                <i class="fas fa-truck"></i>
+                <span>Proveedores</span>
+            </a>
+        </div>
+        
+        <!-- Operaciones -->
+        <div class="nav-section">
+            <div class="nav-section-title">Operaciones</div>
+            <a href="{% url 'admin_panel:compras_lista' %}" class="nav-item {% if 'compras' in request.path %}active{% endif %}">
+                <i class="fas fa-shopping-bag"></i>
+                <span>Compras</span>
+            </a>
+            <a href="{% url 'admin_panel:pagos_lista' %}" class="nav-item {% if 'pagos' in request.path %}active{% endif %}">
+                <i class="fas fa-credit-card"></i>
+                <span>Pagos</span>
+            </a>
+            <a href="{% url 'admin_panel:envios_lista' %}" class="nav-item {% if 'envios' in request.path and 'zonas' not in request.path and 'direcciones-usuarios' not in request.path %}active{% endif %}">
+                <i class="fas fa-shipping-fast"></i>
+                <span>Envíos</span>
+            </a>
+            <a href="{% url 'admin_panel:direcciones_envio' %}" class="nav-item {% if 'zonas' in request.path %}active{% endif %}">
+                <i class="fas fa-map-marked-alt"></i>
+                <span>Zonas Reparto</span>
+            </a>
+            <a href="{% url 'admin_panel:direcciones_envio_lista' %}" class="nav-item {% if 'direcciones-usuarios' in request.path %}active{% endif %}">
+                <i class="fas fa-location-dot"></i>
+                <span>Direcciones de envío</span>
+            </a>
+            <a href="{% url 'admin_panel:logistica' %}" class="nav-item {% if 'logistica' in request.path %}active{% endif %}">
+                <i class="fas fa-columns"></i>
+                <span>Logística</span>
+            </a>
+        </div>
+        
+        <!-- Análisis -->
+        <div class="nav-section">
+            <div class="nav-section-title">Análisis</div>
+            <a href="{% url 'admin_panel:reportes' %}" class="nav-item {% if 'reportes' in request.path %}active{% endif %}">
+                <i class="fas fa-chart-bar"></i>
+                <span>Reportes</span>
+            </a>
+            <a href="{% url 'admin_panel:chatbot_ia' %}" class="nav-item {% if 'chatbot' in request.path %}active{% endif %}">
+                <i class="fas fa-robot"></i>
+                <span>Asistente IA</span>
+            </a>
+        </div>
+        
+        <!-- Sistema -->
+        <div class="nav-section">
+            <div class="nav-section-title">Sistema</div>
+            <a href="{% url 'admin_panel:notificaciones_lista' %}" class="nav-item {% if 'notificaciones' in request.path %}active{% endif %}">
+                <i class="fas fa-bell"></i>
+                <span>Notificaciones</span>
+            </a>
+            <a href="{% url 'admin_panel:roles_lista' %}" class="nav-item {% if 'roles' in request.path %}active{% endif %}">
+                <i class="fas fa-user-shield"></i>
+                <span>Roles de Panel</span>
+            </a>
+            <a href="{% url 'admin_panel:usuarios_panel_lista' %}" class="nav-item {% if 'usuarios-panel' in request.path %}active{% endif %}">
+                <i class="fas fa-users-gear"></i>
+                <span>Usuarios de Panel</span>
+            </a>
+            <a href="{% url 'admin_panel:tokens_recuperacion_lista' %}" class="nav-item {% if 'tokens/recuperacion' in request.path %}active{% endif %}">
+                <i class="fas fa-key"></i>
+                <span>Tokens de recuperación</span>
+            </a>
+            <a href="{% url 'admin_panel:tokens_verificacion_lista' %}" class="nav-item {% if 'tokens/verificacion' in request.path %}active{% endif %}">
+                <i class="fas fa-user-check"></i>
+                <span>Tokens de verificación</span>
+            </a>
+            <a href="{% url 'admin_panel:configuracion' %}" class="nav-item {% if 'configuracion' in request.path %}active{% endif %}">
+                <i class="fas fa-cog"></i>
+                <span>Configuración</span>
+            </a>
+            <a href="{% url 'admin_panel:perfil' %}" class="nav-item {% if 'perfil' in request.path %}active{% endif %}">
+                <i class="fas fa-user"></i>
+                <span>Mi Perfil</span>
+            </a>
+        </div>
+    </nav>
+</aside>

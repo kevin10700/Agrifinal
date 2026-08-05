@@ -1,0 +1,64 @@
+{% extends 'productos/base.html' %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-8 offset-md-2">
+        <div class="card">
+            <div class="card-header bg-warning">
+                <h3><i class="fas fa-edit"></i> Actualizar estado de entrega</h3>
+                <p class="mb-0">Entrega #{{ entrega.id }} - Pedido #{{ entrega.pedido.id }}</p>
+            </div>
+            <div class="card-body">
+                <div class="alert alert-info">
+                    <strong>Estado actual:</strong> 
+                    <span class="badge 
+                        {% if entrega.estado == 'entregado' %}bg-success
+                        {% elif entrega.estado == 'en_ruta' %}bg-info
+                        {% elif entrega.estado == 'asignado' %}bg-primary
+                        {% elif entrega.estado == 'incidente' %}bg-danger
+                        {% else %}bg-warning text-dark{% endif %}">
+                        {{ entrega.get_estado_display }}
+                    </span>
+                </div>
+                
+                <form method="post">
+                    {% csrf_token %}
+                    
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Nuevo estado</label>
+                        <select name="estado" class="form-select" required>
+                            {% for value, label in estados %}
+                                <option value="{{ value }}" {% if entrega.estado == value %}selected{% endif %}>
+                                    {{ label }}
+                                </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Ubicación actual</label>
+                        <input type="text" name="ubicacion_actual" class="form-control" 
+                               value="{{ entrega.ubicacion_actual }}" 
+                               placeholder="Ej: Calle Principal #123, Colonia Centro">
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Notas de la entrega</label>
+                        <textarea name="notas_entrega" class="form-control" rows="3" 
+                                  placeholder="Notas adicionales sobre la entrega...">{{ entrega.notas_entrega }}</textarea>
+                    </div>
+                    
+                    <button type="submit" class="btn btn-primary w-100">
+                        <i class="fas fa-save"></i> Actualizar estado
+                    </button>
+                </form>
+                
+                <hr>
+                <a href="{% url 'pedidos:admin_entregas' %}" class="btn btn-secondary w-100">
+                    <i class="fas fa-arrow-left"></i> Volver al panel de entregas
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

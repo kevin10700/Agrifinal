@@ -1,0 +1,7 @@
+{% load static %}
+<span class="badge badge-{{ status_type }}">
+    {% if icon %}
+    <i class="fas fa-{{ icon }}"></i>
+    {% endif %}
+    {{ label }}
+</span>

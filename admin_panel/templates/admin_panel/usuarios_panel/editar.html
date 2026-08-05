@@ -1,0 +1,54 @@
+{% extends 'admin_panel/base.html' %}
+{% load static %}
+
+{% block title %}Editar Asignación - Panel Admin{% endblock %}
+
+{% block breadcrumb %}
+    <span class="breadcrumb-item"><a href="{% url 'admin_panel:dashboard' %}">Inicio</a></span>
+    <span class="breadcrumb-item"><a href="{% url 'admin_panel:usuarios_panel_lista' %}">Usuarios de Panel</a></span>
+    <span class="breadcrumb-item">Editar: {{ usuario_panel.usuario.nombre_completo }}</span>
+{% endblock %}
+
+{% block content %}
+<div class="fade-in">
+    <div class="page-header">
+        <div>
+            <h1 class="page-title">Editar Asignación de Rol</h1>
+            <p class="page-subtitle">Usuario: {{ usuario_panel.usuario.nombre_completo }} (@{{ usuario_panel.usuario.username }})</p>
+        </div>
+    </div>
+
+    <div class="card" style="max-width: 600px;">
+        <div class="card-body">
+            <form method="post">
+                {% csrf_token %}
+                
+                <div style="margin-bottom: 24px;">
+                    <label style="display: block; margin-bottom: 8px; font-weight: 600; color: var(--text-primary);">Usuario</label>
+                    <input type="text" value="{{ usuario_panel.usuario.nombre_completo }} ({{ usuario_panel.usuario.email }})" disabled
+                           style="width: 100%; padding: 10px 12px; border: 1px solid var(--border-color); border-radius: var(--border-radius_sm); background: var(--bg-hover); color: var(--text-secondary);">
+                </div>
+                
+                <div style="margin-bottom: 24px;">
+                    <label style="display: block; margin-bottom: 8px; font-weight: 600; color: var(--text-primary);">Rol *</label>
+                    <select name="rol" required style="width: 100%; padding: 10px 12px; border: 1px solid var(--border-color); border-radius: var(--border-radius_sm); background: var(--bg-card); color: var(--text-primary);">
+                        <option value="">Selecciona un rol...</option>
+                        {% for r in roles %}
+                        <option value="{{ r.id }}" {% if usuario_panel.rol_id == r.id %}selected{% endif %}>{{ r.nombre }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div style="display: flex; gap: 12px;">
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-save"></i> Guardar Cambios
+                    </button>
+                    <a href="{% url 'admin_panel:usuarios_panel_lista' %}" class="btn btn-secondary">
+                        <i class="fas fa-times"></i> Cancelar
+                    </a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

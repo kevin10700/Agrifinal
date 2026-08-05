@@ -1,0 +1,1287 @@
+/* ============================================
+   Estilos base de Agrivale - Refactorizado
+   ============================================ */
+
+:root {
+  --color-primary: #2c5e2e;
+  --color-primary-dark: #1e4220;
+  --color-primary-light: #4ade80;
+  --color-bg-dark: #1a1a1a;
+  --color-surface-dark: #2d2d2d;
+  --color-surface-hover: #3d3d3d;
+  --color-border-dark: #404040;
+  --color-text-dark: #f5f5f5;
+  --color-text-muted-dark: #b0b0b0;
+  --banner-bg-light: #f0f7f0;
+  --banner-bg-dark: #1e2e1e;
+  --badge-organico-bg: #28a745;
+  --badge-oferta-bg: #dc3545;
+  --shadow-card: 0 2px 8px rgba(0,0,0,0.08);
+  --shadow-card-hover: 0 8px 24px rgba(0,0,0,0.12);
+  --radius-card: 16px;
+  --radius-badge: 8px;
+}
+
+.navbar-brand {
+    font-weight: bold;
+    font-size: 1.5rem;
+}
+
+/* ============================================
+   OFERTAS PAGE - Responsive
+   ============================================ */
+.ofertas-banner .card-body {
+    padding: 1.25rem;
+}
+.ofertas-titulo {
+    font-size: 1.5rem;
+}
+.ofertas-descripcion {
+    font-size: 0.9rem;
+    line-height: 1.4;
+}
+.ofertas-icono {
+    font-size: 2.5rem;
+    opacity: 0.8;
+}
+.ofertas-titulo-lista {
+    font-size: 1.3rem;
+}
+.ofertas-titulo-lista small {
+    font-size: 0.85rem;
+}
+.ofertas-precio {
+    font-size: 1.8rem;
+}
+
+@media (max-width: 767px) {
+    .ofertas-banner .card-body {
+        padding: 0.85rem;
+    }
+    .ofertas-titulo {
+        font-size: 1.15rem;
+    }
+    .ofertas-descripcion {
+        font-size: 0.78rem;
+        margin-top: 0.35rem !important;
+    }
+    .ofertas-icono {
+        font-size: 1.8rem;
+    }
+    .ofertas-header {
+        flex-direction: column;
+        align-items: flex-start !important;
+        gap: 0.25rem;
+    }
+    .ofertas-titulo-lista {
+        font-size: 1.05rem;
+    }
+    .ofertas-titulo-lista small {
+        font-size: 0.78rem;
+    }
+    .ofertas-precio {
+        font-size: 1.4rem;
+    }
+    /* Ofertas badges */
+    .ofertas-badge-descuento span {
+        font-size: 0.8rem !important;
+        padding: 0.3rem 0.5rem !important;
+    }
+    .ofertas-badge-ahorro span {
+        font-size: 0.7rem !important;
+        padding: 0.2rem 0.4rem !important;
+    }
+    /* Ofertas sidebar */
+    .filtro-sidebar {
+        margin-bottom: 0.75rem;
+    }
+    .filtro-sidebar .form-select {
+        height: 44px;
+        font-size: 0.95rem;
+    }
+    .btn-aplicar, .btn-limpiar-ofertas {
+        height: 44px;
+        font-size: 0.95rem;
+    }
+    /* Ofertas pagination */
+    .pagination-responsive .page-link {
+        font-size: 0.82rem;
+        padding: 0.35rem 0.55rem;
+    }
+}
+
+@media (max-width: 575px) {
+    .ofertas-banner .card-body {
+        padding: 0.7rem;
+    }
+    .ofertas-titulo {
+        font-size: 1rem;
+    }
+    .ofertas-descripcion {
+        font-size: 0.72rem;
+    }
+    .ofertas-icono {
+        font-size: 1.5rem;
+    }
+    .ofertas-precio {
+        font-size: 1.2rem;
+    }
+    .filtro-sidebar .form-select {
+        height: 48px;
+        font-size: 1rem;
+    }
+    .btn-aplicar, .btn-limpiar-ofertas {
+        height: 48px;
+        font-size: 1rem;
+    }
+}
+
+/* Dark mode */
+body.modo-oscuro .filtro-sidebar {
+    background-color: var(--color-surface-dark);
+    color: var(--color-text-dark);
+}
+body.modo-oscuro .filtro-sidebar .form-select {
+    background-color: #1e1e1e;
+    border-color: var(--color-border-dark);
+    color: var(--color-text-dark);
+}
+body.modo-oscuro .filtro-sidebar .btn-outline-secondary {
+    border-color: var(--color-border-dark);
+    color: var(--color-text-muted-dark);
+}
+body.modo-oscuro .filtro-sidebar .btn-outline-secondary:hover {
+    background-color: var(--color-surface-hover);
+    color: var(--color-text-dark);
+}
+
+/* ============================================
+   PRODUCT CARDS
+   ============================================ */
+.producto-card {
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    margin-bottom: 20px;
+    border: none;
+    border-radius: var(--radius-card);
+    cursor: pointer;
+    box-shadow: var(--shadow-card);
+    overflow: hidden;
+}
+
+.producto-card:hover {
+    transform: translateY(-6px);
+    box-shadow: var(--shadow-card-hover);
+}
+
+/* Image aspect-ratio wrapper */
+.producto-card .img-wrapper {
+    position: relative;
+    width: 100%;
+    aspect-ratio: 4 / 3;
+    overflow: hidden;
+    background-color: #f0f0f0;
+}
+
+.producto-card .img-wrapper img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.4s ease;
+}
+
+.producto-card:hover .img-wrapper img {
+    transform: scale(1.05);
+}
+
+.producto-card .img-wrapper .img-placeholder {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: #f8f9fa;
+    color: #adb5bd;
+    font-size: 2.5rem;
+}
+
+/* Badges superpuestos con posicionamiento absoluto */
+.producto-card .badge-floating {
+    position: absolute;
+    z-index: 2;
+    padding: 0.35em 0.7em;
+    font-size: 0.75rem;
+    font-weight: 600;
+    border-radius: var(--radius-badge);
+    box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+    line-height: 1.4;
+    pointer-events: none;
+}
+
+.badge-organico {
+    background-color: var(--badge-organico-bg);
+    color: #fff;
+    position: absolute;
+    top: 10px;
+    left: 10px;
+    z-index: 2;
+    padding: 0.35em 0.7em;
+    font-size: 0.75rem;
+    font-weight: 600;
+    border-radius: var(--radius-badge);
+    box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+    pointer-events: none;
+}
+
+.badge-oferta {
+    background-color: var(--badge-oferta-bg);
+    color: #fff;
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    z-index: 2;
+    padding: 0.35em 0.7em;
+    font-size: 0.75rem;
+    font-weight: 600;
+    border-radius: var(--radius-badge);
+    box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+    pointer-events: none;
+}
+
+/* Card body - padding consistente */
+.producto-card .card-body {
+    padding: 1rem 1rem 1.1rem;
+}
+
+.producto-card .card-title {
+    font-size: 1.05rem;
+    font-weight: 700;
+    margin-bottom: 0.35rem;
+    line-height: 1.3;
+}
+
+.producto-card .card-text {
+    font-size: 0.85rem;
+    line-height: 1.4;
+    color: #6c757d;
+}
+
+.precio-oferta {
+    color: #dc3545;
+    font-weight: 700;
+    font-size: 1.25rem;
+}
+
+.precio-original {
+    text-decoration: line-through;
+    color: #6c757d;
+    font-size: 0.85rem;
+}
+
+/* Product info metadata */
+.producto-card .meta-info small {
+    color: #6c757d;
+    font-size: 0.8rem;
+}
+
+.producto-card .meta-info i {
+    color: var(--color-primary);
+}
+
+/* Stock indicator */
+.producto-card .stock-info {
+    padding-top: 0.6rem;
+    border-top: 1px solid #e9ecef;
+    margin-top: 0.25rem;
+}
+
+.producto-card .stock-info small {
+    font-size: 0.8rem;
+}
+
+/* ============================================
+   BANNER DE CONFIANZA
+   ============================================ */
+.banner-confianza {
+    background-color: var(--banner-bg-light);
+    border-bottom: 2px solid #d0e4d0;
+    padding: 0.6rem 0;
+}
+
+.banner-icono {
+    font-size: 1.5rem;
+    color: var(--color-primary);
+    line-height: 1.8;
+}
+
+.banner-texto {
+    color: #1a3a1a;
+    font-weight: 500;
+    font-size: 0.8rem;
+}
+
+body.modo-oscuro .banner-confianza {
+    background-color: var(--banner-bg-dark);
+    border-bottom-color: #2a4a2a;
+}
+body.modo-oscuro .banner-icono {
+    color: var(--color-primary-light);
+}
+body.modo-oscuro .banner-texto {
+    color: #c8e6c9;
+}
+
+/* ============================================
+   FILTROS Y BARRA SUPERIOR
+   ============================================ */
+.card-filtros {
+    border: none;
+    border-radius: var(--radius-card);
+    box-shadow: var(--shadow-card);
+    margin-bottom: 2rem;
+}
+
+.card-filtros .card-body {
+    padding: 1rem 1.25rem;
+}
+
+.card-filtros .form-label {
+    font-size: 0.75rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: #6c757d;
+    margin-bottom: 0.35rem;
+}
+
+.card-filtros .form-label i {
+    color: var(--color-primary);
+}
+
+.card-filtros .form-select {
+    border: 2px solid #e0e0e0;
+    border-radius: 10px;
+    padding: 0.5rem 0.75rem;
+    font-size: 0.9rem;
+    cursor: pointer;
+    transition: border-color 0.2s;
+    height: 42px;
+}
+
+.card-filtros .form-select:focus {
+    border-color: var(--color-primary);
+    box-shadow: 0 0 0 3px rgba(44, 94, 46, 0.15);
+}
+
+.card-filtros .btn-limpiar {
+    font-weight: 500;
+    height: 42px;
+    border: 2px solid #adb5bd;
+    border-radius: 10px;
+    color: #495057;
+    transition: all 0.2s;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.4rem;
+}
+
+.card-filtros .btn-limpiar:hover {
+    background-color: #e9ecef;
+    border-color: #6c757d;
+}
+
+/* Badge de conteo de productos - estilos consistentes */
+.badge-product-count {
+    background-color: rgba(44, 94, 46, 0.1);
+    color: var(--color-primary);
+    padding: 0.5rem 1rem;
+    border-radius: 50rem;
+    font-size: 0.9rem;
+    font-weight: 600;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+}
+
+.badge-product-count i {
+    font-size: 0.85rem;
+}
+
+body.modo-oscuro .badge-product-count {
+    background-color: rgba(74, 222, 128, 0.12);
+    color: var(--color-primary-light);
+}
+
+/* Dark mode filter bar */
+body.modo-oscuro .card-filtros {
+    background-color: var(--color-surface-dark);
+    border-color: var(--color-border-dark);
+}
+
+body.modo-oscuro .card-filtros .form-label {
+    color: #b0b0b0;
+}
+
+body.modo-oscuro .card-filtros .form-label i {
+    color: var(--color-primary-light);
+}
+
+body.modo-oscuro .card-filtros .form-select {
+    background-color: #1e1e1e;
+    border-color: var(--color-border-dark);
+    color: var(--color-text-dark);
+}
+
+body.modo-oscuro .card-filtros .form-select option {
+    background-color: var(--color-surface-dark);
+    color: var(--color-text-dark);
+}
+
+body.modo-oscuro .card-filtros .btn-limpiar {
+    background-color: transparent;
+    border-color: var(--color-border-dark);
+    color: #b0b0b0;
+}
+
+body.modo-oscuro .card-filtros .btn-limpiar:hover {
+    background-color: var(--color-surface-hover);
+    color: var(--color-text-dark);
+}
+
+/* ============================================
+   PANEL DE ACCESIBILIDAD - Posicionamiento corregido
+   ============================================ */
+
+/* Contenedor padre con position relative para anclar el panel */
+.accesibilidad-wrapper {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+}
+
+/* Panel flotante: absolute respecto al wrapper, no fixed */
+.panel-accesibilidad {
+    position: absolute;
+    top: calc(100% + 8px);
+    right: 0;
+    background-color: #fff;
+    border-radius: 12px;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.25);
+    padding: 25px;
+    z-index: 9999;
+    min-width: 300px;
+    display: none;
+    border: 2px solid var(--color-primary);
+    animation: fadeIn 0.3s ease;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(-10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+body.modo-oscuro .panel-accesibilidad {
+    background-color: var(--color-surface-dark);
+    color: var(--color-text-dark);
+    border-color: var(--color-primary-light);
+    box-shadow: 0 8px 32px rgba(0,0,0,0.5);
+}
+
+.panel-accesibilidad.mostrar {
+    display: block;
+}
+
+.panel-accesibilidad h5 {
+    margin-bottom: 20px;
+    font-weight: bold;
+    font-size: 18px;
+    color: var(--color-primary);
+    border-bottom: 2px solid var(--color-primary);
+    padding-bottom: 10px;
+}
+
+body.modo-oscuro .panel-accesibilidad h5 {
+    color: var(--color-primary-light);
+    border-color: var(--color-primary-light);
+}
+
+.control-tamano {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    margin-bottom: 20px;
+    padding: 10px;
+    background-color: #f8f9fa;
+    border-radius: 8px;
+}
+
+body.modo-oscuro .control-tamano {
+    background-color: var(--color-surface-hover);
+}
+
+.control-tamano label {
+    font-weight: bold;
+    color: var(--color-primary);
+    min-width: 60px;
+}
+
+body.modo-oscuro .control-tamano label {
+    color: var(--color-primary-light);
+}
+
+.control-tamano input[type="range"] {
+    flex: 1;
+    height: 10px;
+    border-radius: 5px;
+    background: linear-gradient(to right, var(--color-primary), var(--color-primary-light));
+    outline: none;
+    cursor: pointer;
+}
+
+.control-tamano .tamano-valor {
+    font-weight: bold;
+    min-width: 50px;
+    color: var(--color-primary);
+    text-align: center;
+}
+
+body.modo-oscuro .control-tamano .tamano-valor {
+    color: var(--color-primary-light);
+}
+
+/* Botones de modo claro/oscuro con active dinámico */
+.btn-modo {
+    width: 100%;
+    margin-bottom: 12px;
+    padding: 12px 15px;
+    border-radius: 8px;
+    border: 2px solid var(--color-primary);
+    background-color: white;
+    cursor: pointer;
+    font-weight: bold;
+    transition: all 0.3s;
+    font-size: 15px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+}
+
+.btn-modo:hover {
+    background-color: #f0f0f0;
+    transform: translateY(-2px);
+}
+
+.btn-modo.active {
+    background-color: var(--color-primary);
+    color: white;
+    border-color: var(--color-primary);
+}
+
+body.modo-oscuro .btn-modo {
+    background-color: var(--color-surface-hover);
+    color: var(--color-text-dark);
+    border-color: var(--color-primary-light);
+}
+
+body.modo-oscuro .btn-modo:hover {
+    background-color: #4d4d4d;
+}
+
+body.modo-oscuro .btn-modo.active {
+    background-color: var(--color-primary);
+    color: white;
+    border-color: var(--color-primary);
+}
+
+/* Botón de accesibilidad principal */
+.btn-accesibilidad {
+    background-color: var(--color-primary) !important;
+    color: white !important;
+    border: none !important;
+    padding: 8px 16px !important;
+    font-size: 14px !important;
+    font-weight: bold !important;
+    border-radius: 5px !important;
+    transition: all 0.3s !important;
+    white-space: nowrap;
+}
+
+.btn-accesibilidad:hover {
+    background-color: var(--color-primary-dark) !important;
+    transform: scale(1.05);
+}
+
+body.modo-oscuro .btn-accesibilidad {
+    background-color: var(--color-surface-hover) !important;
+    color: var(--color-text-dark) !important;
+    border: 1px solid #505050 !important;
+}
+
+body.modo-oscuro .btn-accesibilidad:hover {
+    background-color: #4d4d4d !important;
+}
+
+/* ============================================
+   MODO OSCURO - Estilos generales
+   ============================================ */
+body.modo-oscuro {
+    background-color: var(--color-bg-dark) !important;
+    color: var(--color-text-dark) !important;
+}
+
+body.modo-oscuro .navbar {
+    background-color: var(--color-surface-dark) !important;
+    border-bottom: 1px solid var(--color-border-dark) !important;
+}
+
+body.modo-oscuro .navbar-brand,
+body.modo-oscuro .nav-link,
+body.modo-oscuro .dropdown-item {
+    color: var(--color-text-dark) !important;
+}
+
+body.modo-oscuro .card {
+    background-color: var(--color-surface-dark) !important;
+    border-color: var(--color-border-dark) !important;
+    color: var(--color-text-dark) !important;
+}
+
+body.modo-oscuro .card-header {
+    background-color: var(--color-surface-hover) !important;
+    color: var(--color-text-dark) !important;
+    border-color: var(--color-border-dark) !important;
+}
+
+body.modo-oscuro .btn-light {
+    background-color: var(--color-surface-hover) !important;
+    color: var(--color-text-dark) !important;
+    border-color: #505050 !important;
+}
+
+body.modo-oscuro .form-control {
+    background-color: var(--color-surface-dark) !important;
+    border-color: var(--color-border-dark) !important;
+    color: var(--color-text-dark) !important;
+}
+
+body.modo-oscuro .dropdown-menu {
+    background-color: var(--color-surface-dark) !important;
+    border-color: var(--color-border-dark) !important;
+}
+
+body.modo-oscuro .dropdown-item:hover {
+    background-color: var(--color-surface-hover) !important;
+}
+
+body.modo-oscuro .producto-card {
+    background-color: var(--color-surface-dark) !important;
+    border-color: var(--color-border-dark) !important;
+}
+
+body.modo-oscuro footer {
+    background-color: var(--color-bg-dark) !important;
+    border-top: 1px solid var(--color-border-dark) !important;
+}
+
+body.modo-oscuro .alert {
+    background-color: var(--color-surface-dark) !important;
+    border-color: var(--color-border-dark) !important;
+    color: var(--color-text-dark) !important;
+}
+
+body.modo-oscuro .table {
+    color: var(--color-text-dark) !important;
+}
+
+body.modo-oscuro .table-striped > tbody > tr:nth-of-type(odd) > * {
+    color: var(--color-text-dark) !important;
+    background-color: #252525 !important;
+}
+
+/* ============================================
+   CONTROL DE TAMAÑO DE FUENTE
+   ============================================ */
+body {
+    transition: font-size 0.3s ease;
+}
+
+/* ============================================
+   WHATSAPP BUTTON
+   ============================================ */
+.whatsapp-btn {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    background-color: #25d366;
+    color: white;
+    border-radius: 50px;
+    padding: 12px 20px;
+    z-index: 1000;
+    transition: all 0.3s;
+    text-decoration: none;
+    font-weight: bold;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+}
+
+.whatsapp-btn:hover {
+    background-color: #128C7E;
+    color: white;
+    transform: scale(1.05);
+}
+
+/* ============================================
+   FOOTER
+   ============================================ */
+footer {
+    background-color: var(--color-primary);
+    color: white;
+    margin-top: 50px;
+    padding: 30px 0;
+}
+
+footer a {
+    color: white;
+    text-decoration: none;
+}
+
+footer a:hover {
+    text-decoration: underline;
+}
+
+/* Quitar subrayado y color azul del enlace */
+a.text-decoration-none {
+    color: inherit;
+}
+
+a.text-decoration-none:hover {
+    color: inherit;
+}
+
+/* ============================================
+   ANIMACIONES DE TOAST
+   ============================================ */
+.toast-enter { animation: toast-in .25s ease-out both; }
+.toast-leave { animation: toast-out .25s ease-in both; }
+@keyframes toast-in { from { opacity: 0; transform: translateX(20px); } to { opacity: 1; transform: translateX(0); } }
+@keyframes toast-out { to { opacity: 0; transform: translateX(20px); } }
+
+/* ============================================
+   ESTILOS ESPECÍFICOS ADMIN
+   ============================================ */
+body.modo-oscuro .bg-primary {
+    background-color: var(--color-primary) !important;
+}
+
+body.modo-oscuro .bg-warning {
+    background-color: #d97706 !important;
+    color: var(--color-text-dark) !important;
+}
+
+body.modo-oscuro .bg-info {
+    background-color: #0891b2 !important;
+}
+
+body.modo-oscuro .bg-success {
+    background-color: var(--color-primary) !important;
+}
+
+body.modo-oscuro .table-dark {
+    background-color: var(--color-surface-dark) !important;
+    color: var(--color-text-dark) !important;
+}
+
+body.modo-oscuro .table-bordered {
+    border-color: var(--color-border-dark) !important;
+}
+
+body.modo-oscuro .table-bordered th,
+body.modo-oscuro .table-bordered td {
+    border-color: var(--color-border-dark) !important;
+}
+
+body.modo-oscuro .table-hover tbody tr:hover {
+    background-color: var(--color-surface-hover) !important;
+}
+
+/* ============================================
+    DETALLE DE PEDIDO - Responsive
+    ============================================ */
+@media (max-width: 767px) {
+    /* Detalle de pedido - apilar columnas */
+    .container.py-4 .row.g-4 {
+        gap: 1rem !important;
+    }
+    
+    .container.py-4 .col-lg-7,
+    .container.py-4 .col-lg-5 {
+        flex: 0 0 100%;
+        max-width: 100%;
+    }
+    
+    /* Mejorar cards en móvil */
+    .container.py-4 .card {
+        margin-bottom: 1rem;
+    }
+    
+    .container.py-4 .card-body {
+        padding: 1rem;
+    }
+    
+    /* Botones más grandes para touch */
+    .container.py-4 .btn {
+        min-height: 44px;
+        font-size: 0.95rem;
+    }
+    
+    /* Mejorar legibilidad de textos */
+    .container.py-4 h1 {
+        font-size: 1.5rem;
+    }
+    
+    .container.py-4 h2 {
+        font-size: 1.15rem;
+    }
+    
+    .container.py-4 h3 {
+        font-size: 1.05rem;
+    }
+    
+    /* Espaciado en items de productos */
+    .container.py-4 .d-flex.align-items-center.gap-3 {
+        gap: 0.75rem !important;
+        padding: 0.75rem 0;
+    }
+    
+    .container.py-4 img.rounded {
+        width: 56px !important;
+        height: 56px !important;
+    }
+    
+    /* Mejorar visualización de totales */
+    .container.py-4 .border-top.pt-3 {
+        padding-top: 0.75rem !important;
+    }
+    
+    .container.py-4 .border-top.pt-3 div {
+        font-size: 0.95rem;
+        margin-bottom: 0.25rem;
+    }
+    
+    /* Card de cancelación */
+    .container.py-4 .border-danger {
+        border-width: 2px !important;
+    }
+    
+    .container.py-4 .text-danger {
+        font-size: 1.1rem;
+    }
+    
+    /* Alerts en detalle de pedido */
+    .container.py-4 .alert {
+        font-size: 0.9rem;
+        padding: 0.75rem;
+    }
+}
+
+/* ── Pantallas muy pequeñas (< 576px) ── */
+@media (max-width: 575px) {
+/* ============================================
+    DETALLE DE PEDIDO - Pantallas muy pequeñas
+    ============================================ */
+@media (max-width: 575px) {
+    /* === DETALLE DE PEDIDO - optimizaciones extra === */
+    .container.py-4 {
+        padding-left: 0.75rem !important;
+        padding-right: 0.75rem !important;
+        padding-top: 1rem !important;
+        padding-bottom: 1rem !important;
+    }
+    
+    .container.py-4 h1 {
+        font-size: 1.25rem;
+    }
+    
+    .container.py-4 h2 {
+        font-size: 1.05rem;
+    }
+    
+    /* Items de productos más compactos */
+    .container.py-4 .d-flex.align-items-center.gap-3 {
+        gap: 0.6rem !important;
+        padding: 0.6rem 0;
+    }
+    
+    .container.py-4 img.rounded {
+        width: 48px !important;
+        height: 48px !important;
+    }
+    
+    .container.py-4 strong {
+        font-size: 0.9rem;
+    }
+    
+    .container.py-4 .text-muted {
+        font-size: 0.8rem;
+    }
+    
+    /* Totales más compactos */
+    .container.py-4 .border-top.pt-3.text-end div {
+        font-size: 0.85rem;
+    }
+    
+    .container.py-4 .border-top.pt-3 .h5 {
+        font-size: 1rem;
+    }
+    
+    /* Botones full width */
+    .container.py-4 .btn-outline-secondary {
+        width: 100%;
+        margin-top: 0.5rem;
+    }
+    
+    /* Card de cancelación más compacta */
+    .container.py-4 .card .h5 {
+        font-size: 1rem;
+    }
+    
+    .container.py-4 .card .small {
+        font-size: 0.8rem;
+    }
+    
+    /* Alerts más compactas */
+    .container.py-4 .alert {
+        font-size: 0.85rem;
+        padding: 0.6rem 0.75rem;
+    }
+    
+    .container.py-4 .alert strong {
+        font-size: 0.9rem;
+    }
+    
+    .container.py-4 .alert small {
+        font-size: 0.8rem;
+    }
+
+    .badge-product-count {
+        font-size: 0.85rem;
+        padding: 0.45rem 0.85rem;
+    }
+
+    /* === FILTROS — full-width, grandes, táctiles === */
+    .card-filtros {
+        margin-bottom: 1rem;
+    }
+    .card-filtros .card-body {
+        padding: 0.75rem;
+    }
+    .card-filtros .form-label {
+        font-size: 0.8rem;
+        margin-bottom: 0.25rem;
+    }
+    .card-filtros .form-select {
+        height: 48px;
+        font-size: 1rem;
+        padding: 0.5rem 0.75rem;
+    }
+    .card-filtros .btn-limpiar {
+        height: 48px;
+        font-size: 1rem;
+        padding: 0.5rem 1rem;
+    }
+    .card-filtros .col-12 {
+        margin-bottom: 0.4rem;
+    }
+
+    /* === PRODUCT GRID — 2 columnas === */
+    .row > .col-sm-6 {
+        flex: 0 0 50%;
+        max-width: 50%;
+    }
+
+    /* === PRODUCT CARDS — prices BIG === */
+    .producto-card {
+        margin-bottom: 12px;
+    }
+    .producto-card .card-body {
+        padding: 0.6rem 0.65rem 0.75rem;
+    }
+    .producto-card .card-title {
+        font-size: 0.95rem;
+        margin-bottom: 0.15rem;
+    }
+    .producto-card .card-text {
+        font-size: 0.75rem;
+        -webkit-line-clamp: 1 !important;
+        height: auto !important;
+        margin-bottom: 0.35rem !important;
+    }
+    .producto-card .meta-info small {
+        font-size: 0.72rem;
+    }
+    .producto-card .meta-info .d-block {
+        margin-bottom: 0.1rem !important;
+    }
+    .producto-card .precio-oferta {
+        font-size: 1.2rem;
+    }
+    .producto-card .h4.text-success {
+        font-size: 1.2rem;
+    }
+    .producto-card .stock-info {
+        padding-top: 0.35rem;
+        margin-top: 0.1rem;
+    }
+    .producto-card .stock-info small {
+        font-size: 0.72rem;
+    }
+
+    /* Badges — visibles pero compactos */
+    .badge-organico,
+    .badge-oferta {
+        font-size: 0.65rem;
+        padding: 0.25em 0.5em;
+        top: 6px;
+    }
+    .badge-organico { left: 6px; }
+    .badge-oferta { right: 6px; }
+
+    /* === NAVBAR — hamburger menu full-width === */
+    .navbar .container {
+        padding-left: 0.75rem;
+        padding-right: 0.75rem;
+    }
+    .navbar-brand {
+        font-size: 1.25rem;
+    }
+    #buscador-productos {
+        width: 100%;
+        margin-right: 0 !important;
+        margin-top: 0.5rem;
+        margin-bottom: 0.5rem;
+    }
+    #buscador-productos .form-control {
+        font-size: 1rem;
+        height: 44px;
+    }
+    #buscador-productos .btn {
+        height: 44px;
+        padding: 0.4rem 0.8rem;
+    }
+    .accesibilidad-wrapper {
+        width: 100%;
+        margin-right: 0 !important;
+        margin-bottom: 0.5rem;
+    }
+    .btn-accesibilidad {
+        width: 100% !important;
+        justify-content: center !important;
+        height: 44px !important;
+        font-size: 1rem !important;
+    }
+
+    /* === ACCESSIBILITY PANEL — bottom sheet === */
+    .panel-accesibilidad {
+        position: fixed;
+        top: auto;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        min-width: auto;
+        width: 100%;
+        border-radius: 16px 16px 0 0;
+        padding: 20px;
+        max-height: 80vh;
+        overflow-y: auto;
+        animation: slideUp 0.3s ease;
+        box-shadow: 0 -4px 20px rgba(0,0,0,0.2);
+    }
+    @keyframes slideUp {
+        from { transform: translateY(100%); }
+        to { transform: translateY(0); }
+    }
+    .panel-accesibilidad h5 {
+        font-size: 1.1rem;
+        margin-bottom: 15px;
+    }
+    .control-tamano {
+        flex-wrap: wrap;
+        gap: 10px;
+    }
+    .control-tamano label {
+        min-width: auto;
+        font-size: 1rem;
+    }
+    .control-tamano input[type="range"] {
+        height: 10px;
+    }
+    .btn-modo {
+        padding: 14px 12px;
+        font-size: 1rem;
+    }
+
+    /* === PAGINATION === */
+    .pagination .page-link {
+        font-size: 0.85rem;
+        padding: 0.4rem 0.65rem;
+    }
+
+    /* === FOOTER === */
+    footer {
+        padding: 20px 0;
+        margin-top: 30px;
+    }
+    footer .col-md-4 {
+        flex: 0 0 100%;
+        max-width: 100%;
+        margin-bottom: 1.25rem;
+    }
+    footer h5 {
+        font-size: 1.1rem;
+    }
+    footer p, footer li {
+        font-size: 0.9rem;
+    }
+
+    /* === WHATSAPP === */
+    .whatsapp-btn {
+        bottom: 12px;
+        right: 12px;
+        padding: 10px 16px;
+        font-size: 0.9rem;
+    }
+
+    /* === TOAST === */
+    .toast-container {
+        top: 56px !important;
+        padding: 0.5rem !important;
+        max-width: 100% !important;
+    }
+    .toast-container .alert {
+        font-size: 0.9rem;
+        padding: 0.6rem 0.8rem !important;
+    }
+
+    /* === SEARCH RESULTS ALERT === */
+    .alert-info {
+        font-size: 0.9rem;
+        padding: 0.6rem 0.8rem;
+        flex-wrap: wrap;
+        gap: 0.5rem;
+    }
+    .alert-info .btn {
+        font-size: 0.85rem;
+        padding: 0.35rem 0.85rem;
+        height: 40px;
+    }
+
+    /* === EMPTY STATE === */
+    .col-12.text-center.py-5 {
+        padding-top: 2rem !important;
+        padding-bottom: 2rem !important;
+    }
+    .col-12.text-center.py-5 h4 {
+        font-size: 1.25rem;
+    }
+    .col-12.text-center.py-5 p {
+        font-size: 0.95rem;
+    }
+
+    /* === FILTRO SIDEBAR (ofertas) === */
+    .filtro-sidebar {
+        position: static;
+        top: auto;
+        width: 100%;
+        margin-bottom: 1rem;
+    }
+
+    /* === BOTÓN "Saltar tutorial" — no tapa contenido === */
+    #saltar-tutorial {
+        top: 60px !important;
+        font-size: 0.8rem !important;
+        padding: 0.25rem 0.6rem !important;
+    }
+}
+
+/* ── Pantallas medianas/pequeñas (576px - 767px) ── */
+@media (min-width: 576px) and (max-width: 767px) {
+    .card-filtros .form-select {
+        height: 44px;
+        font-size: 0.95rem;
+    }
+    .card-filtros .btn-limpiar {
+        height: 44px;
+    }
+    .row > .col-sm-6 {
+        flex: 0 0 50%;
+        max-width: 50%;
+    }
+    .producto-card .card-title {
+        font-size: 1rem;
+    }
+    .producto-card .precio-oferta,
+    .producto-card .h4.text-success {
+        font-size: 1.15rem;
+    }
+    footer .col-md-4 {
+        flex: 0 0 100%;
+        max-width: 100%;
+        margin-bottom: 1.25rem;
+    }
+    .panel-accesibilidad {
+        position: fixed;
+        top: auto;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        min-width: auto;
+        width: 100%;
+        border-radius: 16px 16px 0 0;
+        padding: 20px;
+        max-height: 80vh;
+        overflow-y: auto;
+        animation: slideUp 0.3s ease;
+        box-shadow: 0 -4px 20px rgba(0,0,0,0.2);
+    }
+}
+
+/* ── Tablets (768px - 1024px) ── */
+@media (min-width: 768px) and (max-width: 1024px) {
+    .row > .col-md-4 {
+        flex: 0 0 50%;
+        max-width: 50%;
+    }
+
+    .card-filtros .col-md-5 {
+        flex: 0 0 100%;
+        max-width: 100%;
+    }
+    .card-filtros .col-md-4 {
+        flex: 0 0 50%;
+        max-width: 50%;
+    }
+    .card-filtros .col-md-3 {
+        flex: 0 0 50%;
+        max-width: 50%;
+    }
+    .card-filtros .btn-limpiar {
+        height: 42px;
+    }
+
+    .container-fluid.px-md-4 {
+        padding-left: 1.5rem !important;
+        padding-right: 1.5rem !important;
+    }
+
+    footer .col-md-4 {
+        flex: 0 0 50%;
+        max-width: 50%;
+        margin-bottom: 1.5rem;
+    }
+}
