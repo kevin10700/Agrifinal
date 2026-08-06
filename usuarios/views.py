@@ -58,63 +58,16 @@ def registro(request):
         form = RegistroForm(request.POST)
         if form.is_valid():
             user = form.save(commit=False)
-            user.is_active = False
-            user.correo_verificado = False
+            # Activamos y verificamos la cuenta de inmediato
+            user.is_active = True
+            user.correo_verificado = True
             user.is_new_user = True
             user.save()
 
-            # Token de verificación
-            token_obj = TokenVerificacion.objects.create(id_usuario=user)
-
-            link = request.build_absolute_uri(
-                f'/usuarios/verificar-email/{token_obj.token}/'
+            messages.success(
+                request,
+                f'🎉 ¡Registro exitoso! Bienvenido a Agrivale, {user.nombre}. Ya puedes iniciar sesión.'
             )
-
-            asunto = 'Verifica tu correo en Agrivale 🌿'
-            mensaje_texto = (
-                f'Hola {user.nombre},\n\n'
-                f'Gracias por registrarte en Agrivale.\n'
-                f'Haz clic en el siguiente enlace para verificar tu cuenta '
-                f'(válido por 30 minutos):\n\n{link}\n\n'
-                f'Si no creaste esta cuenta, ignora este mensaje.'
-            )
-            mensaje_html = f"""
-                <div style="font-family: Arial, sans-serif; padding: 20px; color: #333;">
-                    <h2>¡Bienvenido a Agrivale, {user.nombre}! 🌿</h2>
-                    <p>Gracias por registrarte en nuestra plataforma.</p>
-                    <p>Por favor haz clic en el siguiente botón para verificar tu correo electrónico (válido por 30 minutos):</p>
-                    <p style="margin: 25px 0;">
-                        <a href="{link}" style="background-color: #2e7d32; color: white; padding: 12px 24px; text-decoration: none; border-radius: 5px; font-weight: bold;">
-                            Verificar mi correo
-                        </a>
-                    </p>
-                    <p>O copia y pega el siguiente enlace en tu navegador:</p>
-                    <p><a href="{link}">{link}</a></p>
-                    <hr style="margin-top: 30px; border: none; border-top: 1px solid #ccc;">
-                    <p style="font-size: 12px; color: #777;">Si no creaste esta cuenta, puedes ignorar este mensaje.</p>
-                </div>
-            """
-
-            enviado = enviar_correo(
-                asunto=asunto,
-                mensaje_texto=mensaje_texto,
-                destinatario=user.email,
-                mensaje_html=mensaje_html
-            )
-
-            if enviado:
-                messages.success(
-                    request,
-                    f'✅ ¡Registro exitoso! Te enviamos un correo a {user.email}. '
-                    f'Tienes 30 minutos para verificar tu cuenta antes de que expire el enlace.'
-                )
-            else:
-                messages.warning(
-                    request,
-                    '⚠️ Tu cuenta fue creada pero no pudimos enviar el correo de verificación. '
-                    'Contacta al administrador.'
-                )
-
             return redirect('usuarios:login')
     else:
         form = RegistroForm()
@@ -189,29 +142,14 @@ def iniciar_sesion(request):
         return redirect('productos:lista')
 
     if request.method == 'POST':
-        form = LoginForm(request, data=request.POST)
+        form = LoginForm(request.POST)
         if form.is_valid():
-            username = form.cleaned_data.get('username')
-            password = form.cleaned_data.get('password')
-            user = authenticate(username=username, password=password)
-            if user is not None:
-                if not user.correo_verificado:
-                    messages.warning(
-                        request,
-                        '📧 Debes verificar tu correo electrónico antes de iniciar sesión. '
-                        'Revisa tu bandeja de entrada (o spam).'
-                    )
-                    return redirect('usuarios:login')
-                login(request, user)
-                messages.success(
-                    request,
-                    'Inicio de sesión exitoso'
-                )
-                if user.is_staff:
-                    return redirect('admin_panel:dashboard')
-                return redirect('productos:lista')
-        else:
-            messages.error(request, '❌ Usuario o contraseña incorrectos. Intenta de nuevo.')
+            user = form.get_user()
+            login(request, user)
+            messages.success(request, f'¡Bienvenido de nuevo, {user.nombre}!')
+            if user.is_staff:
+                return redirect('admin_panel:dashboard')
+            return redirect('productos:lista')
     else:
         form = LoginForm()
 
