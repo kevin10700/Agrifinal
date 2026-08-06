@@ -167,7 +167,7 @@ def _guardar_direccion_checkout(usuario, data):
             setattr(direccion, campo, valor)
         direccion.save()
         return direccion
-    return DireccionEnvio.objects.create(id_usuario=usuario, es_principal=True, **valores)
+    return DireccionEnvio.objects.create(usuario=usuario, es_principal=True, **valores)
 
 
 @login_required
