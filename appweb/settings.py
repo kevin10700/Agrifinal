@@ -167,12 +167,7 @@ MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 # ── Correo y Servicios Externos (Resend API / SMTP) ───────
 RESEND_API_KEY = os.getenv('RESEND_API_KEY')
 
-if RESEND_API_KEY:
-    # Usando API de Resend para bypass de bloqueos de puertos SMTP
-    DEFAULT_FROM_EMAIL = os.getenv('DEFAULT_FROM_EMAIL', 'Agrivale <onboarding@resend.dev>')
-else:
-# ── Correo con Gmail SMTP ──────────────────────────────────
-# ── Configuración de Correo (Impresión en consola / Inactivo) ──
+
 EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
 DEFAULT_FROM_EMAIL = 'Agrivale <no-reply@agrivale.com>'
 
