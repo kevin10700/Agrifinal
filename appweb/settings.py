@@ -90,7 +90,7 @@ TEMPLATES = [
 WSGI_APPLICATION = 'appweb.wsgi.application'
 
 # ── Base de Datos (Railway vs Desarrollo Local) ──────────
-db_from_env = os.getenv("DATABASE_URL")
+db_from_env = os.getenv("DATABASE_URL") or os.getenv("MYSQL_URL")
 
 if db_from_env:
     parsed_db = dj_database_url.parse(
