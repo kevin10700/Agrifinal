@@ -1,3 +1,4 @@
+cat > appweb/settings.py << 'SETTINGS_EOF'
 import os
 from pathlib import Path
 from dotenv import dotenv_values, load_dotenv
@@ -58,7 +59,7 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
-    'whitenoise.middleware.WhiteNoiseMiddleware',  # Sirve archivos estáticos en producción
+    'whitenoise.middleware.WhiteNoiseMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -72,7 +73,7 @@ ROOT_URLCONF = 'appweb.urls'
 
 TEMPLATES = [
     {
-        'BACKEND': 'django.template.backends.django.DjangoTemplates',  # <-- Nombre completo del módulo
+        'BACKEND': 'django.template.backends.django.DjangoTemplates',
         'DIRS': [BASE_DIR / 'templates'],
         'APP_DIRS': True,
         'OPTIONS': {
@@ -146,8 +147,11 @@ STATICFILES_DIRS = [
 STATIC_ROOT = BASE_DIR / 'staticfiles'
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-# Compresión y caché de archivos estáticos para WhiteNoise
+# ── Configuración de almacenamiento ──────────────────────
 STORAGES = {
+    "default": {
+        "BACKEND": "django.core.files.storage.FileSystemStorage",
+    },
     "staticfiles": {
         "BACKEND": "whitenoise.storage.CompressedManifestStaticFilesStorage",
     },
@@ -161,6 +165,7 @@ LOGIN_URL = '/usuarios/login/'
 LOGIN_REDIRECT_URL = '/'
 LOGOUT_REDIRECT_URL = '/'
 
+# ── Archivos multimedia (imágenes) ──────────────────────
 MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
@@ -193,24 +198,12 @@ MERCADOPAGO_PUBLIC_KEY = os.getenv("MERCADOPAGO_PUBLIC_KEY")
 MERCADOPAGO_WEBHOOK_SECRET = os.getenv("MERCADOPAGO_WEBHOOK_SECRET")
 
 # ── Logging de Consola ────────────────────────────────────
-# ── Logging de Consola ────────────────────────────────────
 LOGGING = {
     'version': 1,
     'disable_existing_loggers': False,
-    'formatters': {
-        'verbose': {
-            'format': '{levelname} {asctime} {module} {process:d} {thread:d} {message}',
-            'style': '{',
-        },
-        'simple': {
-            'format': '{levelname} {message}',
-            'style': '{',
-        },
-    },
     'handlers': {
         'console': {
             'class': 'logging.StreamHandler',
-            'formatter': 'simple',
         },
     },
     'root': {
@@ -223,27 +216,16 @@ LOGGING = {
             'level': 'INFO',
             'propagate': True,
         },
-        'django.db.backends': {
-            'handlers': ['console'],
-            'level': 'INFO',  # Cambia a DEBUG para ver SQL
-            'propagate': True,
-        },
-        # ✅ IMPORTANTE: Agregar el logger de tu app 'usuarios'
         'usuarios': {
-            'handlers': ['console'],
-            'level': 'DEBUG',  # 🔥 Esto es lo que necesitas para ver los logs
-            'propagate': False,
-        },
-        # ✅ También para otros módulos si los necesitas
-        'productos': {
             'handlers': ['console'],
             'level': 'DEBUG',
             'propagate': False,
         },
-        'chatbot': {
+        'productos': {
             'handlers': ['console'],
             'level': 'DEBUG',
             'propagate': False,
         },
     },
 }
+SETTINGS_EOF
