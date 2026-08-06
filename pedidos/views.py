@@ -23,6 +23,7 @@ from reportlab.pdfbase import pdfmetrics
 from reportlab.pdfbase.ttfonts import TTFont
 import pandas as pd
 from io import BytesIO
+from django.views.decorators.csrf import csrf_exempt
 
 # --- FUNCIONES AUXILIARES ---
 def generar_referencia_transferencia(pedido_id):
