@@ -1,14 +1,14 @@
 import logging
 import os
-import resend
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth import login, authenticate, logout
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
-from django.core.mail import send_mail
+from django.core.mail import send_mail, EmailMultiAlternatives
 from django.conf import settings
 from django.utils import timezone
 from django.http import JsonResponse
+
 
 # Importaciones unificadas
 from .models import Usuario, TokenVerificacion, TokenRecuperacion, RefreshToken
@@ -19,57 +19,33 @@ from .forms import (
 
 logger = logging.getLogger(__name__)
 
-# Configurar Resend API Key si está disponible en variables de entorno
-resend.api_key = os.getenv('RESEND_API_KEY')
 
 
 # ─────────────────────────────────────────────
 # HELPER DE ENVÍO DE CORREO (RESEND API / SMTP)
 # ─────────────────────────────────────────────
 
+from django.core.mail import EmailMultiAlternatives
+
 def enviar_correo(asunto, mensaje_texto, destinatario, link=None, mensaje_html=None):
-    """
-    Intenta enviar correos mediante la API HTTP de Resend si RESEND_API_KEY está configurada.
-    De lo contrario, recurre a send_mail() estándar de Django.
-    """
-    resend_key = os.getenv('RESEND_API_KEY')
-    if resend_key:
-        try:
-            # Construir cuerpo HTML básico si no se proporciona uno explícito
-            if not mensaje_html:
-                html_content = f"""
-                    <div style="font-family: Arial, sans-serif; line-height: 1.6; color: #333;">
-                        <p>{mensaje_texto.replace('\n', '<br>')}</p>
-                    </div>
-                """
-            else:
-                html_content = mensaje_html
+    try:
+        correo = EmailMultiAlternatives(
+            subject=asunto,
+            body=mensaje_texto,
+            from_email=settings.DEFAULT_FROM_EMAIL,
+            to=[destinatario],
+        )
 
-            resend.Emails.send({
-                "from": settings.DEFAULT_FROM_EMAIL,
-                "to": [destinatario],
-                "subject": asunto,
-                "html": html_content
-            })
-            return True
-        except Exception as e:
-            logger.error(f"❌ ERROR ENVIANDO CORREO VÍA RESEND: {e}")
-            return False
-    else:
-        # Respaldo SMTP / Console local
-        try:
-            send_mail(
-                subject=asunto,
-                message=mensaje_texto,
-                from_email=settings.DEFAULT_FROM_EMAIL,
-                recipient_list=[destinatario],
-                fail_silently=False,
-            )
-            return True
-        except Exception as e:
-            logger.error(f"❌ ERROR ENVIANDO CORREO VÍA SMTP/DJANGO: {e}")
-            return False
+        if mensaje_html:
+            correo.attach_alternative(mensaje_html, "text/html")
 
+        correo.send()
+
+        return True
+
+    except Exception as e:
+        logger.error(f"ERROR ENVIANDO CORREO: {e}")
+        return False
 
 # ─────────────────────────────────────────────
 # REGISTRO Y VERIFICACIÓN
