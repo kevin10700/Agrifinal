@@ -39,12 +39,11 @@ def enviar_correo(asunto, mensaje_texto, destinatario, link=None, mensaje_html=N
         if mensaje_html:
             correo.attach_alternative(mensaje_html, "text/html")
 
-        correo.send()
-
+        correo.send(fail_silently=False)
         return True
 
     except Exception as e:
-        logger.error(f"ERROR ENVIANDO CORREO: {e}")
+        logger.error(f"❌ ERROR ENVIANDO CORREO A {destinatario}: {e}")
         return False
 
 # ─────────────────────────────────────────────
