@@ -178,6 +178,20 @@ def confirmar_pedido(request):
         return redirect('productos:lista')
 
     resumen = calcular_resumen_carrito(items)
+    
+    # 📦 ENVÍO FIJO PARA TODO MÉXICO (cuando Envia no tiene cobertura)
+    cotizaciones = request.session.get("envia_cotizaciones", [])
+    if not cotizaciones:
+        cotizaciones.append({
+            "transportista": "agrivale",
+            "servicio": "Envío a todo México",
+            "precio": 150.00,
+            "dias_estimados": "2-5 días hábiles",
+            "tipo": "local",
+            "zona_reparto": "Nacional"
+        })
+        request.session["envia_cotizaciones"] = cotizaciones
+    
     if request.method == 'POST':
         form = CheckoutForm(request.POST)
         if form.is_valid():
@@ -267,10 +281,7 @@ def confirmar_pedido(request):
                         request.session.pop("envia_cotizaciones", None)
 
                         if datos["metodo_pago"] == "mercadopago":
-                            # Flujo independiente de Stripe: el pedido existe antes
-                            # de redirigir y el webhook es quien confirma el pago.
                             from payments.services.mercadopago import crear_preferencia
-
                             preferencia = crear_preferencia(pedido, request)
                             pago.referencia = preferencia.get("id", "")
                             pago.referencia_pago = pago.referencia
