@@ -172,15 +172,9 @@ if RESEND_API_KEY:
     DEFAULT_FROM_EMAIL = os.getenv('DEFAULT_FROM_EMAIL', 'Agrivale <onboarding@resend.dev>')
 else:
 # ── Correo con Gmail SMTP ──────────────────────────────────
-EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
-EMAIL_HOST = os.getenv('EMAIL_HOST', 'smtp.gmail.com')
-EMAIL_PORT = int(os.getenv('EMAIL_PORT', 587))
-EMAIL_USE_TLS = os.getenv('EMAIL_USE_TLS', 'True').lower() in ('true', '1', 't')
-EMAIL_USE_SSL = os.getenv('EMAIL_USE_SSL', 'False').lower() in ('true', '1', 't')
-EMAIL_HOST_USER = os.getenv('EMAIL_HOST_USER', '')
-EMAIL_HOST_PASSWORD = os.getenv('EMAIL_HOST_PASSWORD', '')
-DEFAULT_FROM_EMAIL = os.getenv('DEFAULT_FROM_EMAIL', EMAIL_HOST_USER)
-EMAIL_TIMEOUT = 15
+# ── Configuración de Correo (Impresión en consola / Inactivo) ──
+EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+DEFAULT_FROM_EMAIL = 'Agrivale <no-reply@agrivale.com>'
 
 GEMINI_API_KEY = os.getenv('GEMINI_API_KEY')
 
