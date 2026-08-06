@@ -1,3 +1,4 @@
+import logging
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth import login, authenticate, logout
 from django.contrib.auth.decorators import login_required
@@ -14,6 +15,12 @@ from .forms import (
     SolicitarRecuperacionForm, NuevaContrasenaForm
 )
 
+logger = logging.getLogger(__name__)
+
+
+# ─────────────────────────────────────────────
+# REGISTRO Y VERIFICACIÓN
+# ─────────────────────────────────────────────
 
 def registro(request):
     if request.user.is_authenticated:
@@ -55,9 +62,7 @@ def registro(request):
                     f'Tienes 30 minutos para verificar tu cuenta antes de que expire el enlace.'
                 )
             except Exception as e:
-                # Imprimimos el error exacto en la terminal de VS Code
-                print("❌ ERROR ENVIANDO CORREO:", str(e)) 
-                
+                logger.error(f"❌ ERROR ENVIANDO CORREO DE REGISTRO: {e}")
                 messages.warning(
                     request,
                     '⚠️ Tu cuenta fue creada pero no pudimos enviar el correo de verificación. '
@@ -83,7 +88,6 @@ def verificar_email(request, token):
         return redirect('usuarios:login')
 
     if token_obj.ha_expirado():
-        # Se elimina el usuario y el token asociado
         user_to_delete = token_obj.id_usuario
         token_obj.delete()
         user_to_delete.delete() 
@@ -107,6 +111,27 @@ def verificar_email(request, token):
         f'Ya puedes iniciar sesión.'
     )
     return redirect('usuarios:login')
+
+
+# Alternativa de verificación que renderiza un template propio
+def verificar_correo_view(request, token):
+    try:
+        token_db = TokenVerificacion.objects.get(token=token)
+        usuario = token_db.id_usuario
+
+        if token_db.ha_expirado():
+            token_db.delete()
+            usuario.delete() 
+            return render(request, 'usuarios/verificar_correo.html', {'exito': False})
+            
+        usuario.correo_verificado = True
+        usuario.is_active = True
+        usuario.save()
+        token_db.delete() 
+        return render(request, 'usuarios/verificar_correo.html', {'exito': True})
+        
+    except TokenVerificacion.DoesNotExist:
+        return render(request, 'usuarios/verificar_correo.html', {'exito': False})
 
 
 # ─────────────────────────────────────────────
@@ -136,7 +161,6 @@ def iniciar_sesion(request):
                     request,
                     'Inicio de sesión exitoso'
                 )
-                # Si es staff, redirigir al panel administrativo
                 if user.is_staff:
                     return redirect('admin_panel:dashboard')
                 return redirect('productos:lista')
@@ -157,7 +181,10 @@ def cerrar_sesion(request):
     return redirect('productos:lista')
 
 
-# PERFIL
+# ─────────────────────────────────────────────
+# PERFIL & ONBOARDING
+# ─────────────────────────────────────────────
+
 @login_required
 def perfil(request):
     if request.method == 'POST':
@@ -207,24 +234,27 @@ def solicitar_recuperacion(request):
                     f'/usuarios/restablecer-contrasena/{token_obj.token}/'
                 )
 
-                send_mail(
-                    subject='Recupera tu contraseña en Agrivale 🔑',
-                    message=(
-                        f'Hola {user.nombre},\n\n'
-                        f'Recibimos una solicitud para restablecer tu contraseña.\n'
-                        f'Haz clic en el siguiente enlace (válido por 30 minutos):\n\n'
-                        f'{link}\n\n'
-                        f'Si no solicitaste esto, ignora este mensaje.'
-                    ),
-                    from_email=settings.DEFAULT_FROM_EMAIL,
-                    recipient_list=[user.email],
-                    fail_silently=False,
-                )
+                try:
+                    send_mail(
+                        subject='Recupera tu contraseña en Agrivale 🔑',
+                        message=(
+                            f'Hola {user.nombre},\n\n'
+                            f'Recibimos una solicitud para restablecer tu contraseña.\n'
+                            f'Haz clic en el siguiente enlace (válido por 30 minutos):\n\n'
+                            f'{link}\n\n'
+                            f'Si no solicitaste esto, ignora este mensaje.'
+                        ),
+                        from_email=settings.DEFAULT_FROM_EMAIL,
+                        recipient_list=[user.email],
+                        fail_silently=False,
+                    )
+                except Exception as e:
+                    logger.error(f"❌ ERROR ENVIANDO CORREO DE RECUPERACIÓN: {e}")
+
             except Usuario.DoesNotExist:
                 pass  # No revelamos si el email existe por seguridad
 
-            # Siempre mostramos el mismo mensaje
-            messages.info(request, 'Se ha enviado un correo de recuperación a tu email. Revisa tu bandeja y spam')
+            messages.info(request, 'Se ha enviado un correo de recuperación a tu email. Revisa tu bandeja y spam.')
             return redirect('usuarios:login')
     else:
         form = SolicitarRecuperacionForm()
@@ -275,25 +305,3 @@ def restablecer_contrasena(request, token):
         'form': form,
         'token': token,
     })
-
-
-# Alternativa de verificación que renderiza un template propio
-def verificar_correo_view(request, token):
-    try:
-        token_db = TokenVerificacion.objects.get(token=token)
-        usuario = token_db.id_usuario
-
-        if token_db.ha_expirado():
-            token_db.delete()
-            # Si expira, puedes decidir si borras el usuario aquí también
-            usuario.delete() 
-            return render(request, 'usuarios/verificar_correo.html', {'exito': False})
-            
-        usuario.correo_verificado = True
-        usuario.is_active = True  # Aseguramos que se active aquí también
-        usuario.save()
-        token_db.delete() 
-        return render(request, 'usuarios/verificar_correo.html', {'exito': True})
-        
-    except TokenVerificacion.DoesNotExist:
-        return render(request, 'usuarios/verificar_correo.html', {'exito': False})
