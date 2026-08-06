@@ -197,9 +197,20 @@ MERCADOPAGO_WEBHOOK_SECRET = os.getenv("MERCADOPAGO_WEBHOOK_SECRET")
 LOGGING = {
     'version': 1,
     'disable_existing_loggers': False,
+    'formatters': {
+        'verbose': {
+            'format': '{levelname} {asctime} {module} {process:d} {thread:d} {message}',
+            'style': '{',
+        },
+        'simple': {
+            'format': '{levelname} {message}',
+            'style': '{',
+        },
+    },
     'handlers': {
         'console': {
             'class': 'logging.StreamHandler',
+            'formatter': 'simple',
         },
     },
     'root': {
@@ -211,6 +222,28 @@ LOGGING = {
             'handlers': ['console'],
             'level': 'INFO',
             'propagate': True,
+        },
+        'django.db.backends': {
+            'handlers': ['console'],
+            'level': 'INFO',  # Cambia a DEBUG para ver SQL
+            'propagate': True,
+        },
+        # ✅ IMPORTANTE: Agregar el logger de tu app 'usuarios'
+        'usuarios': {
+            'handlers': ['console'],
+            'level': 'DEBUG',  # 🔥 Esto es lo que necesitas para ver los logs
+            'propagate': False,
+        },
+        # ✅ También para otros módulos si los necesitas
+        'productos': {
+            'handlers': ['console'],
+            'level': 'DEBUG',
+            'propagate': False,
+        },
+        'chatbot': {
+            'handlers': ['console'],
+            'level': 'DEBUG',
+            'propagate': False,
         },
     },
 }

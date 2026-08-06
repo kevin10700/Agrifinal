@@ -4,9 +4,9 @@ from django.utils import timezone
 
 
 class Usuario(AbstractUser):
-
-
-    id_usuario = models.AutoField(primary_key=True)
+    # ✅ ELIMINADO: id_usuario = models.AutoField(primary_key=True)
+    # Django ahora manejará 'id' automáticamente como clave primaria
+    
     first_name = None  
     last_name = None  
     nombre = models.CharField("Nombre(s)", max_length=100)
@@ -15,14 +15,14 @@ class Usuario(AbstractUser):
         "Apellido materno", max_length=100, blank=True
     )
 
-    #Datos personales
+    # Datos personales
     fecha_nacimiento = models.DateField("Fecha de nacimiento", null=True, blank=True)
     telefono = models.CharField(max_length=15, blank=True)
     foto_perfil = models.ImageField(
         upload_to="perfiles/", blank=True, null=True
     )
 
-    # estado de cuenta
+    # Estado de cuenta
     correo_verificado = models.BooleanField(default=False)
     is_new_user = models.BooleanField(default=True)
     onboarding_completado = models.BooleanField(default=False)
@@ -36,7 +36,6 @@ class Usuario(AbstractUser):
         verbose_name = "Usuario"
         verbose_name_plural = "Usuarios"
 
-    # Propiedades calculadas
     @property
     def nombre_completo(self):
         partes = [self.nombre, self.apellido_paterno]
@@ -79,18 +78,14 @@ class RefreshToken(models.Model):
         return self.revocado_en is None and self.expira_en > timezone.now()
 
 
-# ---------------------------------------------------------------------------
-# Tabla separada para direcciones (3NF: antes mezclada en Usuario)
-# ---------------------------------------------------------------------------
-
 class DireccionEnvio(models.Model):
-    id_direccion = models.AutoField(primary_key=True)
-
-    id_usuario = models.ForeignKey(
+    # ✅ Cambiado: id_direccion → id (estándar)
+    # Django manejará 'id' automáticamente
+    usuario = models.ForeignKey(
         Usuario,
         on_delete=models.CASCADE,
         related_name="direcciones",
-        db_column="id_usuario",
+        db_column="usuario_id",  # Mantenemos el nombre de columna existente
     )
 
     nombre_referencia = models.CharField(
@@ -127,14 +122,12 @@ class DireccionEnvio(models.Model):
         return ", ".join(filter(None, partes))
 
 
-# Tokens
 class TokenVerificacion(models.Model):
-    id_token = models.AutoField(primary_key=True)
-    id_usuario = models.ForeignKey(
+    usuario = models.ForeignKey(
         Usuario,
         on_delete=models.CASCADE,
         related_name="tokens_verificacion",
-        db_column="id_usuario",
+        db_column="usuario_id",  # Mantenemos el nombre de columna existente
     )
     token = models.CharField(max_length=32, blank=True)
     creado_en = models.DateTimeField(auto_now_add=True)
@@ -147,7 +140,7 @@ class TokenVerificacion(models.Model):
     def save(self, *args, **kwargs):
         import uuid
         if not self.token:
-            self.token = uuid.uuid4().hex  # genera 32 caracteres aleatorios
+            self.token = uuid.uuid4().hex
         super().save(*args, **kwargs)
 
     def ha_expirado(self):
@@ -155,16 +148,15 @@ class TokenVerificacion(models.Model):
         return timezone.now() > self.creado_en + timedelta(minutes=5)
 
     def __str__(self):
-        return f"Token verificación – {self.id_usuario.username}"
+        return f"Token verificación – {self.usuario.username}"
 
 
 class TokenRecuperacion(models.Model):
-    id_token = models.AutoField(primary_key=True)
-    id_usuario = models.ForeignKey(
+    usuario = models.ForeignKey(
         Usuario,
         on_delete=models.CASCADE,
         related_name="tokens_recuperacion",
-        db_column="id_usuario",
+        db_column="usuario_id",  # Mantenemos el nombre de columna existente
     )
     token = models.CharField(max_length=32, blank=True)
     creado_en = models.DateTimeField(auto_now_add=True)
@@ -178,12 +170,12 @@ class TokenRecuperacion(models.Model):
     def save(self, *args, **kwargs):
         import uuid
         if not self.token:
-            self.token = uuid.uuid4().hex  # genera 32 caracteres aleatorios
+            self.token = uuid.uuid4().hex
         super().save(*args, **kwargs)
 
     def ha_expirado(self):
         from datetime import timedelta
-        return timezone.now() > self.creado_en + timedelta(minutes=5)
+        return timezone.now() > self.creado_en + timedelta(minutes=30)
 
     def __str__(self):
-        return f"Token recuperación – {self.id_usuario.username}"
+        return f"Token recuperación – {self.usuario.username}"

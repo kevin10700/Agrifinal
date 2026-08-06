@@ -134,10 +134,9 @@ def verificar_correo_view(request, token):
 
 
 # ─────────────────────────────────────────────
-# LOGIN / LOGOUT
+# LOGIN / LOGOUT - VERSIÓN CORREGIDA
 # ─────────────────────────────────────────────
 
-# views.py - Actualiza la función iniciar_sesion
 def iniciar_sesion(request):
     if request.user.is_authenticated:
         logger.info(f"Usuario {request.user.username} ya autenticado, redirigiendo")
@@ -162,7 +161,8 @@ def iniciar_sesion(request):
             if user is not None:
                 login(request, user)
                 messages.success(request, f'¡Bienvenido de nuevo, {user.nombre}!')
-                logger.info(f"✅ Login exitoso para {user.username} (ID: {user.id})")
+                # ✅ CORREGIDO: Eliminado {user.id}
+                logger.info(f"✅ Login exitoso para {user.username}")
                 
                 if user.is_staff:
                     logger.info(f"👤 Usuario staff, redirigiendo a admin_panel:dashboard")
@@ -189,7 +189,8 @@ def iniciar_sesion(request):
             try:
                 user_obj = Usuario.objects.get(username=username)
                 logger.info(f"🔍 Usuario {username} existe en BD:")
-                logger.info(f"   - ID: {user_obj.id}")
+                # ✅ CORREGIDO: Eliminado {user_obj.id}
+                logger.info(f"   - Username: {user_obj.username}")
                 logger.info(f"   - is_active: {user_obj.is_active}")
                 logger.info(f"   - correo_verificado: {user_obj.correo_verificado}")
                 logger.info(f"   - is_staff: {user_obj.is_staff}")
