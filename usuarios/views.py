@@ -145,11 +145,19 @@ def iniciar_sesion(request):
         form = LoginForm(request.POST)
         if form.is_valid():
             user = form.get_user()
-            login(request, user)
-            messages.success(request, f'¡Bienvenido de nuevo, {user.nombre}!')
-            if user.is_staff:
-                return redirect('admin_panel:dashboard')
-            return redirect('productos:lista')
+            if user is not None:
+                login(request, user)
+                messages.success(request, f'¡Bienvenido de nuevo, {user.nombre}!')
+                if user.is_staff:
+                    return redirect('admin_panel:dashboard')
+                return redirect('productos:lista')
+            else:
+                messages.error(request, '❌ El usuario no está activo o no se pudo autenticar.')
+        else:
+            # Captura y muestra los errores que arroja el formulario de login (ej. credenciales inválidas)
+            for field, errors in form.errors.items():
+                for error in errors:
+                    messages.error(request, f'❌ {error}')
     else:
         form = LoginForm()
 
