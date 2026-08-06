@@ -39,5 +39,5 @@ urlpatterns = [
     # Stripe (Flujo seguro temporal)
     path('stripe/pagar-temp/', views.pagar_con_stripe_temp, name='pagar_con_stripe_temp'),
     path('stripe/exito/', views.stripe_exito, name='stripe_exito'),
-    
+    path('webhook/', views.stripe_webhook, name='stripe_webhook'),
 ]

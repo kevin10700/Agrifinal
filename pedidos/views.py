@@ -330,8 +330,8 @@ def pagar_con_stripe_temp(request):
             payment_method_types=['card'],
             line_items=line_items,
             mode='payment',
-            success_url="http://127.0.0.1:8000/pedidos/stripe/exito/?session_id={CHECKOUT_SESSION_ID}",
-            cancel_url="http://127.0.0.1:8000/pedidos/carrito/",
+            success_url=f"{settings.DOMINIO}/pedidos/stripe/exito/?session_id={{CHECKOUT_SESSION_ID}}",
+            cancel_url=f"{settings.DOMINIO}/pedidos/carrito/",
         )
         return redirect(checkout_session.url, code=303)
     except Exception as e:
@@ -918,4 +918,25 @@ def reporte_admin_page(request):
     return render(request, 'pedidos/admin_reporte.html', {
         'hoy': timezone.now().date()
     })
+
+@csrf_exempt
+def stripe_webhook(request):
+    """Maneja los webhooks de Stripe"""
+    payload = request.body
+    sig_header = request.META.get('HTTP_STRIPE_SIGNATURE', '')
+    
+    try:
+        event = stripe.Webhook.construct_event(
+            payload, sig_header, settings.STRIPE_WEBHOOK_SECRET
+        )
+    except ValueError:
+        return HttpResponse(status=400)
+    except stripe.error.SignatureVerificationError:
+        return HttpResponse(status=400)
+    
+    if event['type'] == 'checkout.session.completed':
+        session = event['data']['object']
+        print(f"✅ Pago completado: {session['id']}")
+    
+    return HttpResponse(status=200)
 

@@ -28,6 +28,7 @@ ALLOWED_HOSTS = ['*']
 
 # Configuración de URL base para redirecciones dinámicas en Stripe
 SITE_URL = os.getenv("SITE_URL", "https://agrifinal-production.up.railway.app")
+DOMINIO = os.getenv("DOMINIO", SITE_URL)  # ✅ AGREGADO
 
 SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
 
