@@ -918,3 +918,28 @@ def reporte_admin_page(request):
     return render(request, 'pedidos/admin_reporte.html', {
         'hoy': timezone.now().date()
     })
+
+@csrf_exempt
+def stripe_webhook(request):
+    payload = request.body
+    sig_header = request.META.get('HTTP_STRIPE_SIGNATURE')
+    endpoint_secret = settings.STRIPE_WEBHOOK_SECRET
+
+    try:
+        if endpoint_secret:
+            event = stripe.Webhook.construct_event(
+                payload, sig_header, endpoint_secret
+            )
+        else:
+            event = stripe.Event.construct_from(
+                json.loads(payload), stripe.api_key
+            )
+    except (ValueError, stripe.error.SignatureVerificationError) as e:
+        return HttpResponse(status=400)
+
+    # Manejar el evento checkout.session.completed
+    if event['type'] == 'checkout.session.completed':
+        session = event['data']['object']
+        # Aquí actualizas el estado de tu pedido a 'PAGADO' o procesas la orden
+
+    return HttpResponse(status=200)
