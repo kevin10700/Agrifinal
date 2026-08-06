@@ -137,29 +137,79 @@ def verificar_correo_view(request, token):
 # LOGIN / LOGOUT
 # ─────────────────────────────────────────────
 
+# views.py - Actualiza la función iniciar_sesion
 def iniciar_sesion(request):
     if request.user.is_authenticated:
+        logger.info(f"Usuario {request.user.username} ya autenticado, redirigiendo")
         return redirect('productos:lista')
 
     if request.method == 'POST':
-        form = LoginForm(request.POST)
+        # Log del intento de login
+        username = request.POST.get('username')
+        logger.info(f"📝 Intento de login - Usuario: {username}")
+        logger.info(f"📝 Datos POST recibidos: {request.POST}")
+        
+        # ¡IMPORTANTE! Pasa 'request' como primer argumento
+        form = LoginForm(request, data=request.POST)
+        
+        # Log para verificar si el formulario tiene errores antes de is_valid
+        logger.info(f"📝 Formulario creado, datos: {form.data}")
+        
         if form.is_valid():
             user = form.get_user()
+            logger.info(f"✅ Formulario válido, usuario obtenido: {user}")
+            
             if user is not None:
                 login(request, user)
                 messages.success(request, f'¡Bienvenido de nuevo, {user.nombre}!')
+                logger.info(f"✅ Login exitoso para {user.username} (ID: {user.id})")
+                
                 if user.is_staff:
+                    logger.info(f"👤 Usuario staff, redirigiendo a admin_panel:dashboard")
                     return redirect('admin_panel:dashboard')
+                logger.info(f"👤 Usuario normal, redirigiendo a productos:lista")
                 return redirect('productos:lista')
             else:
-                messages.error(request, '❌ El usuario no está activo o no se pudo autenticar.')
+                logger.error("❌ form.get_user() retornó None a pesar de que form.is_valid() es True")
+                messages.error(request, '❌ Error al obtener el usuario autenticado.')
         else:
-            # Captura y muestra los errores que arroja el formulario de login (ej. credenciales inválidas)
+            # Log detallado de errores
+            logger.error(f"❌ Formulario inválido")
+            logger.error(f"   - Errores completos: {form.errors}")
+            logger.error(f"   - Errores no field: {form.non_field_errors()}")
+            logger.error(f"   - Campos con errores: {list(form.errors.keys())}")
+            
+            # Mostrar errores al usuario
             for field, errors in form.errors.items():
                 for error in errors:
                     messages.error(request, f'❌ {error}')
+                    logger.error(f"   - Error en {field}: {error}")
+            
+            # Verificar si el usuario existe en la BD (para diagnóstico)
+            try:
+                user_obj = Usuario.objects.get(username=username)
+                logger.info(f"🔍 Usuario {username} existe en BD:")
+                logger.info(f"   - ID: {user_obj.id}")
+                logger.info(f"   - is_active: {user_obj.is_active}")
+                logger.info(f"   - correo_verificado: {user_obj.correo_verificado}")
+                logger.info(f"   - is_staff: {user_obj.is_staff}")
+                logger.info(f"   - Password hash: {user_obj.password[:30]}...")
+                
+                # Verificar contraseña manualmente
+                password = request.POST.get('password')
+                if password:
+                    password_correct = user_obj.check_password(password)
+                    logger.info(f"   - Contraseña correcta (check_password): {password_correct}")
+                    if not password_correct:
+                        logger.warning(f"⚠️ La contraseña ingresada NO coincide con la guardada")
+                else:
+                    logger.warning(f"⚠️ No se recibió contraseña en el POST")
+                    
+            except Usuario.DoesNotExist:
+                logger.error(f"❌ Usuario {username} NO existe en BD")
     else:
         form = LoginForm()
+        logger.info("📄 Mostrando formulario de login (GET)")
 
     return render(request, 'usuarios/login.html', {'form': form})
 

@@ -1,6 +1,11 @@
+# forms.py
+import logging
 from django import forms
 from django.contrib.auth.forms import UserCreationForm, AuthenticationForm
+from django.contrib.auth import authenticate
 from .models import Usuario, DireccionEnvio
+
+logger = logging.getLogger(__name__)
 
 
 class RegistroForm(UserCreationForm):
@@ -77,6 +82,76 @@ class LoginForm(AuthenticationForm):
         label="Contraseña",
         widget=forms.PasswordInput(attrs={"class": "form-control", "placeholder": "Ingresa tu contraseña"}),
     )
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        # Asegurar que el campo username tenga el label correcto
+        self.fields['username'].label = 'Usuario'
+        # Remover help_text por defecto
+        self.fields['username'].help_text = None
+
+    def clean(self):
+        """
+        Método de validación personalizado con logs para depuración
+        """
+        username = self.cleaned_data.get('username')
+        password = self.cleaned_data.get('password')
+        
+        logger.info(f"🔍 Intentando autenticar usuario: {username}")
+        logger.info(f"🔍 Request en LoginForm: {self.request}")
+
+        if username and password:
+            # Intentar autenticar al usuario
+            user = authenticate(
+                self.request,
+                username=username,
+                password=password
+            )
+            
+            logger.info(f"🔍 Resultado de authenticate: {user}")
+            
+            if user is None:
+                # Verificar si el usuario existe en la base de datos
+                from .models import Usuario
+                try:
+                    user_exists = Usuario.objects.get(username=username)
+                    logger.info(f"✅ Usuario {username} existe en BD")
+                    logger.info(f"   - ID: {user_exists.id}")
+                    logger.info(f"   - is_active: {user_exists.is_active}")
+                    logger.info(f"   - correo_verificado: {user_exists.correo_verificado}")
+                    logger.info(f"   - is_staff: {user_exists.is_staff}")
+                    logger.info(f"   - Contraseña hash: {user_exists.password[:30]}...")
+                    
+                    # Verificar si la contraseña es correcta manualmente
+                    password_correct = user_exists.check_password(password)
+                    logger.info(f"   - Contraseña correcta (check_password): {password_correct}")
+                    
+                except Usuario.DoesNotExist:
+                    logger.info(f"❌ Usuario {username} NO existe en BD")
+                    
+                raise forms.ValidationError(
+                    "Usuario o contraseña incorrectos. Por favor verifica tus credenciales.",
+                    code='invalid_login'
+                )
+            
+            if not user.is_active:
+                logger.warning(f"⚠️ Usuario {username} está inactivo")
+                raise forms.ValidationError(
+                    "Esta cuenta está desactivada. Por favor verifica tu correo electrónico o contacta a soporte.",
+                    code='inactive'
+                )
+            
+            # Guardar el usuario autenticado para get_user()
+            self.user_cache = user
+            logger.info(f"✅ Usuario {username} autenticado exitosamente")
+            
+        else:
+            if not username:
+                logger.warning("⚠️ Username vacío en el formulario")
+            if not password:
+                logger.warning("⚠️ Password vacío en el formulario")
+        
+        return self.cleaned_data
 
 
 class PerfilForm(forms.ModelForm):
@@ -170,5 +245,5 @@ class NuevaContrasenaForm(forms.Form):
         if p1 and p2 and p1 != p2:
             raise forms.ValidationError("Las contraseñas no coinciden.")
         if p1 and len(p1) < 8:
-            raise forms.ValcidationError("La contraseña debe tener al menos 8 caracteres.")
+            raise forms.ValidationError("La contraseña debe tener al menos 8 caracteres.")
         return cleaned_data
