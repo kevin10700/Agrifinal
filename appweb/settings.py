@@ -72,7 +72,7 @@ ROOT_URLCONF = 'appweb.urls'
 
 TEMPLATES = [
     {
-        'BACKEND': 'django.template.backends.django.DjangoTemplates',
+        'BACKEND': 'django.template.backends.DjangoTemplates',
         'DIRS': [BASE_DIR / 'templates'],
         'APP_DIRS': True,
         'OPTIONS': {
@@ -164,10 +164,7 @@ LOGOUT_REDIRECT_URL = '/'
 MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
-# ── Correo y Servicios Externos (Resend API / SMTP) ───────
-RESEND_API_KEY = os.getenv('RESEND_API_KEY')
-
-
+# ── Correo (Inactivo / Impresión en Consola) ───────────────
 EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
 DEFAULT_FROM_EMAIL = 'Agrivale <no-reply@agrivale.com>'
 
@@ -216,13 +213,3 @@ LOGGING = {
         },
     },
 }
-
-# ── Parche para forzar IPv4 con Gmail SMTP en Railway ──────
-import socket
-
-_orig_getaddrinfo = socket.getaddrinfo
-def getaddrinfo_ipv4_only(*args, **kwargs):
-    responses = _orig_getaddrinfo(*args, **kwargs)
-    return [response for response in responses if response[0] == socket.AF_INET]
-
-socket.getaddrinfo = getaddrinfo_ipv4_only  
