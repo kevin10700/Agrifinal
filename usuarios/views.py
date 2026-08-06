@@ -1,4 +1,6 @@
 import logging
+import os
+import resend
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth import login, authenticate, logout
 from django.contrib.auth.decorators import login_required
@@ -16,6 +18,57 @@ from .forms import (
 )
 
 logger = logging.getLogger(__name__)
+
+# Configurar Resend API Key si está disponible en variables de entorno
+resend.api_key = os.getenv('RESEND_API_KEY')
+
+
+# ─────────────────────────────────────────────
+# HELPER DE ENVÍO DE CORREO (RESEND API / SMTP)
+# ─────────────────────────────────────────────
+
+def enviar_correo(asunto, mensaje_texto, destinatario, link=None, mensaje_html=None):
+    """
+    Intenta enviar correos mediante la API HTTP de Resend si RESEND_API_KEY está configurada.
+    De lo contrario, recurre a send_mail() estándar de Django.
+    """
+    resend_key = os.getenv('RESEND_API_KEY')
+    if resend_key:
+        try:
+            # Construir cuerpo HTML básico si no se proporciona uno explícito
+            if not mensaje_html:
+                html_content = f"""
+                    <div style="font-family: Arial, sans-serif; line-height: 1.6; color: #333;">
+                        <p>{mensaje_texto.replace('\n', '<br>')}</p>
+                    </div>
+                """
+            else:
+                html_content = mensaje_html
+
+            resend.Emails.send({
+                "from": settings.DEFAULT_FROM_EMAIL,
+                "to": [destinatario],
+                "subject": asunto,
+                "html": html_content
+            })
+            return True
+        except Exception as e:
+            logger.error(f"❌ ERROR ENVIANDO CORREO VÍA RESEND: {e}")
+            return False
+    else:
+        # Respaldo SMTP / Console local
+        try:
+            send_mail(
+                subject=asunto,
+                message=mensaje_texto,
+                from_email=settings.DEFAULT_FROM_EMAIL,
+                recipient_list=[destinatario],
+                fail_silently=False,
+            )
+            return True
+        except Exception as e:
+            logger.error(f"❌ ERROR ENVIANDO CORREO VÍA SMTP/DJANGO: {e}")
+            return False
 
 
 # ─────────────────────────────────────────────
@@ -42,27 +95,45 @@ def registro(request):
                 f'/usuarios/verificar-email/{token_obj.token}/'
             )
 
-            try:
-                send_mail(
-                    subject='Verifica tu correo en Agrivale 🌿',
-                    message=(
-                        f'Hola {user.nombre},\n\n'
-                        f'Gracias por registrarte en Agrivale.\n'
-                        f'Haz clic en el siguiente enlace para verificar tu cuenta '
-                        f'(válido por 30 minutos):\n\n{link}\n\n'
-                        f'Si no creaste esta cuenta, ignora este mensaje.'
-                    ),
-                    from_email=settings.DEFAULT_FROM_EMAIL,
-                    recipient_list=[user.email],
-                    fail_silently=False,
-                )
+            asunto = 'Verifica tu correo en Agrivale 🌿'
+            mensaje_texto = (
+                f'Hola {user.nombre},\n\n'
+                f'Gracias por registrarte en Agrivale.\n'
+                f'Haz clic en el siguiente enlace para verificar tu cuenta '
+                f'(válido por 30 minutos):\n\n{link}\n\n'
+                f'Si no creaste esta cuenta, ignora este mensaje.'
+            )
+            mensaje_html = f"""
+                <div style="font-family: Arial, sans-serif; padding: 20px; color: #333;">
+                    <h2>¡Bienvenido a Agrivale, {user.nombre}! 🌿</h2>
+                    <p>Gracias por registrarte en nuestra plataforma.</p>
+                    <p>Por favor haz clic en el siguiente botón para verificar tu correo electrónico (válido por 30 minutos):</p>
+                    <p style="margin: 25px 0;">
+                        <a href="{link}" style="background-color: #2e7d32; color: white; padding: 12px 24px; text-decoration: none; border-radius: 5px; font-weight: bold;">
+                            Verificar mi correo
+                        </a>
+                    </p>
+                    <p>O copia y pega el siguiente enlace en tu navegador:</p>
+                    <p><a href="{link}">{link}</a></p>
+                    <hr style="margin-top: 30px; border: none; border-top: 1px solid #ccc;">
+                    <p style="font-size: 12px; color: #777;">Si no creaste esta cuenta, puedes ignorar este mensaje.</p>
+                </div>
+            """
+
+            enviado = enviar_correo(
+                asunto=asunto,
+                mensaje_texto=mensaje_texto,
+                destinatario=user.email,
+                mensaje_html=mensaje_html
+            )
+
+            if enviado:
                 messages.success(
                     request,
                     f'✅ ¡Registro exitoso! Te enviamos un correo a {user.email}. '
                     f'Tienes 30 minutos para verificar tu cuenta antes de que expire el enlace.'
                 )
-            except Exception as e:
-                logger.error(f"❌ ERROR ENVIANDO CORREO DE REGISTRO: {e}")
+            else:
                 messages.warning(
                     request,
                     '⚠️ Tu cuenta fue creada pero no pudimos enviar el correo de verificación. '
@@ -234,22 +305,37 @@ def solicitar_recuperacion(request):
                     f'/usuarios/restablecer-contrasena/{token_obj.token}/'
                 )
 
-                try:
-                    send_mail(
-                        subject='Recupera tu contraseña en Agrivale 🔑',
-                        message=(
-                            f'Hola {user.nombre},\n\n'
-                            f'Recibimos una solicitud para restablecer tu contraseña.\n'
-                            f'Haz clic en el siguiente enlace (válido por 30 minutos):\n\n'
-                            f'{link}\n\n'
-                            f'Si no solicitaste esto, ignora este mensaje.'
-                        ),
-                        from_email=settings.DEFAULT_FROM_EMAIL,
-                        recipient_list=[user.email],
-                        fail_silently=False,
-                    )
-                except Exception as e:
-                    logger.error(f"❌ ERROR ENVIANDO CORREO DE RECUPERACIÓN: {e}")
+                asunto = 'Recupera tu contraseña en Agrivale 🔑'
+                mensaje_texto = (
+                    f'Hola {user.nombre},\n\n'
+                    f'Recibimos una solicitud para restablecer tu contraseña.\n'
+                    f'Haz clic en el siguiente enlace (válido por 30 minutos):\n\n'
+                    f'{link}\n\n'
+                    f'Si no solicitaste esto, ignora este mensaje.'
+                )
+                mensaje_html = f"""
+                    <div style="font-family: Arial, sans-serif; padding: 20px; color: #333;">
+                        <h2>Restablecimiento de contraseña 🔑</h2>
+                        <p>Hola <strong>{user.nombre}</strong>,</p>
+                        <p>Recibimos una solicitud para restablecer la contraseña de tu cuenta en Agrivale.</p>
+                        <p style="margin: 25px 0;">
+                            <a href="{link}" style="background-color: #0288d1; color: white; padding: 12px 24px; text-decoration: none; border-radius: 5px; font-weight: bold;">
+                                Restablecer contraseña
+                            </a>
+                        </p>
+                        <p>O copia y pega el siguiente enlace en tu navegador:</p>
+                        <p><a href="{link}">{link}</a></p>
+                        <hr style="margin-top: 30px; border: none; border-top: 1px solid #ccc;">
+                        <p style="font-size: 12px; color: #777;">Si no solicitaste este cambio, puedes ignorar este mensaje.</p>
+                    </div>
+                """
+
+                enviar_correo(
+                    asunto=asunto,
+                    mensaje_texto=mensaje_texto,
+                    destinatario=user.email,
+                    mensaje_html=mensaje_html
+                )
 
             except Usuario.DoesNotExist:
                 pass  # No revelamos si el email existe por seguridad
