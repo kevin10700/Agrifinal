@@ -145,6 +145,10 @@ STATICFILES_DIRS = [
 STATIC_ROOT = BASE_DIR / 'staticfiles'
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
+# ── Archivos multimedia ───────────────────────────────────
+MEDIA_URL = '/media/'
+MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+
 # ── Configuración de almacenamiento ──────────────────────
 STORAGES = {
     "default": {
@@ -164,15 +168,11 @@ LOGIN_REDIRECT_URL = '/'
 LOGOUT_REDIRECT_URL = '/'
 
 # ── Configuración de sesiones ─────────────────────────────
-SESSION_COOKIE_AGE = 3600  # 1 hora
-SESSION_EXPIRE_AT_BROWSER_CLOSE = True  # Cierra sesión al cerrar navegador
-SESSION_COOKIE_SECURE = not DEBUG  # Solo HTTPS en producción
-SESSION_COOKIE_HTTPONLY = True  # No accesible desde JavaScript
-SESSION_SAVE_EVERY_REQUEST = True  # Renueva sesión con cada petición
-
-# ── Archivos multimedia ───────────────────────────────────
-MEDIA_URL = '/media/'
-MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+SESSION_COOKIE_AGE = 3600
+SESSION_EXPIRE_AT_BROWSER_CLOSE = True
+SESSION_COOKIE_SECURE = not DEBUG
+SESSION_COOKIE_HTTPONLY = True
+SESSION_SAVE_EVERY_REQUEST = True
 
 # ── Correo ────────────────────────────────────────────────
 EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
