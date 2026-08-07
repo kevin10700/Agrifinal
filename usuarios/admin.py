@@ -5,7 +5,7 @@ from .models import Usuario, DireccionEnvio, TokenVerificacion, TokenRecuperacio
 
 class DireccionInline(admin.TabularInline):
     model = DireccionEnvio
-    fk_name = "usuario"
+    fk_name = "id_usuario"
     extra = 0
     fields = [
         "nombre_referencia", "calle", "numero_exterior", "numero_interior",
@@ -19,7 +19,7 @@ class UsuarioAdmin(UserAdmin):
     inlines = [DireccionInline]
 
     list_display = [
-        "id", "username", "nombre", "apellido_paterno",
+        "id_usuario", "username", "nombre", "apellido_paterno",
         "apellido_materno", "email", "edad_display",
         "correo_verificado", "is_active",
     ]
@@ -70,21 +70,21 @@ class UsuarioAdmin(UserAdmin):
 @admin.register(DireccionEnvio)
 class DireccionEnvioAdmin(admin.ModelAdmin):
     list_display = [
-        "id", "usuario", "nombre_referencia",
+        "id_direccion", "id_usuario", "nombre_referencia",
         "municipio", "estado", "es_principal",
     ]
     list_filter = ["estado", "es_principal"]
-    search_fields = ["usuario__username", "municipio", "colonia"]
+    search_fields = ["id_usuario__username", "municipio", "colonia"]
 
 
 @admin.register(TokenVerificacion)
 class TokenVerificacionAdmin(admin.ModelAdmin):
-    list_display = ["id", "usuario", "creado_en"]
+    list_display = ["id_token", "id_usuario", "creado_en"]
     readonly_fields = ["creado_en"]
 
 
 @admin.register(TokenRecuperacion)
 class TokenRecuperacionAdmin(admin.ModelAdmin):
-    list_display = ["id", "usuario", "creado_en", "usado"]
+    list_display = ["id_token", "id_usuario", "creado_en", "usado"]
     list_filter = ["usado"]
     readonly_fields = ["creado_en"]
