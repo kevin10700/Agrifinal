@@ -179,7 +179,7 @@ class ItemCompra(models.Model):
         return f"{self.producto.nombre} x {self.cantidad}"
     
     def save(self, *args, **kwargs):
-        # Calcular subtotal
+        #calcular subtotal
         self.subtotal = self.cantidad * self.precio_unitario
         super().save(*args, **kwargs)
 
@@ -207,8 +207,6 @@ class MovimientoInventario(models.Model):
     stock_anterior = models.IntegerField()
     stock_posterior = models.IntegerField()
     costo_unitario = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
-    
-    # Referencia al documento origen
     compra = models.ForeignKey(
         Compra,
         on_delete=models.SET_NULL,

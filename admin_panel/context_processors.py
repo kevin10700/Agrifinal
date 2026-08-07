@@ -13,14 +13,14 @@ def alertas_sistema(request):
     if not request.user.is_authenticated:
         return {'alertas': {}}
 
-    # Contar notificaciones no leídas del usuario actual
+    #contar notificaciones no leidas del usuario actual
     notificaciones_no_leidas = Notificacion.objects.filter(
         id_usuario=request.user,
         leida=False
     ).count()
 
-    # Mantener los conteos de stock para el dashboard, pero usar
-    # Notificacion como fuente única de verdad para el badge del bell.
+    #mantener los conteos de stock para el dashboard pero usar
+    #notificacion como fuente única de verdad para el badge del bell
     alertas = {
         'productos_sin_stock': Producto.objects.filter(stock=0).count(),
         'productos_bajo_stock': Producto.objects.filter(stock__lte=10, stock__gt=0).count(),
@@ -29,8 +29,7 @@ def alertas_sistema(request):
         'notificaciones_no_leidas': notificaciones_no_leidas,
     }
 
-    # El total del badge del bell = solo notificaciones no leídas reales.
-    # Ya no se muestran alertas falsas de stock/pedidos en el badge.
+    #el total del badge del bell solo notificaciones no leídas reales
     alertas['total'] = notificaciones_no_leidas
 
     return {'alertas': alertas}

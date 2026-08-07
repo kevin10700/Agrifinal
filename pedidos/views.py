@@ -179,12 +179,12 @@ def confirmar_pedido(request):
 
     resumen = calcular_resumen_carrito(items)
     
-    # 📦 ENVÍO FIJO PARA TODO MÉXICO (cuando Envia no tiene cobertura)
+    #envios a todo Mxico
     cotizaciones = request.session.get("envia_cotizaciones", [])
     if not cotizaciones:
         cotizaciones.append({
             "transportista": "agrivale",
-            "servicio": "Envío a todo México",
+            "servicio": "Envío a todo Mexico",
             "precio": 150.00,
             "dias_estimados": "2-5 días hábiles",
             "tipo": "local",

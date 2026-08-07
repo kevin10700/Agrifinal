@@ -4,9 +4,8 @@ from django.contrib.auth.forms import AuthenticationForm
 
 
 class PanelLoginForm(AuthenticationForm):
-    """
-    Formulario de login específico para el Panel Administrativo de AGRIVALE.
-    """
+    
+    #formulario de login
     username = forms.CharField(
         label='Usuario o Correo',
         widget=forms.TextInput(attrs={
