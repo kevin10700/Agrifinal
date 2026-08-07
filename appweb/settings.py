@@ -148,23 +148,24 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 # ── Configuración de almacenamiento ──────────────────────
 STORAGES = {
     "default": {
-        "BACKEND": "whitenoise.storage.CompressedStaticFilesStorage",
+        "BACKEND": "whitenoise.storage.CompressedStaticFilesStorage", 
     },
     "staticfiles": {
         "BACKEND": "whitenoise.storage.CompressedManifestStaticFilesStorage",
     },
 }
 
-# Archivos multimedia
+# Archivos multimedia 
 MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
-#Whitenoise configuración
+# Whitenoise configuración
 WHITENOISE_USE_FINDERS = True
 WHITENOISE_AUTOREFRESH = True
 WHITENOISE_MANIFEST_STRICT = False
+WHITENOISE_ROOT = MEDIA_ROOT 
 
-# Para producción, servir media con Whitenoise
+#Para producción
 if not DEBUG:
     STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 
