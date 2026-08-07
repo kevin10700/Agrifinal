@@ -20,7 +20,6 @@ load_dotenv()
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-# Una variable de Windows vacía no debe anular el valor configurado en .env.
 SECRET_KEY = os.getenv("SECRET_KEY") or dotenv_values(BASE_DIR / ".env").get("SECRET_KEY") or "django-insecure-default-fallback-key-12345"
 
 DEBUG = os.getenv("DEBUG", "False").lower() == "true"
@@ -58,7 +57,7 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
-    'whitenoise.middleware.WhiteNoiseMiddleware',  # Sirve archivos estáticos en producción
+    'whitenoise.middleware.WhiteNoiseMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -72,7 +71,7 @@ ROOT_URLCONF = 'appweb.urls'
 
 TEMPLATES = [
     {
-        'BACKEND': 'django.template.backends.django.DjangoTemplates',  # <-- Nombre completo del módulo
+        'BACKEND': 'django.template.backends.django.DjangoTemplates',
         'DIRS': [BASE_DIR / 'templates'],
         'APP_DIRS': True,
         'OPTIONS': {
@@ -146,8 +145,11 @@ STATICFILES_DIRS = [
 STATIC_ROOT = BASE_DIR / 'staticfiles'
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-# Compresión y caché de archivos estáticos para WhiteNoise
+# ── Configuración de almacenamiento ──────────────────────
 STORAGES = {
+    "default": {
+        "BACKEND": "django.core.files.storage.FileSystemStorage",
+    },
     "staticfiles": {
         "BACKEND": "whitenoise.storage.CompressedManifestStaticFilesStorage",
     },
@@ -161,16 +163,17 @@ LOGIN_URL = '/usuarios/login/'
 LOGIN_REDIRECT_URL = '/'
 LOGOUT_REDIRECT_URL = '/'
 
+# ── Archivos multimedia ───────────────────────────────────
 MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
-# ── Correo (Inactivo / Impresión en Consola) ───────────────
+# ── Correo ────────────────────────────────────────────────
 EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
 DEFAULT_FROM_EMAIL = 'Agrivale <no-reply@agrivale.com>'
 
 GEMINI_API_KEY = os.getenv('GEMINI_API_KEY')
 
-# Envia API
+# ── Envia API ─────────────────────────────────────────────
 ENVIA_API_TOKEN = os.getenv("ENVIA_API_TOKEN")
 ENVIA_API_URL = os.getenv("ENVIA_API_URL")
 ENVIA_ENVIRONMENT = os.getenv("ENVIA_ENVIRONMENT", "test")
@@ -185,14 +188,15 @@ ENVIA_ORIGIN_POSTAL_CODE = os.getenv("ENVIA_ORIGIN_POSTAL_CODE")
 ENVIA_LABEL_FORMAT = os.getenv("ENVIA_LABEL_FORMAT")
 ENVIA_LABEL_SIZE = os.getenv("ENVIA_LABEL_SIZE")
 
-# Pasarelas de Pago
+# ── Stripe ─────────────────────────────────────────────────
 STRIPE_PUBLIC_KEY = os.getenv("STRIPE_PUBLIC_KEY")
 STRIPE_SECRET_KEY = os.getenv("STRIPE_SECRET_KEY")
+
+# ── MercadoPago ────────────────────────────────────────────
 MERCADOPAGO_ACCESS_TOKEN = os.getenv("MERCADOPAGO_ACCESS_TOKEN")
 MERCADOPAGO_PUBLIC_KEY = os.getenv("MERCADOPAGO_PUBLIC_KEY")
 MERCADOPAGO_WEBHOOK_SECRET = os.getenv("MERCADOPAGO_WEBHOOK_SECRET")
 
-# ── Logging de Consola ────────────────────────────────────
 # ── Logging de Consola ────────────────────────────────────
 LOGGING = {
     'version': 1,
@@ -211,6 +215,11 @@ LOGGING = {
             'handlers': ['console'],
             'level': 'INFO',
             'propagate': True,
+        },
+        'usuarios': {
+            'handlers': ['console'],
+            'level': 'DEBUG',
+            'propagate': False,
         },
     },
 }
