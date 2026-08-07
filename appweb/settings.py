@@ -20,18 +20,17 @@ load_dotenv()
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
+# Una variable de Windows vacía no debe anular el valor configurado en .env.
 SECRET_KEY = os.getenv("SECRET_KEY") or dotenv_values(BASE_DIR / ".env").get("SECRET_KEY") or "django-insecure-default-fallback-key-12345"
 
 DEBUG = os.getenv("DEBUG", "False").lower() == "true"
 
 ALLOWED_HOSTS = ['*']
 
-# Configuración de URL base para redirecciones dinámicas en Stripe
-SITE_URL = os.getenv("SITE_URL", "https://agrifinal-production.up.railway.app")
-DOMINIO = os.getenv("DOMINIO", SITE_URL)
-
+# ── Proxy seguro ──────────────────────────────────────────
 SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
 
+# ── CSRF Trusted Origins ──────────────────────────────────
 CSRF_TRUSTED_ORIGINS = [
     "https://agrifinal-production.up.railway.app",
     "https://*.ngrok-free.dev",
@@ -59,7 +58,7 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
-    'whitenoise.middleware.WhiteNoiseMiddleware',
+    'whitenoise.middleware.WhiteNoiseMiddleware',  # Sirve archivos estáticos en producción
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -73,7 +72,7 @@ ROOT_URLCONF = 'appweb.urls'
 
 TEMPLATES = [
     {
-        'BACKEND': 'django.template.backends.django.DjangoTemplates',
+        'BACKEND': 'django.template.backends.django.DjangoTemplates',  # <-- Nombre completo del módulo
         'DIRS': [BASE_DIR / 'templates'],
         'APP_DIRS': True,
         'OPTIONS': {
@@ -90,6 +89,7 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'appweb.wsgi.application'
 
+# ── Base de Datos (Railway vs Desarrollo Local) ──────────
 db_from_env = os.getenv("DATABASE_URL") or os.getenv("MYSQL_URL")
 
 if db_from_env:
@@ -138,6 +138,7 @@ TIME_ZONE = 'America/Mexico_City'
 USE_I18N = True
 USE_TZ = True
 
+# ── Archivos Estáticos ────────────────────────────────────
 STATIC_URL = 'static/'
 STATICFILES_DIRS = [
     BASE_DIR / 'static',
@@ -145,23 +146,12 @@ STATICFILES_DIRS = [
 STATIC_ROOT = BASE_DIR / 'staticfiles'
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-# ── Configuración de almacenamiento ──────────────────────
+# Compresión y caché de archivos estáticos para WhiteNoise
 STORAGES = {
-    "default": {
-        "BACKEND": "django.core.files.storage.FileSystemStorage",
-    },
     "staticfiles": {
         "BACKEND": "whitenoise.storage.CompressedManifestStaticFilesStorage",
     },
 }
-
-# ── Archivos multimedia ───────────────────────────────────
-MEDIA_URL = '/media/'
-MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
-
-# ── Para producción ──────────────────────────────────────
-if not DEBUG:
-    STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 
 JWT_REFRESH_COOKIE = 'agrivale_refresh'
 JWT_COOKIE_SECURE = not DEBUG
@@ -171,11 +161,16 @@ LOGIN_URL = '/usuarios/login/'
 LOGIN_REDIRECT_URL = '/'
 LOGOUT_REDIRECT_URL = '/'
 
+MEDIA_URL = '/media/'
+MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+
+# ── Correo (Inactivo / Impresión en Consola) ───────────────
 EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
 DEFAULT_FROM_EMAIL = 'Agrivale <no-reply@agrivale.com>'
 
 GEMINI_API_KEY = os.getenv('GEMINI_API_KEY')
 
+# Envia API
 ENVIA_API_TOKEN = os.getenv("ENVIA_API_TOKEN")
 ENVIA_API_URL = os.getenv("ENVIA_API_URL")
 ENVIA_ENVIRONMENT = os.getenv("ENVIA_ENVIRONMENT", "test")
@@ -190,14 +185,15 @@ ENVIA_ORIGIN_POSTAL_CODE = os.getenv("ENVIA_ORIGIN_POSTAL_CODE")
 ENVIA_LABEL_FORMAT = os.getenv("ENVIA_LABEL_FORMAT")
 ENVIA_LABEL_SIZE = os.getenv("ENVIA_LABEL_SIZE")
 
+# Pasarelas de Pago
 STRIPE_PUBLIC_KEY = os.getenv("STRIPE_PUBLIC_KEY")
 STRIPE_SECRET_KEY = os.getenv("STRIPE_SECRET_KEY")
-STRIPE_WEBHOOK_SECRET = os.getenv("STRIPE_WEBHOOK_SECRET")
-
 MERCADOPAGO_ACCESS_TOKEN = os.getenv("MERCADOPAGO_ACCESS_TOKEN")
 MERCADOPAGO_PUBLIC_KEY = os.getenv("MERCADOPAGO_PUBLIC_KEY")
 MERCADOPAGO_WEBHOOK_SECRET = os.getenv("MERCADOPAGO_WEBHOOK_SECRET")
 
+# ── Logging de Consola ────────────────────────────────────
+# ── Logging de Consola ────────────────────────────────────
 LOGGING = {
     'version': 1,
     'disable_existing_loggers': False,
@@ -215,11 +211,6 @@ LOGGING = {
             'handlers': ['console'],
             'level': 'INFO',
             'propagate': True,
-        },
-        'usuarios': {
-            'handlers': ['console'],
-            'level': 'DEBUG',
-            'propagate': False,
         },
     },
 }
