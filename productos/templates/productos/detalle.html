@@ -126,32 +126,28 @@
             </div>
             
             <!-- Formulario de Compra / Acciones -->
-            {% if producto.stock > 0 %}
-            <form method="post" action="{% url 'pedidos:agregar' producto.id_producto %}">
-                {% csrf_token %}
-                <div class="row g-3">
-                    <!-- Selector de Cantidad -->
-                    <div class="col-4 col-lg-3">
-                        <label class="form-label small fw-bold text-muted">Cantidad</label>
-                        <input type="number" name="cantidad" class="form-control form-control-lg bg-light border-0 fw-bold text-center rounded-3" value="1" min="1" max="{{ producto.stock }}">
-                    </div>
-                    
-                    <!-- Botón Tradicional: Agregar al Carrito -->
-                    <div class="col-8 col-lg-9 d-flex align-items-end">
-                        <button type="submit" class="btn btn-outline-success btn-lg w-100 py-3 fw-bold rounded-3 shadow-sm transition-up">
-                            <i class="fas fa-shopping-cart me-2"></i> Agregar al carrito
-                        </button>
-                    </div>
-
-                    <!-- NUEVO BOTÓN: Comprar Ahora (Ocupa todo el ancho inferior) -->
-                    <div class="col-12 mt-2">
-                        <a href="{% url 'productos:comprar_ahora' producto.id_producto %}" class="btn btn-success btn-lg w-100 py-3 fw-bold rounded-3 shadow-sm transition-up">
-                            <i class="fas fa-bolt me-2"></i> Comprar ahora
-                        </a>
-                    </div>
-                </div>
-            </form>
-            {% endif %}
+            {% if producto.disponibilidad > 0 %}
+    <form method="post" action="{% url 'pedidos:agregar_al_carrito' producto.id_producto %}">
+        {% csrf_token %}
+        <div class="row g-3">
+            <div class="col-4 col-lg-3">
+                <label class="form-label small fw-bold text-muted">Cantidad</label>
+                <input type="number" 
+                       name="cantidad" 
+                       class="form-control form-control-lg bg-light border-0 fw-bold text-center rounded-3" 
+                       value="1" 
+                       min="1" 
+                       max="{{ producto.disponibilidad }}">
+            </div>
+            
+            <div class="col-8 col-lg-9 d-flex align-items-end">
+                <button type="submit" class="btn btn-outline-success btn-lg w-100 py-3 fw-bold rounded-3 shadow-sm transition-up">
+                    <i class="fas fa-shopping-cart me-2"></i> Agregar al carrito
+                </button>
+            </div>
+        </div>
+    </form>
+{% endif %}
 
             <!-- Botón de Favoritos -->
             {% if user.is_authenticated %}

@@ -24,6 +24,8 @@ from reportlab.pdfbase.ttfonts import TTFont
 import pandas as pd
 from io import BytesIO
 from django.views.decorators.csrf import csrf_exempt
+from django.contrib import messages
+from django.shortcuts import get_object_or_404, redirect, render
 
 # --- FUNCIONES AUXILIARES ---
 def generar_referencia_transferencia(pedido_id):
@@ -44,17 +46,51 @@ def ver_carrito(request):
     return render(request, 'pedidos/carrito.html', {'items': items, 'total': total})
 
 @login_required
-def agregar_al_carrito(request, producto_id):
-    producto = get_object_or_404(Producto, id_producto=producto_id)
-    item, created = CarritoItem.objects.get_or_create(
-        id_usuario=request.user, 
-        id_producto=producto, 
-        defaults={'cantidad': 1}
-    )
-    if not created:
-        item.cantidad += 1
+def actualizar_cantidad(request, item_id):
+  item = get_object_or_404(
+      CarritoItem, id_carrito_item=item_id, id_usuario=request.user
+  )
+
+  if request.method == 'POST':
+    # Capturar el valor enviado desde el formulario
+    raw_cantidad = request.POST.get('cantidad', '').strip()
+
+    # Manejar el caso donde el usuario deje la casilla vacía o ingrese letras
+    try:
+      nueva_cantidad = int(raw_cantidad)
+    except (ValueError, TypeError):
+      messages.error(request, 'Por favor, ingresa un número válido.')
+      return redirect('pedidos:ver_carrito')
+
+    # Si la cantidad ingresada es 0 o menor, se elimina el ítem del carrito
+    if nueva_cantidad <= 0:
+      item.delete()
+      messages.info(
+          request,
+          f'"{item.id_producto.nombre}" fue eliminado de tu carrito.',
+      )
+    else:
+      # Detectar el campo de existencias del producto (disponibilidad o stock)
+      stock_disponible = getattr(
+          item.id_producto,
+          'disponibilidad',
+          getattr(item.id_producto, 'stock', 0),
+      )
+
+      # Validación estricta de stock
+      if nueva_cantidad > stock_disponible:
+        item.cantidad = stock_disponible
         item.save()
-    return redirect('pedidos:ver_carrito')
+        messages.warning(
+            request,
+            f'Solo hay {stock_disponible} unidad(es) disponibles de "{item.id_producto.nombre}". Se ajustó la cantidad al máximo permitido.',
+        )
+      else:
+        item.cantidad = nueva_cantidad
+        item.save()
+        messages.success(request, 'Cantidad actualizada correctamente.')
+
+  return redirect('pedidos:ver_carrito')
 
 @login_required
 def eliminar_del_carrito(request, item_id):
