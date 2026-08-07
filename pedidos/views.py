@@ -24,6 +24,8 @@ from reportlab.pdfbase.ttfonts import TTFont
 import pandas as pd
 from io import BytesIO
 from django.views.decorators.csrf import csrf_exempt
+from django.contrib import messages
+from django.shortcuts import get_object_or_404, redirect, render
 
 # --- FUNCIONES AUXILIARES ---
 def generar_referencia_transferencia(pedido_id):
@@ -45,16 +47,60 @@ def ver_carrito(request):
 
 @login_required
 def agregar_al_carrito(request, producto_id):
-    producto = get_object_or_404(Producto, id_producto=producto_id)
-    item, created = CarritoItem.objects.get_or_create(
-        id_usuario=request.user, 
-        id_producto=producto, 
-        defaults={'cantidad': 1}
+  producto = get_object_or_404(Producto, id_producto=producto_id)
+
+  # Capturar la cantidad enviada desde el formulario (POST o GET)
+  # Se convierte a entero y por defecto toma 1 si no se envía nada o el valor es inválido
+  try:
+    cantidad_solicitada = int(
+        request.POST.get("cantidad", request.GET.get("cantidad", 1))
     )
-    if not created:
-        item.cantidad += 1
-        item.save()
-    return redirect('pedidos:ver_carrito')
+  except ValueError:
+    cantidad_solicitada = 1
+
+  # Validar que la cantidad ingresada sea al menos 1
+  if cantidad_solicitada < 1:
+    cantidad_solicitada = 1
+
+  # Buscar si el producto ya existe en el carrito del usuario
+  item, created = CarritoItem.objects.get_or_create(
+      id_usuario=request.user,
+      id_producto=producto,
+      defaults={'cantidad': cantidad_solicitada},
+  )
+
+  if not created:
+    # Si ya existía, sumarle la nueva cantidad deseada
+    nueva_cantidad = item.cantidad + cantidad_solicitada
+
+    # Validación de stock opcional (si tu modelo Producto tiene campo disponibilidad/stock)
+    if (
+        hasattr(producto, "disponibilidad")
+        and nueva_cantidad > producto.disponibilidad
+    ):
+      item.cantidad = producto.disponibilidad
+      messages.warning(
+          request,
+          f"Se ha ajustado la cantidad al stock disponible ({producto.disponibilidad}).",
+      )
+    else:
+      item.cantidad = nueva_cantidad
+
+    item.save()
+  else:
+    # Si fue creado, verificar también que no supere el stock disponible
+    if (
+        hasattr(producto, "disponibilidad")
+        and item.cantidad > producto.disponibilidad
+    ):
+      item.cantidad = producto.disponibilidad
+      item.save()
+      messages.warning(
+          request,
+          f"Se ha ajustado la cantidad al stock disponible ({producto.disponibilidad}).",
+      )
+
+  return redirect("pedidos:ver_carrito")
 
 @login_required
 def eliminar_del_carrito(request, item_id):
