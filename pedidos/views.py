@@ -47,15 +47,50 @@ def ver_carrito(request):
 
 @login_required
 def actualizar_cantidad(request, item_id):
-    item = get_object_or_404(CarritoItem, id_carrito_item=item_id, id_usuario=request.user)
-    if request.method == 'POST':
-        cantidad = int(request.POST.get('cantidad', 1))
-        if cantidad <= 0:
-            item.delete()
-        else:
-            item.cantidad = cantidad
-            item.save()
-    return redirect('pedidos:ver_carrito')
+  item = get_object_or_404(
+      CarritoItem, id_carrito_item=item_id, id_usuario=request.user
+  )
+
+  if request.method == 'POST':
+    # Capturar el valor enviado desde el formulario
+    raw_cantidad = request.POST.get('cantidad', '').strip()
+
+    # Manejar el caso donde el usuario deje la casilla vacía o ingrese letras
+    try:
+      nueva_cantidad = int(raw_cantidad)
+    except (ValueError, TypeError):
+      messages.error(request, 'Por favor, ingresa un número válido.')
+      return redirect('pedidos:ver_carrito')
+
+    # Si la cantidad ingresada es 0 o menor, se elimina el ítem del carrito
+    if nueva_cantidad <= 0:
+      item.delete()
+      messages.info(
+          request,
+          f'"{item.id_producto.nombre}" fue eliminado de tu carrito.',
+      )
+    else:
+      # Detectar el campo de existencias del producto (disponibilidad o stock)
+      stock_disponible = getattr(
+          item.id_producto,
+          'disponibilidad',
+          getattr(item.id_producto, 'stock', 0),
+      )
+
+      # Validación estricta de stock
+      if nueva_cantidad > stock_disponible:
+        item.cantidad = stock_disponible
+        item.save()
+        messages.warning(
+            request,
+            f'Solo hay {stock_disponible} unidad(es) disponibles de "{item.id_producto.nombre}". Se ajustó la cantidad al máximo permitido.',
+        )
+      else:
+        item.cantidad = nueva_cantidad
+        item.save()
+        messages.success(request, 'Cantidad actualizada correctamente.')
+
+  return redirect('pedidos:ver_carrito')
 
 @login_required
 def eliminar_del_carrito(request, item_id):
