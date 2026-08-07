@@ -46,61 +46,16 @@ def ver_carrito(request):
     return render(request, 'pedidos/carrito.html', {'items': items, 'total': total})
 
 @login_required
-def agregar_al_carrito(request, producto_id):
-  producto = get_object_or_404(Producto, id_producto=producto_id)
-
-  # Capturar la cantidad enviada desde el formulario (POST o GET)
-  # Se convierte a entero y por defecto toma 1 si no se envía nada o el valor es inválido
-  try:
-    cantidad_solicitada = int(
-        request.POST.get("cantidad", request.GET.get("cantidad", 1))
-    )
-  except ValueError:
-    cantidad_solicitada = 1
-
-  # Validar que la cantidad ingresada sea al menos 1
-  if cantidad_solicitada < 1:
-    cantidad_solicitada = 1
-
-  # Buscar si el producto ya existe en el carrito del usuario
-  item, created = CarritoItem.objects.get_or_create(
-      id_usuario=request.user,
-      id_producto=producto,
-      defaults={'cantidad': cantidad_solicitada},
-  )
-
-  if not created:
-    # Si ya existía, sumarle la nueva cantidad deseada
-    nueva_cantidad = item.cantidad + cantidad_solicitada
-
-    # Validación de stock opcional (si tu modelo Producto tiene campo disponibilidad/stock)
-    if (
-        hasattr(producto, "disponibilidad")
-        and nueva_cantidad > producto.disponibilidad
-    ):
-      item.cantidad = producto.disponibilidad
-      messages.warning(
-          request,
-          f"Se ha ajustado la cantidad al stock disponible ({producto.disponibilidad}).",
-      )
-    else:
-      item.cantidad = nueva_cantidad
-
-    item.save()
-  else:
-    # Si fue creado, verificar también que no supere el stock disponible
-    if (
-        hasattr(producto, "disponibilidad")
-        and item.cantidad > producto.disponibilidad
-    ):
-      item.cantidad = producto.disponibilidad
-      item.save()
-      messages.warning(
-          request,
-          f"Se ha ajustado la cantidad al stock disponible ({producto.disponibilidad}).",
-      )
-
-  return redirect("pedidos:ver_carrito")
+def actualizar_cantidad(request, item_id):
+    item = get_object_or_404(CarritoItem, id_carrito_item=item_id, id_usuario=request.user)
+    if request.method == 'POST':
+        cantidad = int(request.POST.get('cantidad', 1))
+        if cantidad <= 0:
+            item.delete()
+        else:
+            item.cantidad = cantidad
+            item.save()
+    return redirect('pedidos:ver_carrito')
 
 @login_required
 def eliminar_del_carrito(request, item_id):
