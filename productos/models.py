@@ -1,6 +1,7 @@
 from django.db import models
 from django.urls import reverse
 from admin_panel.models import Proveedor
+from cloudinary.models import CloudinaryField
 
 
 class Categoria(models.Model):
@@ -83,9 +84,7 @@ class Producto(models.Model):
     es_organico = models.BooleanField(default=False)
 
     # ===== IMÁGENES =====
-    imagen_principal = models.ImageField(
-        upload_to="productos/", blank=True, null=True
-    )
+    imagen_principal = CloudinaryField('image', blank=True, null=True)
 
     # ===== ATRIBUTOS AGRÍCOLAS =====
     temporada = models.CharField(max_length=100, blank=True)

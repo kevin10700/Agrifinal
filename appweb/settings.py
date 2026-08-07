@@ -4,6 +4,9 @@ from dotenv import dotenv_values, load_dotenv
 import dj_database_url
 from django.db.backends.base.base import BaseDatabaseWrapper
 import django.db.backends.mysql.features as mysql_features
+import cloudinary
+import cloudinary.uploader
+import cloudinary.api
 
 # 1. Evitamos que Django bloquee el arranque por la versión de MariaDB
 BaseDatabaseWrapper.check_database_version_supported = lambda self: None
@@ -145,19 +148,33 @@ STATICFILES_DIRS = [
 STATIC_ROOT = BASE_DIR / 'staticfiles'
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-# ── Archivos multimedia ───────────────────────────────────
-MEDIA_URL = '/media/'
-MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+# ── Cloudinary ─────────────────────────────────────────────
+CLOUDINARY_STORAGE = {
+    'CLOUD_NAME': os.getenv('CLOUDINARY_CLOUD_NAME'),
+    'API_KEY': os.getenv('CLOUDINARY_API_KEY'),
+    'API_SECRET': os.getenv('CLOUDINARY_API_SECRET'),
+}
+
+cloudinary.config(
+    cloud_name=CLOUDINARY_STORAGE['CLOUD_NAME'],
+    api_key=CLOUDINARY_STORAGE['API_KEY'],
+    api_secret=CLOUDINARY_STORAGE['API_SECRET']
+)
 
 # ── Configuración de almacenamiento ──────────────────────
 STORAGES = {
     "default": {
-        "BACKEND": "django.core.files.storage.FileSystemStorage",
+        "BACKEND": "cloudinary_storage.storage.MediaCloudinaryStorage",
     },
     "staticfiles": {
         "BACKEND": "whitenoise.storage.CompressedManifestStaticFilesStorage",
     },
 }
+
+DEFAULT_FILE_STORAGE = 'cloudinary_storage.storage.MediaCloudinaryStorage'
+
+# ── Archivos multimedia ───────────────────────────────────
+MEDIA_URL = '/media/'
 
 JWT_REFRESH_COOKIE = 'agrivale_refresh'
 JWT_COOKIE_SECURE = not DEBUG
