@@ -163,6 +163,13 @@ LOGIN_URL = '/usuarios/login/'
 LOGIN_REDIRECT_URL = '/'
 LOGOUT_REDIRECT_URL = '/'
 
+# ── Configuración de sesiones ─────────────────────────────
+SESSION_COOKIE_AGE = 3600  # 1 hora
+SESSION_EXPIRE_AT_BROWSER_CLOSE = True  # Cierra sesión al cerrar navegador
+SESSION_COOKIE_SECURE = not DEBUG  # Solo HTTPS en producción
+SESSION_COOKIE_HTTPONLY = True  # No accesible desde JavaScript
+SESSION_SAVE_EVERY_REQUEST = True  # Renueva sesión con cada petición
+
 # ── Archivos multimedia ───────────────────────────────────
 MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
