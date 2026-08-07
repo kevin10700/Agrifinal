@@ -125,29 +125,40 @@
                 </div>
             </div>
             
-            <!-- Formulario de Compra / Acciones -->
-            {% if producto.disponibilidad > 0 %}
-    <form method="post" action="{% url 'pedidos:agregar_al_carrito' producto.id_producto %}">
-        {% csrf_token %}
-        <div class="row g-3">
-            <div class="col-4 col-lg-3">
-                <label class="form-label small fw-bold text-muted">Cantidad</label>
-                <input type="number" 
-                       name="cantidad" 
-                       class="form-control form-control-lg bg-light border-0 fw-bold text-center rounded-3" 
-                       value="1" 
-                       min="1" 
-                       max="{{ producto.disponibilidad }}">
-            </div>
-            
-            <div class="col-8 col-lg-9 d-flex align-items-end">
-                <button type="submit" class="btn btn-outline-success btn-lg w-100 py-3 fw-bold rounded-3 shadow-sm transition-up">
-                    <i class="fas fa-shopping-cart me-2"></i> Agregar al carrito
-                </button>
-            </div>
-        </div>
-    </form>
-{% endif %}
+            <!-- ✅ FORMULARIO DE COMPRA CORREGIDO -->
+            {% if producto.stock > 0 %}
+                <form method="post" action="{% url 'pedidos:agregar_al_carrito' producto.id_producto %}">
+                    {% csrf_token %}
+                    <div class="row g-3">
+                        <div class="col-4 col-lg-3">
+                            <label class="form-label small fw-bold text-muted">Cantidad</label>
+                            <input type="number" 
+                                   name="cantidad" 
+                                   class="form-control form-control-lg bg-light border-0 fw-bold text-center rounded-3" 
+                                   value="1" 
+                                   min="1" 
+                                   max="{{ producto.stock }}">
+                        </div>
+                        
+                        <div class="col-8 col-lg-9 d-flex align-items-end">
+                            <button type="submit" class="btn btn-success btn-lg w-100 py-3 fw-bold rounded-3 shadow-sm transition-up">
+                                <i class="fas fa-shopping-cart me-2"></i> Agregar al carrito
+                            </button>
+                        </div>
+                    </div>
+                </form>
+
+                <!-- Botón Comprar Ahora -->
+                <div class="mt-2">
+                    <a href="{% url 'productos:comprar_ahora' producto.id_producto %}" class="btn btn-primary w-100 py-3 fw-bold rounded-3 shadow-sm transition-up">
+                        <i class="fas fa-bolt me-2"></i> Comprar ahora
+                    </a>
+                </div>
+            {% else %}
+                <div class="alert alert-danger text-center mt-3">
+                    <i class="fas fa-times-circle me-2"></i> Producto agotado
+                </div>
+            {% endif %}
 
             <!-- Botón de Favoritos -->
             {% if user.is_authenticated %}
@@ -250,7 +261,6 @@
                                     <div class="text-md-end">
                                         <span class="text-muted d-block fs-7">{{ comentario.fecha_creacion|date:"d/m/Y" }}</span>
                                         
-                                        <!-- 🔥 CAMBIO DE SEGURIDAD AQUÍ: Validamos si el usuario existe -->
                                         <span class="text-secondary small fw-medium">por 
                                             {% if comentario.id_usuario %}
                                                 <strong>{{ comentario.id_usuario.username }}</strong>
