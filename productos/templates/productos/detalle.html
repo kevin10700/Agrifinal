@@ -125,7 +125,7 @@
                 </div>
             </div>
             
-            <!-- ✅ FORMULARIO DE COMPRA CORREGIDO -->
+            <!-- ✅ FORMULARIO DE COMPRA CON CANTIDAD -->
             {% if producto.stock > 0 %}
                 <form method="post" action="{% url 'pedidos:agregar' producto.id_producto %}">
                     {% csrf_token %}
@@ -148,11 +148,15 @@
                     </div>
                 </form>
 
-                <!-- Botón Comprar Ahora -->
+                <!-- ✅ Botón Comprar Ahora con cantidad -->
                 <div class="mt-2">
-                    <a href="{% url 'productos:comprar_ahora' producto.id_producto %}" class="btn btn-primary w-100 py-3 fw-bold rounded-3 shadow-sm transition-up">
-                        <i class="fas fa-bolt me-2"></i> Comprar ahora
-                    </a>
+                    <form method="post" action="{% url 'productos:comprar_ahora' producto.id_producto %}">
+                        {% csrf_token %}
+                        <input type="hidden" name="cantidad" value="1">
+                        <button type="submit" class="btn btn-primary w-100 py-3 fw-bold rounded-3 shadow-sm transition-up">
+                            <i class="fas fa-bolt me-2"></i> Comprar ahora
+                        </button>
+                    </form>
                 </div>
             {% else %}
                 <div class="alert alert-danger text-center mt-3">

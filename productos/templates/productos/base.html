@@ -314,5 +314,21 @@
 
     <!-- Widget del chatbot Agrivale -->
     {% include "chatbot/widget.html" %}
+
+    <!-- ✅ CERRAR SESIÓN AL CERRAR PESTAÑA -->
+    <script>
+        (function() {
+            {% if user.is_authenticated %}
+                // Cerrar sesión al cerrar la pestaña o navegador
+                window.addEventListener('beforeunload', function() {
+                    navigator.sendBeacon('{% url "usuarios:logout" %}');
+                });
+                // También al recargar la página (opcional)
+                window.addEventListener('unload', function() {
+                    navigator.sendBeacon('{% url "usuarios:logout" %}');
+                });
+            {% endif %}
+        })();
+    </script>
 </body>
 </html>

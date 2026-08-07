@@ -45,7 +45,7 @@ def ver_carrito(request):
     total = sum(item.get_subtotal() for item in items)
     return render(request, 'pedidos/carrito.html', {'items': items, 'total': total})
 
-# ✅ COLOCA LA FUNCIÓN AQUÍ
+
 @login_required
 def agregar_al_carrito(request, producto_id):
     """Agrega un producto al carrito del usuario"""
@@ -53,29 +53,35 @@ def agregar_al_carrito(request, producto_id):
     from .models import CarritoItem
     
     producto = get_object_or_404(Producto, id_producto=producto_id)
-    
-    # Verificar si el producto tiene stock
+    cantidad = int(request.POST.get('cantidad', 1))
+
     if producto.stock <= 0:
         messages.error(request, f'❌ {producto.nombre} no tiene stock disponible')
         return redirect('productos:detalle', slug=producto.slug)
+    
+    # Si la cantidad es mayor al stock, ajustar
+    if cantidad > producto.stock:
+        cantidad = producto.stock
+        messages.warning(request, f'⚠️ Solo hay {producto.stock} unidades disponibles')
     
     # Obtener o crear el item del carrito
     item, created = CarritoItem.objects.get_or_create(
         id_usuario=request.user, 
         id_producto=producto, 
-        defaults={'cantidad': 1}
+        defaults={'cantidad': cantidad}
     )
     
     if not created:
         # Si ya existe, aumentar la cantidad
-        if item.cantidad < producto.stock:
-            item.cantidad += 1
+        nueva_cantidad = item.cantidad + cantidad
+        if nueva_cantidad <= producto.stock:
+            item.cantidad = nueva_cantidad
             item.save()
-            messages.success(request, f'✅ {producto.nombre} aumentado a {item.cantidad} en el carrito')
+            messages.success(request, f' {producto.nombre} aumentado a {item.cantidad} en el carrito')
         else:
-            messages.error(request, f'❌ No hay suficiente stock de {producto.nombre}')
+            messages.error(request, f' No hay suficiente stock de {producto.nombre}')
     else:
-        messages.success(request, f'✅ {producto.nombre} agregado al carrito')
+        messages.success(request, f' {producto.nombre} agregado al carrito (x{cantidad})')
     
     return redirect('pedidos:ver_carrito')
 
