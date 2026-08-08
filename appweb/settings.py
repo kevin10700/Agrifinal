@@ -68,6 +68,7 @@ MIDDLEWARE = [
     'django.contrib.messages.middleware.MessageMiddleware',
     'usuarios.middleware.JWTApiAuthenticationMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'usuarios.middleware.AdminAccessMiddleware',        # Bloquea acceso a /admin/ para no-superusers
     'usuarios.middleware.SessionValidationMiddleware',  # Valida estado de sesión
     'usuarios.middleware.SessionSecurityMiddleware',    # Detecta cambios sospechosos
     'usuarios.middleware.NoCacheAuthenticatedMiddleware',  # Previene caché

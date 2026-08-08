@@ -116,6 +116,31 @@ class SessionValidationMiddleware(MiddlewareMixin):
         return None
 
 
+class AdminAccessMiddleware(MiddlewareMixin):
+    """
+    Middleware que bloquea el acceso al admin de Django para usuarios no autorizados.
+    Solo superusers pueden acceder a /admin/.
+    """
+    
+    def process_request(self, request):
+        # Verificar si la ruta es /admin/ o subrutas
+        if request.path.startswith('/admin/'):
+            # Si el usuario no está autenticado, dejar pasar (Django lo maneja)
+            if not getattr(request, 'user', None) or not request.user.is_authenticated:
+                return None
+            
+            # Si está autenticado, verificar que sea superuser
+            if not request.user.is_superuser:
+                logger.warning(f"⚠️ Usuario {request.user.username} intentó acceder a /admin/ sin permisos")
+                messages.error(
+                    request,
+                    '❌ No tienes permisos para acceder al panel de administración de Django.'
+                )
+                return redirect('usuarios:login')
+        
+        return None
+
+
 class SessionSecurityMiddleware(MiddlewareMixin):
     """
     Middleware de seguridad adicional para sesiones.

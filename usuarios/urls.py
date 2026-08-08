@@ -17,5 +17,8 @@ urlpatterns = [
     # ← str en lugar de uuid
     path('restablecer-contrasena/<str:token>/', views.restablecer_contrasena, name='restablecer_contrasena'),
 
-    path('verificar/<str:token>/', views.verificar_correo_view, name='verificar_correo'), 
+    path('verificar/<str:token>/', views.verificar_correo_view, name='verificar_correo'),
+    
+    # Cerrar sesiones en otros dispositivos
+    path('cerrar-sesiones-otros-dispositivos/', views.cerrar_sesiones_otros_dispositivos, name='cerrar_sesiones_otros_dispositivos'),
 ]

@@ -465,3 +465,69 @@ def restablecer_contrasena(request, token):
         'form': form,
         'token': token,
     })
+
+
+def cerrar_sesiones_otros_dispositivos(request):
+    """
+    Muestra ventana para cerrar sesiones en otros dispositivos.
+    Se muestra cuando se detecta una sesión restaurada (navegador cerrado y reabierto).
+    """
+    from django.contrib.sessions.models import Session
+    
+    if not request.user.is_authenticated:
+        return redirect('usuarios:login')
+    
+    # Obtener todas las sesiones activas del usuario
+    sesiones_usuario = []
+    sesion_actual = request.session.session_key
+    
+    todas_sesiones = Session.objects.filter(expire_date__gte=timezone.now())
+    
+    for sesion in todas_sesiones:
+        try:
+            data = sesion.get_decoded()
+            user_id = data.get('_auth_user_id')
+            
+            if user_id == str(request.user.pk):
+                # Es una sesión del usuario actual
+                es_sesion_actual = sesion.session_key == sesion_actual
+                sesiones_usuario.append({
+                    'sesion': sesion,
+                    'ip': data.get('login_ip', 'N/A'),
+                    'user_agent': data.get('login_user_agent', 'N/A'),
+                    'login_time': data.get('login_time', 'N/A'),
+                    'es_actual': es_sesion_actual,
+                })
+        except Exception as e:
+            logger.error(f"❌ Error al procesar sesión: {e}")
+    
+    # Cerrar todas las sesiones excepto la actual
+    sesiones_cerradas = 0
+    if request.method == 'POST':
+        for sesion_info in sesiones_usuario:
+            if not sesion_info['es_actual']:
+                try:
+                    sesion = sesion_info['sesion']
+                    sesion.delete()
+                    sesiones_cerradas += 1
+                except Exception as e:
+                    logger.error(f"❌ Error al cerrar sesión: {e}")
+        
+        if sesiones_cerradas > 0:
+            messages.success(
+                request,
+                f'✅ Se cerraron {sesiones_cerradas} sesión(es) en otros dispositivos. '
+                f'Ahora puedes continuar de forma segura.'
+            )
+        else:
+            messages.info(request, 'ℹ️ No había otras sesiones activas.')
+        
+        return redirect('productos:lista')
+    
+    context = {
+        'sesiones': sesiones_usuario,
+        'total_sesiones': len(sesiones_usuario),
+        'otras_sesiones': len([s for s in sesiones_usuario if not s['es_actual']]),
+    }
+    
+    return render(request, 'usuarios/cerrar_sesiones_otros_dispositivos.html', context)
