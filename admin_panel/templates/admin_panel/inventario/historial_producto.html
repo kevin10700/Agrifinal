@@ -1,0 +1,346 @@
+{% extends 'admin_panel/base.html' %}
+{% load static %}
+
+{% block title %}Historial de {{ producto.nombre }} - Panel Administrativo{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h1 class="h3 mb-0 text-gray-800">
+                <i class="fas fa-history"></i> Historial de Producto
+            </h1>
+            <p class="text-muted">
+                Registro completo de cambios y movimientos de 
+                <strong>{{ producto.nombre }}</strong>
+            </p>
+        </div>
+        <div>
+            <a href="{% url 'admin_panel:historial_productos_lista' %}" class="btn btn-secondary">
+                <i class="fas fa-arrow-left"></i> Volver al Listado
+            </a>
+        </div>
+    </div>
+
+    <!-- Información del Producto -->
+    <div class="card shadow mb-4">
+        <div class="card-header py-3">
+            <h6 class="m-0 font-weight-bold text-primary">
+                <i class="fas fa-box"></i> Información del Producto
+            </h6>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-3">
+                    {% if producto.imagen_principal %}
+                        <img src="{{ producto.imagen_principal.url }}" alt="{{ producto.nombre }}" 
+                             class="img-fluid rounded" style="max-height: 200px; object-fit: cover;">
+                    {% else %}
+                        <div class="bg-light rounded d-flex align-items-center justify-content-center" 
+                             style="height: 200px;">
+                            <i class="fas fa-image fa-3x text-muted"></i>
+                        </div>
+                    {% endif %}
+                </div>
+                <div class="col-md-9">
+                    <table class="table table-borderless">
+                        <tr>
+                            <td><strong>Nombre:</strong></td>
+                            <td>{{ producto.nombre }}</td>
+                            <td><strong>Categoría:</strong></td>
+                            <td>{{ producto.id_categoria.nombre }}</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Precio:</strong></td>
+                            <td>${{ producto.precio }}</td>
+                            <td><strong>Precio Oferta:</strong></td>
+                            <td>
+                                {% if producto.precio_oferta %}
+                                    <span class="text-danger">${{ producto.precio_oferta }}</span>
+                                {% else %}
+                                    <span class="text-muted">N/A</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        <tr>
+                            <td><strong>Stock:</strong></td>
+                            <td>
+                                <span class="badge {% if producto.stock == 0 %}badge-danger{% elif producto.stock <= 10 %}badge-warning{% else %}badge-success{% endif %}">
+                                    {{ producto.stock }} unidades
+                                </span>
+                            </td>
+                            <td><strong>Costo Promedio:</strong></td>
+                            <td>${{ producto.costo_promedio }}</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Unidad de Medida:</strong></td>
+                            <td>{{ producto.get_unidad_medida_display }}</td>
+                            <td><strong>Estado:</strong></td>
+                            <td>
+                                {% if producto.activo %}
+                                    <span class="badge badge-success">Activo</span>
+                                {% else %}
+                                    <span class="badge badge-danger">Inactivo</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filtros -->
+    <div class="card shadow mb-4">
+        <div class="card-header py-3">
+            <h6 class="m-0 font-weight-bold text-primary">
+                <i class="fas fa-filter"></i> Filtros
+            </h6>
+        </div>
+        <div class="card-body">
+            <form method="GET" class="form-inline">
+                <div class="form-group mr-3 mb-2">
+                    <label for="tipo" class="mr-2">Tipo de Cambio:</label>
+                    <select name="tipo" id="tipo" class="form-control">
+                        <option value="">Todos</option>
+                        {% for tipo in tipos_cambio %}
+                            <option value="{{ tipo.0 }}" {% if tipo_filtro == tipo.0 %}selected{% endif %}>
+                                {{ tipo.1 }}
+                            </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="form-group mr-3 mb-2">
+                    <label for="fecha_desde" class="mr-2">Desde:</label>
+                    <input type="date" name="fecha_desde" id="fecha_desde" class="form-control" 
+                           value="{{ fecha_desde }}">
+                </div>
+                <div class="form-group mr-3 mb-2">
+                    <label for="fecha_hasta" class="mr-2">Hasta:</label>
+                    <input type="date" name="fecha_hasta" id="fecha_hasta" class="form-control" 
+                           value="{{ fecha_hasta }}">
+                </div>
+                <button type="submit" class="btn btn-primary mb-2">
+                    <i class="fas fa-search"></i> Filtrar
+                </button>
+                <a href="{% url 'admin_panel:historial_producto' producto.id_producto %}" 
+                   class="btn btn-secondary mb-2 ml-2">
+                    <i class="fas fa-times"></i> Limpiar
+                </a>
+            </form>
+        </div>
+    </div>
+
+    <!-- Historial -->
+    <div class="card shadow mb-4">
+        <div class="card-header py-3 d-flex justify-content-between align-items-center">
+            <h6 class="m-0 font-weight-bold text-primary">
+                <i class="fas fa-list"></i> Historial de Cambios
+                <span class="badge badge-info ml-2">{{ total_cambios }}</span>
+            </h6>
+        </div>
+        <div class="card-body">
+            {% if historial %}
+            <div class="timeline">
+                {% for cambio in historial %}
+                <div class="timeline-item">
+                    <div class="timeline-marker 
+                        {% if cambio.tipo_cambio == 'creacion' %}bg-success
+                        {% elif cambio.tipo_cambio == 'cambio_precio' %}bg-warning
+                        {% elif cambio.tipo_cambio == 'cambio_stock' %}bg-info
+                        {% elif cambio.tipo_cambio == 'cambio_estado' %}bg-danger
+                        {% else %}bg-primary{% endif %}">
+                        <i class="fas 
+                            {% if cambio.tipo_cambio == 'creacion' %}fa-plus
+                            {% elif cambio.tipo_cambio == 'cambio_precio' %}fa-dollar-sign
+                            {% elif cambio.tipo_cambio == 'cambio_stock' %}fa-boxes
+                            {% elif cambio.tipo_cambio == 'cambio_estado' %}fa-toggle-on
+                            {% elif cambio.tipo_cambio == 'cambio_costo' %}fa-calculator
+                            {% else %}fa-edit{% endif %}">
+                        </i>
+                    </div>
+                    <div class="timeline-content">
+                        <div class="card">
+                            <div class="card-body">
+                                <div class="d-flex justify-content-between align-items-start">
+                                    <div>
+                                        <h6 class="mb-1">
+                                            {{ cambio.get_tipo_cambio_display }}
+                                        </h6>
+                                        <p class="text-muted small mb-2">
+                                            <i class="fas fa-user"></i> 
+                                            {{ cambio.usuario.nombre_completo|default:"Sistema" }}
+                                            &nbsp;|&nbsp;
+                                            <i class="fas fa-clock"></i> 
+                                            {{ cambio.fecha_cambio|date:"d/m/Y H:i:s" }}
+                                        </p>
+                                    </div>
+                                    <span class="badge 
+                                        {% if cambio.tipo_cambio == 'creacion' %}badge-success
+                                        {% elif cambio.tipo_cambio == 'cambio_precio' %}badge-warning
+                                        {% elif cambio.tipo_cambio == 'cambio_stock' %}badge-info
+                                        {% elif cambio.tipo_cambio == 'cambio_estado' %}badge-danger
+                                        {% else %}badge-primary{% endif %}">
+                                        {{ cambio.get_tipo_cambio_display }}
+                                    </span>
+                                </div>
+
+                                <!-- Detalles del cambio -->
+                                <div class="mt-3">
+                                    {% if cambio.precio_anterior is not None and cambio.precio_nuevo is not None %}
+                                    <div class="alert alert-warning">
+                                        <strong><i class="fas fa-dollar-sign"></i> Cambio de Precio:</strong><br>
+                                        <span class="text-danger">Anterior: ${{ cambio.precio_anterior }}</span>
+                                        &nbsp;→&nbsp;
+                                        <span class="text-success">Nuevo: ${{ cambio.precio_nuevo }}</span>
+                                        {% if cambio.precio_anterior %}
+                                            {% widthratio cambio.precio_nuevo cambio.precio_anterior 100 as porcentaje %}
+                                            {% if porcentaje > 100 %}
+                                                <span class="badge badge-danger">+{{ porcentaje|add:"-100"|floatformat:1 }}%</span>
+                                            {% elif porcentaje < 100 %}
+                                                <span class="badge badge-success">{{ porcentaje|add:"-100"|floatformat:1 }}%</span>
+                                            {% endif %}
+                                        {% endif %}
+                                    </div>
+                                    {% endif %}
+
+                                    {% if cambio.costo_anterior is not None and cambio.costo_nuevo is not None %}
+                                    <div class="alert alert-info">
+                                        <strong><i class="fas fa-calculator"></i> Cambio de Costo:</strong><br>
+                                        <span class="text-danger">Anterior: ${{ cambio.costo_anterior }}</span>
+                                        &nbsp;→&nbsp;
+                                        <span class="text-success">Nuevo: ${{ cambio.costo_nuevo }}</span>
+                                    </div>
+                                    {% endif %}
+
+                                    {% if cambio.campos_cambiados %}
+                                    <div class="alert alert-secondary">
+                                        <strong><i class="fas fa-list"></i> Campos Modificados:</strong>
+                                        <ul class="mb-0 mt-2">
+                                            {% for campo, valores in cambio.campos_cambiados.items %}
+                                            <li>
+                                                <strong>{{ campo|capfirst }}:</strong> 
+                                                {% if valores.anterior is not none %}
+                                                    <span class="text-danger">{{ valores.anterior }}</span>
+                                                    &nbsp;→&nbsp;
+                                                    <span class="text-success">{{ valores.nuevo }}</span>
+                                                {% else %}
+                                                    {{ valores.nuevo }}
+                                                {% endif %}
+                                            </li>
+                                            {% endfor %}
+                                        </ul>
+                                    </div>
+                                    {% endif %}
+
+                                    {% if cambio.compra %}
+                                    <div class="alert alert-success">
+                                        <strong><i class="fas fa-shopping-cart"></i> Compra Relacionada:</strong><br>
+                                        Compra #{{ cambio.compra.id_compra }} - 
+                                        {{ cambio.compra.proveedor.empresa|default:"Producto Propio" }}<br>
+                                        <small class="text-muted">
+                                            Fecha: {{ cambio.compra.fecha_compra|date:"d/m/Y" }}
+                                        </small>
+                                    </div>
+                                    {% endif %}
+
+                                    {% if cambio.pedido %}
+                                    <div class="alert alert-info">
+                                        <strong><i class="fas fa-shopping-bag"></i> Pedido Relacionado:</strong><br>
+                                        Pedido #{{ cambio.pedido.id_pedido }}<br>
+                                        <small class="text-muted">
+                                            Fecha: {{ cambio.pedido.fecha_pedido|date:"d/m/Y H:i" }}
+                                        </small>
+                                    </div>
+                                    {% endif %}
+
+                                    {% if cambio.observaciones %}
+                                    <div class="mt-2">
+                                        <strong><i class="fas fa-comment"></i> Observaciones:</strong>
+                                        <p class="text-muted mb-0">{{ cambio.observaciones }}</p>
+                                    </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+
+            <!-- Paginación -->
+            {% if historial.has_other_pages %}
+            <nav class="mt-4">
+                <ul class="pagination justify-content-center">
+                    {% if historial.has_previous %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ historial.previous_page_number }}{% if tipo_filtro %}&tipo={{ tipo_filtro }}{% endif %}{% if fecha_desde %}&fecha_desde={{ fecha_desde }}{% endif %}{% if fecha_hasta %}&fecha_hasta={{ fecha_hasta }}{% endif %}">Anterior</a>
+                        </li>
+                    {% endif %}
+                    
+                    {% for num in historial.paginator.page_range %}
+                        <li class="page-item {% if historial.number == num %}active{% endif %}">
+                            <a class="page-link" href="?page={{ num }}{% if tipo_filtro %}&tipo={{ tipo_filtro }}{% endif %}{% if fecha_desde %}&fecha_desde={{ fecha_desde }}{% endif %}{% if fecha_hasta %}&fecha_hasta={{ fecha_hasta }}{% endif %}">{{ num }}</a>
+                        </li>
+                    {% endfor %}
+                    
+                    {% if historial.has_next %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ historial.next_page_number }}{% if tipo_filtro %}&tipo={{ tipo_filtro }}{% endif %}{% if fecha_desde %}&fecha_desde={{ fecha_desde }}{% endif %}{% if fecha_hasta %}&fecha_hasta={{ fecha_hasta }}{% endif %}">Siguiente</a>
+                        </li>
+                    {% endif %}
+                </ul>
+            </nav>
+            {% endif %}
+
+            {% else %}
+            <div class="alert alert-info">
+                <i class="fas fa-info-circle"></i> Este producto no tiene historial de cambios registrado.
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<style>
+.timeline {
+    position: relative;
+    padding: 20px 0;
+}
+
+.timeline-item {
+    position: relative;
+    padding-left: 50px;
+    margin-bottom: 30px;
+}
+
+.timeline-marker {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 16px;
+}
+
+.timeline-content {
+    position: relative;
+}
+
+.timeline-item:not(:last-child)::before {
+    content: '';
+    position: absolute;
+    left: 19px;
+    top: 40px;
+    bottom: -30px;
+    width: 2px;
+    background-color: #dee2e6;
+}
+</style>
+{% endblock %}

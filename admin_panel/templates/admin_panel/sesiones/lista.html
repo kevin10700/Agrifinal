@@ -1,0 +1,199 @@
+{% extends 'admin_panel/base.html' %}
+{% load static %}
+
+{% block title %}Gestión de Sesiones - Panel Administrativo{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h1 class="h3 mb-0 text-gray-800">
+                <i class="fas fa-shield-alt"></i> Gestión de Sesiones
+            </h1>
+            <p class="text-muted">Monitorea y controla las sesiones activas del sistema</p>
+        </div>
+        <div>
+            <a href="{% url 'admin_panel:dashboard' %}" class="btn btn-secondary">
+                <i class="fas fa-arrow-left"></i> Volver al Dashboard
+            </a>
+        </div>
+    </div>
+
+    <!-- Estadísticas -->
+    <div class="row mb-4">
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-primary shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
+                                Sesiones Activas</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ total_sesiones }}</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-users fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Acciones -->
+    <div class="card shadow mb-4">
+        <div class="card-header py-3 d-flex justify-content-between align-items-center">
+            <h6 class="m-0 font-weight-bold text-primary">
+                <i class="fas fa-list"></i> Sesiones Activas
+            </h6>
+            <form method="POST" action="{% url 'admin_panel:cerrar_todas_sesiones' %}" 
+                  onsubmit="return confirm('¿Estás seguro de cerrar TODAS las sesiones? Todos los usuarios deberán iniciar sesión de nuevo.');">
+                {% csrf_token %}
+                <button type="submit" class="btn btn-danger btn-sm">
+                    <i class="fas fa-power-off"></i> Cerrar Todas las Sesiones
+                </button>
+            </form>
+        </div>
+        <div class="card-body">
+            {% if sesiones %}
+            <div class="table-responsive">
+                <table class="table table-bordered table-hover">
+                    <thead class="thead-light">
+                        <tr>
+                            <th>Usuario</th>
+                            <th>Rol</th>
+                            <th>IP</th>
+                            <th>Navegador</th>
+                            <th>Inicio de Sesión</th>
+                            <th>Expira</th>
+                            <th>Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for sesion in sesiones %}
+                        <tr>
+                            <td>
+                                {% if sesion.usuario %}
+                                    <strong>{{ sesion.usuario.nombre_completo }}</strong><br>
+                                    <small class="text-muted">@{{ sesion.usuario.username }}</small>
+                                {% else %}
+                                    <span class="text-muted">Usuario eliminado</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if sesion.usuario %}
+                                    {% if sesion.usuario.is_superuser %}
+                                        <span class="badge badge-danger">Super Admin</span>
+                                    {% elif sesion.usuario.is_staff %}
+                                        <span class="badge badge-warning">Staff</span>
+                                    {% else %}
+                                        <span class="badge badge-info">Cliente</span>
+                                    {% endif %}
+                                {% else %}
+                                    <span class="badge badge-secondary">N/A</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <code>{{ sesion.ip }}</code>
+                            </td>
+                            <td>
+                                <small>{{ sesion.user_agent|truncatechars:50 }}</small>
+                            </td>
+                            <td>
+                                {% if sesion.login_time != 'N/A' %}
+                                    {{ sesion.login_time|date:"d/m/Y H:i" }}
+                                {% else %}
+                                    <span class="text-muted">N/A</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {{ sesion.sesion.expire_date|date:"d/m/Y H:i" }}
+                            </td>
+                            <td>
+                                <div class="btn-group" role="group">
+                                    <a href="{% url 'admin_panel:sesion_detalle' sesion.sesion.session_key %}" 
+                                       class="btn btn-info btn-sm" title="Ver Detalle">
+                                        <i class="fas fa-eye"></i>
+                                    </a>
+                                    {% if sesion.usuario %}
+                                    <form method="POST" 
+                                          action="{% url 'admin_panel:cerrar_sesion_usuario' sesion.usuario.pk %}"
+                                          onsubmit="return confirm('¿Cerrar todas las sesiones de {{ sesion.usuario.nombre_completo }}?');">
+                                        {% csrf_token %}
+                                        <button type="submit" class="btn btn-danger btn-sm" title="Cerrar Sesiones del Usuario">
+                                            <i class="fas fa-power-off"></i>
+                                        </button>
+                                    </form>
+                                    {% endif %}
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Paginación -->
+            {% if sesiones.has_other_pages %}
+            <nav class="mt-4">
+                <ul class="pagination justify-content-center">
+                    {% if sesiones.has_previous %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ sesiones.previous_page_number }}">Anterior</a>
+                        </li>
+                    {% endif %}
+                    
+                    {% for num in sesiones.paginator.page_range %}
+                        <li class="page-item {% if sesiones.number == num %}active{% endif %}">
+                            <a class="page-link" href="?page={{ num }}">{{ num }}</a>
+                        </li>
+                    {% endfor %}
+                    
+                    {% if sesiones.has_next %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ sesiones.next_page_number }}">Siguiente</a>
+                        </li>
+                    {% endif %}
+                </ul>
+            </nav>
+            {% endif %}
+
+            {% else %}
+            <div class="alert alert-info">
+                <i class="fas fa-info-circle"></i> No hay sesiones activas en este momento.
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Información Adicional -->
+    <div class="card shadow mb-4">
+        <div class="card-header py-3">
+            <h6 class="m-0 font-weight-bold text-primary">
+                <i class="fas fa-info-circle"></i> Información
+            </h6>
+        </div>
+        <div class="card-body">
+            <ul>
+                <li>Las sesiones se cierran automáticamente después de <strong>8 horas</strong> de inactividad.</li>
+                <li>Al cerrar el navegador, la sesión se elimina automáticamente.</li>
+                <li>Puedes cerrar todas las sesiones activas para forzar a todos los usuarios a iniciar sesión de nuevo.</li>
+                <li>El sistema detecta cambios sospechosos en el navegador y cierra la sesión automáticamente.</li>
+            </ul>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Confirmación antes de cerrar sesiones
+document.querySelectorAll('form[onscreen]').forEach(form => {
+    form.addEventListener('submit', function(e) {
+        if (!confirm('¿Estás seguro de realizar esta acción?')) {
+            e.preventDefault();
+        }
+    });
+});
+</script>
+{% endblock %}

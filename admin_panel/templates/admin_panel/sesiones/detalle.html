@@ -1,0 +1,181 @@
+{% extends 'admin_panel/base.html' %}
+{% load static %}
+
+{% block title %}Detalle de Sesión - Panel Administrativo{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h1 class="h3 mb-0 text-gray-800">
+                <i class="fas fa-search"></i> Detalle de Sesión
+            </h1>
+            <p class="text-muted">Información completa de la sesión seleccionada</p>
+        </div>
+        <div>
+            <a href="{% url 'admin_panel:sesiones_lista' %}" class="btn btn-secondary">
+                <i class="fas fa-arrow-left"></i> Volver a la Lista
+            </a>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Información del Usuario -->
+        <div class="col-lg-6">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">
+                        <i class="fas fa-user"></i> Información del Usuario
+                    </h6>
+                </div>
+                <div class="card-body">
+                    {% if usuario %}
+                    <div class="text-center mb-4">
+                        {% if usuario.foto_perfil %}
+                            <img src="{{ usuario.foto_perfil.url }}" alt="{{ usuario.nombre_completo }}" 
+                                 class="rounded-circle mb-3" style="width: 100px; height: 100px; object-fit: cover;">
+                        {% else %}
+                            <div class="rounded-circle bg-primary text-white d-flex align-items-center justify-content-center mx-auto mb-3" 
+                                 style="width: 100px; height: 100px; font-size: 40px;">
+                                {{ usuario.nombre|first|upper }}
+                            </div>
+                        {% endif %}
+                        <h5>{{ usuario.nombre_completo }}</h5>
+                        <p class="text-muted">@{{ usuario.username }}</p>
+                        <div>
+                            {% if usuario.is_superuser %}
+                                <span class="badge badge-danger">Super Admin</span>
+                            {% elif usuario.is_staff %}
+                                <span class="badge badge-warning">Staff</span>
+                            {% else %}
+                                <span class="badge badge-info">Cliente</span>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <table class="table table-borderless">
+                        <tr>
+                            <td><strong>Email:</strong></td>
+                            <td>{{ usuario.email }}</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Teléfono:</strong></td>
+                            <td>{{ usuario.telefono|default:"N/A" }}</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Cuenta activa:</strong></td>
+                            <td>
+                                {% if usuario.is_active %}
+                                    <span class="badge badge-success">Activa</span>
+                                {% else %}
+                                    <span class="badge badge-danger">Desactivada</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        <tr>
+                            <td><strong>Correo verificado:</strong></td>
+                            <td>
+                                {% if usuario.correo_verificado %}
+                                    <span class="badge badge-success">Verificado</span>
+                                {% else %}
+                                    <span class="badge badge-warning">No verificado</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        <tr>
+                            <td><strong>Fecha de registro:</strong></td>
+                            <td>{{ usuario.date_joined|date:"d/m/Y H:i" }}</td>
+                        </tr>
+                    </table>
+                    {% else %}
+                    <div class="alert alert-warning">
+                        <i class="fas fa-exclamation-triangle"></i> 
+                        El usuario asociado a esta sesión ya no existe en el sistema.
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Información de la Sesión -->
+        <div class="col-lg-6">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">
+                        <i class="fas fa-key"></i> Información de la Sesión
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <table class="table table-borderless">
+                        <tr>
+                            <td><strong>Session Key:</strong></td>
+                            <td><code>{{ sesion.session_key }}</code></td>
+                        </tr>
+                        <tr>
+                            <td><strong>IP de conexión:</strong></td>
+                            <td><code>{{ data.login_ip|default:"N/A" }}</code></td>
+                        </tr>
+                        <tr>
+                            <td><strong>User Agent:</strong></td>
+                            <td>
+                                <small class="text-muted" style="word-break: break-all;">
+                                    {{ data.login_user_agent|default:"N/A" }}
+                                </small>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td><strong>Inicio de sesión:</strong></td>
+                            <td>
+                                {% if data.login_time %}
+                                    {{ data.login_time|date:"d/m/Y H:i:s" }}
+                                {% else %}
+                                    N/A
+                                {% endif %}
+                            </td>
+                        </tr>
+                        <tr>
+                            <td><strong>Fecha de expiración:</strong></td>
+                            <td>{{ sesion.expire_date|date:"d/m/Y H:i:s" }}</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Estado:</strong></td>
+                            <td>
+                                {% if sesion.expire_date > now %}
+                                    <span class="badge badge-success">Activa</span>
+                                {% else %}
+                                    <span class="badge badge-secondary">Expirada</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                    </table>
+
+                    {% if usuario %}
+                    <form method="POST" 
+                          action="{% url 'admin_panel:cerrar_sesion_usuario' usuario.pk %}"
+                          onsubmit="return confirm('¿Cerrar todas las sesiones de {{ usuario.nombre_completo }}?');"
+                          class="mt-3">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-danger btn-block">
+                            <i class="fas fa-power-off"></i> Cerrar Todas las Sesiones de este Usuario
+                        </button>
+                    </form>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Datos Adicionales de la Sesión -->
+    <div class="card shadow mb-4">
+        <div class="card-header py-3">
+            <h6 class="m-0 font-weight-bold text-primary">
+                <i class="fas fa-code"></i> Datos Completos de la Sesión
+            </h6>
+        </div>
+        <div class="card-body">
+            <pre class="bg-light p-3 rounded" style="max-height: 400px; overflow-y: auto;"><code>{{ data|pprint }}</code></pre>
+        </div>
+    </div>
+</div>
+{% endblock %}

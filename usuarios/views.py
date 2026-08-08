@@ -8,6 +8,16 @@ from django.core.mail import send_mail, EmailMultiAlternatives
 from django.conf import settings
 from django.utils import timezone
 from django.http import JsonResponse
+from django.views.decorators.cache import never_cache
+
+@never_cache
+def iniciar_sesion(request):
+    ...  # sin cambios en el cuerpo
+
+@login_required
+@never_cache
+def cerrar_sesion(request):
+    ...  # sin cambios en el cuerpo
 
 
 # Importaciones unificadas
@@ -143,6 +153,9 @@ def iniciar_sesion(request):
         return redirect('productos:lista')
 
     if request.method == 'POST':
+        # Limpiar mensajes antiguos para evitar confusión
+        list(messages.get_messages(request))
+        
         # Log del intento de login
         username = request.POST.get('username')
         logger.info(f"📝 Intento de login - Usuario: {username}")
@@ -159,11 +172,32 @@ def iniciar_sesion(request):
             logger.info(f"✅ Formulario válido, usuario obtenido: {user}")
             
             if user is not None:
+                # Verificar si la cuenta está activa
+                if not user.is_active:
+                    logger.warning(f"⚠️ Intento de login con cuenta desactivada: {username}")
+                    messages.error(
+                        request,
+                        '❌ Tu cuenta ha sido desactivada. '
+                        'Si crees que esto es un error, contacta al administrador.'
+                    )
+                    return render(request, 'usuarios/login.html', {'form': form})
+                
+                # Verificar si el correo está verificado
+                if not user.correo_verificado:
+                    logger.warning(f"⚠️ Intento de login con correo no verificado: {username}")
+                    messages.error(
+                        request,
+                        '❌ Debes verificar tu correo electrónico antes de iniciar sesión. '
+                        'Revisa tu bandeja de entrada y spam.'
+                    )
+                    return render(request, 'usuarios/login.html', {'form': form})
+                
+                # Login exitoso
                 login(request, user)
                 messages.success(request, f'¡Bienvenido de nuevo, {user.nombre}!')
-                # ✅ CORREGIDO: Eliminado {user.id}
                 logger.info(f"✅ Login exitoso para {user.username}")
                 
+                # Redirigir según el rol
                 if user.is_staff:
                     logger.info(f"👤 Usuario staff, redirigiendo a admin_panel:dashboard")
                     return redirect('admin_panel:dashboard')
@@ -179,17 +213,62 @@ def iniciar_sesion(request):
             logger.error(f"   - Errores no field: {form.non_field_errors()}")
             logger.error(f"   - Campos con errores: {list(form.errors.keys())}")
             
-            # Mostrar errores al usuario
+            # Determinar el tipo de error y mostrar mensaje apropiado
+            error_ocurred = False
+            
+            # Verificar errores de campo
             for field, errors in form.errors.items():
                 for error in errors:
-                    messages.error(request, f'❌ {error}')
-                    logger.error(f"   - Error en {field}: {error}")
+                    error_str = str(error).lower()
+                    
+                    # Detectar error de cuenta inactiva
+                    if 'inactiva' in error_str or 'desactivada' in error_str or 'active' in error_str:
+                        messages.error(
+                            request,
+                            '❌ Tu cuenta ha sido desactivada. '
+                            'Si crees que esto es un error, contacta al administrador.'
+                        )
+                        error_ocurred = True
+                        break
+                    
+                    # Detectar error de correo no verificado
+                    elif 'verificad' in error_str or 'correo' in error_str or 'email' in error_str:
+                        messages.error(
+                            request,
+                            '❌ Debes verificar tu correo electrónico antes de iniciar sesión. '
+                            'Revisa tu bandeja de entrada y carpeta de spam.'
+                        )
+                        error_ocurred = True
+                        break
+                    
+                    # Detectar error de credenciales incorrectas
+                    elif 'incorrecta' in error_str or 'inválida' in error_str or 'invalid' in error_str:
+                        messages.error(
+                            request,
+                            '❌ Usuario o contraseña incorrectos. Por favor, verifica tus datos.'
+                        )
+                        error_ocurred = True
+                        break
+                    
+                    # Otro tipo de error
+                    else:
+                        messages.error(request, f'❌ {error}')
+                        error_ocurred = True
+                
+                if error_ocurred:
+                    break
+            
+            # Si no se identificó un error específico, mostrar mensaje genérico
+            if not error_ocurred:
+                messages.error(
+                    request,
+                    '❌ No se pudo iniciar sesión. Por favor, verifica que tu usuario y contraseña sean correctos.'
+                )
             
             # Verificar si el usuario existe en la BD (para diagnóstico)
             try:
                 user_obj = Usuario.objects.get(username=username)
                 logger.info(f"🔍 Usuario {username} existe en BD:")
-                # ✅ CORREGIDO: Eliminado {user_obj.id}
                 logger.info(f"   - Username: {user_obj.username}")
                 logger.info(f"   - is_active: {user_obj.is_active}")
                 logger.info(f"   - correo_verificado: {user_obj.correo_verificado}")
@@ -208,6 +287,10 @@ def iniciar_sesion(request):
                     
             except Usuario.DoesNotExist:
                 logger.error(f"❌ Usuario {username} NO existe en BD")
+                messages.error(
+                    request,
+                    '❌ El usuario no existe en el sistema. Por favor, verifica el nombre de usuario.'
+                )
     else:
         form = LoginForm()
         logger.info("📄 Mostrando formulario de login (GET)")
@@ -217,11 +300,28 @@ def iniciar_sesion(request):
 
 @login_required
 def cerrar_sesion(request):
+    """Cierra la sesión del usuario y revoca todos los tokens de refresco."""
     nombre = request.user.nombre
-    RefreshToken.objects.filter(usuario=request.user, revocado_en__isnull=True).update(revocado_en=timezone.now())
+    username = request.user.username
+    
+    # Revocar todos los refresh tokens activos
+    RefreshToken.objects.filter(usuario=request.user, revocado_en__isnull=True).update(
+        revocado_en=timezone.now()
+    )
+    
+    # Cerrar sesión de Django
     logout(request)
+    
+    logger.info(f"✅ Sesión cerrada para usuario {username}")
     messages.info(request, f'Hasta pronto, {nombre}. ¡Vuelve pronto!')
-    return redirect('productos:lista')
+    
+    # Redirigir con headers anti-caché
+    response = redirect('productos:lista')
+    response['Cache-Control'] = 'no-cache, no-store, must-revalidate, private'
+    response['Pragma'] = 'no-cache'
+    response['Expires'] = '0'
+    
+    return response
 
 
 # ─────────────────────────────────────────────

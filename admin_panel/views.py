@@ -10,13 +10,17 @@ from django.utils.text import slugify
 from datetime import datetime, timedelta
 import json
 from decimal import Decimal
+from django.contrib.auth import login, logout as django_logout
+from django.views.decorators.cache import never_cache
+
+# Asegúrate de importar tu formulario según la estructura de tu proyecto
+from .forms import PanelLoginForm
 
 # Modelos
 from usuarios.models import Usuario, DireccionEnvio, TokenRecuperacion, TokenVerificacion
 from productos.models import Producto, Categoria
 from pedidos.models import Pedido, ItemPedido, Pago, Entrega, Notificacion, CarritoItem
 from .models import RolPanel, UsuarioPanel, Proveedor, Compra, ItemCompra, MovimientoInventario
-from .forms import PanelLoginForm
 
 
 # ===== DECORADOR DE PERMISOS =====
@@ -51,18 +55,58 @@ def login_view(request):
     """Vista de login del Panel Administrativo"""
     if request.user.is_authenticated and request.user.is_staff:
         return redirect('admin_panel:dashboard')
-    
+
     if request.method == 'POST':
         form = PanelLoginForm(request, data=request.POST)
         if form.is_valid():
             user = form.get_user()
+            
+            # Verificar si la cuenta está activa
+            if not user.is_active:
+                messages.error(
+                    request,
+                    '❌ Tu cuenta ha sido desactivada. Si crees que esto es un error, contacta al administrador.'
+                )
+                return render(request, 'admin_panel/login.html', {'form': form})
+            
+            # Login exitoso
             login(request, user)
+            
+            # Guardar información de seguridad en la sesión
+            request.session['login_ip'] = get_client_ip(request)
+            request.session['login_user_agent'] = request.META.get('HTTP_USER_AGENT', '')
+            request.session['login_time'] = timezone.now().isoformat()
+            
             messages.success(request, f'Bienvenido al Panel Administrativo, {user.nombre_completo}')
             return redirect('admin_panel:dashboard')
     else:
         form = PanelLoginForm()
-    
+
     return render(request, 'admin_panel/login.html', {'form': form})
+
+
+def get_client_ip(request):
+    """Obtiene la IP real del cliente, considerando proxies."""
+    x_forwarded_for = request.META.get('HTTP_X_FORWARDED_FOR')
+    if x_forwarded_for:
+        ip = x_forwarded_for.split(',')[0].strip()
+    else:
+        ip = request.META.get('REMOTE_ADDR')
+    return ip
+
+
+@login_required
+def logout_view(request):
+    """Cierra sesión del panel administrativo de forma consistente."""
+    nombre = request.user.nombre_completo
+    django_logout(request)
+    messages.info(request, f'Sesión cerrada correctamente. Hasta pronto, {nombre}.')
+    response = redirect('admin_panel:login')
+    # Evita que el navegador muestre el dashboard desde caché al dar "atrás"
+    response['Cache-Control'] = 'no-cache, no-store, must-revalidate, private'
+    response['Pragma'] = 'no-cache'
+    response['Expires'] = '0'
+    return response
 
 
 # ===== DASHBOARD =====
@@ -576,6 +620,88 @@ def inventario(request):
     }
     
     return render(request, 'admin_panel/inventario/lista.html', context)
+
+
+@rol_requerido('puede_gestionar_inventario')
+def historial_producto(request, id_producto):
+    """Historial completo de un producto específico"""
+    from django.core.paginator import Paginator
+    from .models import HistorialProducto
+    
+    producto = get_object_or_404(Producto, id_producto=id_producto)
+    
+    # Obtener todo el historial del producto
+    historial = HistorialProducto.objects.filter(producto=producto).select_related('usuario', 'compra', 'pedido', 'movimiento_inventario')
+    
+    # Filtros
+    tipo_filtro = request.GET.get('tipo')
+    if tipo_filtro:
+        historial = historial.filter(tipo_cambio=tipo_filtro)
+    
+    fecha_desde = request.GET.get('fecha_desde')
+    if fecha_desde:
+        historial = historial.filter(fecha_cambio__date__gte=fecha_desde)
+    
+    fecha_hasta = request.GET.get('fecha_hasta')
+    if fecha_hasta:
+        historial = historial.filter(fecha_cambio__date__lte=fecha_hasta)
+    
+    # Ordenar por fecha descendente
+    historial = historial.order_by('-fecha_cambio')
+    
+    # Paginación
+    paginator = Paginator(historial, 50)
+    page = request.GET.get('page')
+    historial_paginado = paginator.get_page(page)
+    
+    # Obtener tipos de cambio únicos para el filtro
+    tipos_cambio = HistorialProducto.TIPOS_CAMBIO
+    
+    context = {
+        'producto': producto,
+        'historial': historial_paginado,
+        'tipos_cambio': tipos_cambio,
+        'tipo_filtro': tipo_filtro,
+        'fecha_desde': fecha_desde,
+        'fecha_hasta': fecha_hasta,
+        'total_cambios': historial.count(),
+    }
+    
+    return render(request, 'admin_panel/inventario/historial_producto.html', context)
+
+
+@rol_requerido('puede_gestionar_inventario')
+def historial_productos_lista(request):
+    """Lista todos los productos con su historial resumido"""
+    from django.core.paginator import Paginator
+    from .models import HistorialProducto
+    
+    # Obtener todos los productos
+    productos = Producto.objects.select_related('id_categoria').all()
+    
+    # Para cada producto, obtener el último cambio
+    productos_con_historial = []
+    for producto in productos:
+        ultimo_historial = HistorialProducto.objects.filter(producto=producto).first()
+        total_cambios = HistorialProducto.objects.filter(producto=producto).count()
+        
+        productos_con_historial.append({
+            'producto': producto,
+            'ultimo_cambio': ultimo_historial,
+            'total_cambios': total_cambios,
+        })
+    
+    # Paginación
+    paginator = Paginator(productos_con_historial, 20)
+    page = request.GET.get('page')
+    productos_paginados = paginator.get_page(page)
+    
+    context = {
+        'productos': productos_paginados,
+        'total_productos': len(productos_con_historial),
+    }
+    
+    return render(request, 'admin_panel/inventario/historial_productos.html', context)
 
 
 @rol_requerido('puede_gestionar_inventario')
@@ -2205,3 +2331,192 @@ def pedido_cambiar_estado(request, id_pedido):
         messages.error(request, 'xEstado no válido.')
     
     return redirect('admin_panel:pedidos_lista')
+
+
+# ===== VISTAS DE GESTIÓN DE SESIONES =====
+
+from django.contrib.sessions.models import Session
+from django.contrib.auth import logout
+
+
+@rol_requerido('puede_gestionar_clientes')
+def sesiones_lista(request):
+    """Lista todas las sesiones activas del sistema."""
+    from django.core.paginator import Paginator
+    
+    # Obtener todas las sesiones activas (no expiradas)
+    sesiones = Session.objects.filter(expire_date__gte=timezone.now()).order_by('-expire_date')
+    
+    # Información de usuario para cada sesión
+    sesiones_info = []
+    for sesion in sesiones:
+        data = sesion.get_decoded()
+        user_id = data.get('_auth_user_id')
+        
+        if user_id:
+            try:
+                usuario = Usuario.objects.get(pk=user_id)
+                sesiones_info.append({
+                    'sesion': sesion,
+                    'usuario': usuario,
+                    'ip': data.get('login_ip', 'N/A'),
+                    'user_agent': data.get('login_user_agent', 'N/A'),
+                    'login_time': data.get('login_time', 'N/A'),
+                    'ultimo_acceso': sesion.expire_date - timedelta(seconds=settings.SESSION_COOKIE_AGE),
+                })
+            except Usuario.DoesNotExist:
+                # Usuario eliminado pero sesión existe
+                sesiones_info.append({
+                    'sesion': sesion,
+                    'usuario': None,
+                    'ip': data.get('login_ip', 'N/A'),
+                    'user_agent': data.get('login_user_agent', 'N/A'),
+                    'login_time': data.get('login_time', 'N/A'),
+                    'ultimo_acceso': sesion.expire_date - timedelta(seconds=settings.SESSION_COOKIE_AGE),
+                })
+    
+    # Paginación
+    paginator = Paginator(sesiones_info, 20)
+    page = request.GET.get('page')
+    sesiones_paginadas = paginator.get_page(page)
+    
+    context = {
+        'sesiones': sesiones_paginadas,
+        'total_sesiones': len(sesiones_info),
+    }
+    
+    return render(request, 'admin_panel/sesiones/lista.html', context)
+
+
+@rol_requerido('puede_gestionar_clientes')
+@require_POST
+def cerrar_todas_sesiones(request):
+    """Cierra TODAS las sesiones activas del sistema (excepto la del admin actual)."""
+    sesiones_cerradas = 0
+    sesiones_error = 0
+    
+    # Obtener la sesión actual del admin para no cerrarla
+    sesion_actual_id = request.session.session_key
+    
+    # Obtener todas las sesiones activas
+    sesiones = Session.objects.filter(expire_date__gte=timezone.now())
+    
+    for sesion in sesiones:
+        # No cerrar la sesión del administrador actual
+        if sesion.session_key == sesion_actual_id:
+            continue
+        
+        try:
+            # Eliminar la sesión de la base de datos
+            sesion.delete()
+            sesiones_cerradas += 1
+        except Exception as e:
+            logger.error(f"❌ Error al cerrar sesión {sesion.session_key}: {e}")
+            sesiones_error += 1
+    
+    # Mensaje de éxito
+    if sesiones_cerradas > 0:
+        messages.success(
+            request,
+            f'✅ Se cerraron {sesiones_cerradas} sesión(es) activa(s) correctamente. '
+            f'Todos los usuarios deberán iniciar sesión de nuevo.'
+        )
+    else:
+        messages.info(request, 'ℹ️ No había sesiones activas para cerrar.')
+    
+    if sesiones_error > 0:
+        messages.warning(
+            request,
+            f'⚠️ Hubo {sesiones_error} error(es) al intentar cerrar algunas sesiones.'
+        )
+    
+    logger.info(f"🔒 Admin {request.user.username} cerró {sesiones_cerradas} sesiones")
+    
+    return redirect('admin_panel:sesiones_lista')
+
+
+@rol_requerido('puede_gestionar_clientes')
+@require_POST
+def cerrar_sesion_usuario(request, id_usuario):
+    """Cierra todas las sesiones de un usuario específico."""
+    usuario = get_object_or_404(Usuario, pk=id_usuario)
+    
+    sesiones_cerradas = 0
+    
+    # Buscar todas las sesiones activas del usuario
+    sesiones = Session.objects.filter(expire_date__gte=timezone.now())
+    
+    for sesion in sesiones:
+        try:
+            data = sesion.get_decoded()
+            if data.get('_auth_user_id') == str(usuario.pk):
+                sesion.delete()
+                sesiones_cerradas += 1
+        except Exception as e:
+            logger.error(f"❌ Error al cerrar sesión de {usuario.username}: {e}")
+    
+    if sesiones_cerradas > 0:
+        messages.success(
+            request,
+            f'✅ Se cerraron {sesiones_cerradas} sesión(es) del usuario {usuario.nombre_completo}. '
+            f'El usuario deberá iniciar sesión de nuevo.'
+        )
+    else:
+        messages.info(
+            request,
+            f'ℹ️ El usuario {usuario.nombre_completo} no tenía sesiones activas.'
+        )
+    
+    logger.info(f"🔒 Admin {request.user.username} cerró {sesiones_cerradas} sesiones de {usuario.username}")
+    
+    return redirect('admin_panel:sesiones_lista')
+
+
+@rol_requerido('puede_gestionar_clientes')
+@require_POST
+def cerrar_mi_sesion(request):
+    """Cierra la sesión actual del administrador."""
+    nombre = request.user.nombre_completo
+    username = request.user.username
+    
+    # Cerrar sesión
+    logout(request)
+    
+    messages.info(request, f'Sesión cerrada correctamente. Hasta pronto, {nombre}.')
+    logger.info(f"✅ Admin {username} cerró su propia sesión")
+    
+    response = redirect('admin_panel:login')
+    response['Cache-Control'] = 'no-cache, no-store, must-revalidate, private'
+    response['Pragma'] = 'no-cache'
+    response['Expires'] = '0'
+    
+    return response
+
+
+@rol_requerido('puede_gestionar_clientes')
+def sesion_detalle(request, session_key):
+    """Muestra el detalle de una sesión específica."""
+    try:
+        sesion = Session.objects.get(session_key=session_key)
+        data = sesion.get_decoded()
+        user_id = data.get('_auth_user_id')
+        
+        usuario = None
+        if user_id:
+            try:
+                usuario = Usuario.objects.get(pk=user_id)
+            except Usuario.DoesNotExist:
+                pass
+        
+        context = {
+            'sesion': sesion,
+            'data': data,
+            'usuario': usuario,
+            'now': timezone.now(),  # Para comparar si la sesión está activa
+        }
+        
+        return render(request, 'admin_panel/sesiones/detalle.html', context)
+    
+    except Session.DoesNotExist:
+        messages.error(request, 'La sesión no existe o ha expirado.')
+        return redirect('admin_panel:sesiones_lista')

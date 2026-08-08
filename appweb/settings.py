@@ -68,6 +68,9 @@ MIDDLEWARE = [
     'django.contrib.messages.middleware.MessageMiddleware',
     'usuarios.middleware.JWTApiAuthenticationMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'usuarios.middleware.SessionValidationMiddleware',  # Valida estado de sesión
+    'usuarios.middleware.SessionSecurityMiddleware',    # Detecta cambios sospechosos
+    'usuarios.middleware.NoCacheAuthenticatedMiddleware',  # Previene caché
 ]
 
 ROOT_URLCONF = 'appweb.urls'
@@ -181,6 +184,14 @@ JWT_COOKIE_SECURE = not DEBUG
 
 AUTH_USER_MODEL = 'usuarios.Usuario'
 LOGIN_URL = '/usuarios/login/'
+# ── Configuración de sesiones (agregar debajo de AUTH_USER_MODEL / LOGIN_URL) ──
+SESSION_COOKIE_AGE = 60 * 60 * 8        # Sesión dura 8 horas de inactividad máxima
+SESSION_EXPIRE_AT_BROWSER_CLOSE = True  # Se cierra automáticamente al cerrar el navegador
+SESSION_SAVE_EVERY_REQUEST = True       # Renueva el tiempo de vida en cada request activo
+SESSION_COOKIE_HTTPONLY = True          # JS no puede leer la cookie de sesión (seguridad)
+SESSION_COOKIE_SECURE = not DEBUG       # Solo se envía por HTTPS en producción
+SESSION_COOKIE_SAMESITE = 'Lax'
+CSRF_COOKIE_SECURE = not DEBUG
 LOGIN_REDIRECT_URL = '/'
 LOGOUT_REDIRECT_URL = '/'
 
