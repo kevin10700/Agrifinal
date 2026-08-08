@@ -32,24 +32,27 @@ class JWTApiAuthenticationMiddleware(MiddlewareMixin):
 
 
 class NoCacheAuthenticatedMiddleware(MiddlewareMixin):
-    """Evita que el navegador cachee páginas vistas mientras había sesión activa."""
+    """Evita que el navegador guarde en caché y en el historial las páginas con sesión activa."""
     def process_response(self, request, response):
-        if getattr(request, 'user', None) and request.user.is_authenticated:
-            # Headers para no guardar en caché
-            response['Cache-Control'] = 'no-cache, no-store, must-revalidate, private, max-age=0'
-            response['Pragma'] = 'no-cache'
-            response['Expires'] = '0'
-            
-            # Headers adicionales para prevenir guardado en historial
-            response['X-Content-Type-Options'] = 'nosniff'
-            response['X-Frame-Options'] = 'DENY'
-            
-        # También aplicar a páginas de login y logout
-        if request.path in ['/usuarios/login/', '/usuarios/logout/', '/admin_panel/login/', '/admin_panel/logout/']:
-            response['Cache-Control'] = 'no-cache, no-store, must-revalidate, private, max-age=0'
-            response['Pragma'] = 'no-cache'
-            response['Expires'] = '0'
-            
+        # Aplicar a TODAS las páginas (no solo autenticadas)
+        # Headers agresivos para prevenir caché y guardado en historial
+        response['Cache-Control'] = 'no-store, no-cache, must-revalidate, max-age=0, private'
+        response['Pragma'] = 'no-cache'
+        response['Expires'] = '0'
+        
+        # Headers adicionales de seguridad
+        response['X-Content-Type-Options'] = 'nosniff'
+        response['X-Frame-Options'] = 'DENY'
+        response['X-XSS-Protection'] = '1; mode=block'
+        
+        # Limpiar datos del navegador (cookies, caché, storage)
+        response['Clear-Site-Data'] = '"cache", "cookies", "storage"'
+        
+        # Prevenir que el navegador guarde la página en el historial
+        response['Cache-Control'] = 'no-store, no-cache, must-revalidate, max-age=0'
+        response['Pragma'] = 'no-cache'
+        response['Expires'] = '0'
+        
         return response
 
 
