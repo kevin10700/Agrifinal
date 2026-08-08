@@ -172,20 +172,28 @@ class SessionSecurityMiddleware(MiddlewareMixin):
                 pass
         
         # Verificar si hubo cambio de User-Agent (posible robo de sesión)
-        if session_user_agent and session_user_agent != current_user_agent:
-            logger.warning(f"⚠️ Cambio de User-Agent detectado para usuario {request.user.username}")
-            logger.warning(f"   IP: {current_ip}")
-            logger.warning(f"   User-Agent anterior: {session_user_agent[:100]}")
-            logger.warning(f"   User-Agent actual: {current_user_agent[:100]}")
+        # Solo verificar si ambos User-Agents son diferentes y no vacíos
+        if session_user_agent and current_user_agent:
+            # Comparar solo los primeros 50 caracteres para evitar falsos positivos
+            # por parámetros dinámicos del navegador
+            session_ua_base = session_user_agent[:50]
+            current_ua_base = current_user_agent[:50]
             
-            # Cerrar sesión por seguridad
-            logout(request)
-            messages.error(
-                request,
-                '❌ Se detectó un cambio sospechoso en tu navegador. Por seguridad, tu sesión ha sido cerrada. '
-                'Si fuiste tú, inicia sesión de nuevo.'
-            )
-            return redirect('usuarios:login')
+            # Solo cerrar sesión si hay un cambio REAL en el navegador/sistema operativo
+            if session_ua_base != current_ua_base:
+                logger.warning(f"⚠️ Cambio de User-Agent detectado para usuario {request.user.username}")
+                logger.warning(f"   IP: {current_ip}")
+                logger.warning(f"   User-Agent anterior: {session_user_agent[:100]}")
+                logger.warning(f"   User-Agent actual: {current_user_agent[:100]}")
+                
+                # Cerrar sesión por seguridad
+                logout(request)
+                messages.error(
+                    request,
+                    '❌ Se detectó un cambio sospechoso en tu navegador. Por seguridad, tu sesión ha sido cerrada. '
+                    'Si fuiste tú, inicia sesión de nuevo.'
+                )
+                return redirect('usuarios:login')
         
         return None
     
