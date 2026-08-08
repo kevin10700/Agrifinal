@@ -120,6 +120,7 @@ class AdminAccessMiddleware(MiddlewareMixin):
     """
     Middleware que bloquea el acceso al admin de Django para usuarios no autorizados.
     Solo superusers pueden acceder a /admin/.
+    Staff y usuarios normales son redirigidos al admin_panel o productos.
     """
     
     def process_request(self, request):
@@ -131,12 +132,22 @@ class AdminAccessMiddleware(MiddlewareMixin):
             
             # Si está autenticado, verificar que sea superuser
             if not request.user.is_superuser:
-                logger.warning(f"⚠️ Usuario {request.user.username} intentó acceder a /admin/ sin permisos")
-                messages.error(
-                    request,
-                    '❌ No tienes permisos para acceder al panel de administración de Django.'
-                )
-                return redirect('usuarios:login')
+                logger.warning(f"⚠️ Usuario {request.user.username} (staff={request.user.is_staff}) intentó acceder a /admin/ sin permisos")
+                
+                # Si es staff, redirigir al admin_panel
+                if request.user.is_staff:
+                    messages.warning(
+                        request,
+                        'ℹ️ Los usuarios staff deben usar el Panel Administrativo personalizado.'
+                    )
+                    return redirect('admin_panel:dashboard')
+                else:
+                    # Si es usuario normal, redirigir a la tienda
+                    messages.error(
+                        request,
+                        '❌ No tienes permisos para acceder al panel de administración.'
+                    )
+                    return redirect('productos:lista')
         
         return None
 
