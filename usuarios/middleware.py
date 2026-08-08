@@ -120,6 +120,7 @@ class SessionSecurityMiddleware(MiddlewareMixin):
     """
     Middleware de seguridad adicional para sesiones.
     Detecta cambios de IP o User-Agent que podrían indicar robo de sesión.
+    Detecta sesiones restauradas después de cerrar el navegador.
     """
     
     def process_request(self, request):
@@ -134,19 +135,41 @@ class SessionSecurityMiddleware(MiddlewareMixin):
         session_ip = request.session.get('login_ip')
         session_user_agent = request.session.get('login_user_agent')
         session_login_time = request.session.get('login_time')
+        session_token = request.session.get('session_token')
         
         # Si es la primera vez que se autentica en esta sesión, guardar los datos
         if not session_ip:
             request.session['login_ip'] = current_ip
             request.session['login_user_agent'] = current_user_agent
             request.session['login_time'] = timezone.now().isoformat()
+            # Generar token único para esta sesión
+            import uuid
+            request.session['session_token'] = str(uuid.uuid4())
             return None
         
-        # Verificar si hubo cambio de IP (solo alertar, no cerrar automáticamente)
-        if session_ip and session_ip != current_ip:
-            logger.warning(f"⚠️ Cambio de IP detectado para usuario {request.user.username}: {session_ip} -> {current_ip}")
-            # Opcional: mostrar mensaje de advertencia
-            # messages.warning(request, 'Se detectó un cambio de ubicación en tu sesión.')
+        # DETECTAR SESIÓN RESTAURADA: Verificar si el navegador fue cerrado y reabierto
+        # sessionStorage se limpia al cerrar el navegador, pero la cookie de sesión de Django permanece
+        # Si no hay token en sessionStorage pero sí hay sesión de Django, significa que se restauró
+        from django.conf import settings
+        
+        # Verificar si la sesión tiene más de 8 horas (tiempo máximo de inactividad)
+        if session_login_time:
+            try:
+                login_time = timezone.datetime.fromisoformat(session_login_time)
+                tiempo_transcurrido = timezone.now() - login_time
+                horas_inactivo = tiempo_transcurrido.total_seconds() / 3600
+                
+                # Si han pasado más de 8 horas desde el login, cerrar sesión
+                if horas_inactivo > 8:
+                    logger.warning(f"⚠️ Sesión expirada por inactividad para {request.user.username}: {horas_inactivo:.1f} horas")
+                    logout(request)
+                    messages.error(
+                        request,
+                        '❌ Tu sesión ha expirado por inactividad (8 horas). Por favor, inicia sesión de nuevo.'
+                    )
+                    return redirect('usuarios:login')
+            except (ValueError, TypeError):
+                pass
         
         # Verificar si hubo cambio de User-Agent (posible robo de sesión)
         if session_user_agent and session_user_agent != current_user_agent:

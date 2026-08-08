@@ -109,6 +109,34 @@
         }
     }
     
+    // Prevenir guardado en historial y detectar sesiones restauradas
+    // Obtener el session_token de la sesión de Django (si existe)
+    const sessionToken = '{{ request.session.session_token|default:"" }}';
+    
+    // Guardar el token en sessionStorage al cargar la página
+    if (sessionToken) {
+        sessionStorage.setItem('agrivale_session_token', sessionToken);
+    }
+    
+    // Verificar si existe el token en sessionStorage
+    const storedToken = sessionStorage.getItem('agrivale_session_token');
+    
+    // Si no hay token en sessionStorage pero hay sesión activa, significa que se restauró
+    // después de cerrar el navegador
+    if (!storedToken && sessionToken) {
+        // Cerrar la sesión automáticamente
+        fetch('/usuarios/logout/', {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': '{{ csrf_token }}',
+                'Content-Type': 'application/json',
+            },
+        }).then(() => {
+            // Redirigir al login con mensaje
+            window.location.href = '/usuarios/login/?session_restored=true';
+        });
+    }
+    
     // Prevenir guardado en historial
     if (window.history && window.history.pushState) {
         window.history.replaceState(null, null, window.location.href);
