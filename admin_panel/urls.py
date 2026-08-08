@@ -83,6 +83,7 @@ urlpatterns = [
     path('sesiones/', views.sesiones_lista, name='sesiones_lista'),
     path('sesiones/cerrar-todas/', views.cerrar_todas_sesiones, name='cerrar_todas_sesiones'),
     path('sesiones/cerrar-usuario/<int:id_usuario>/', views.cerrar_sesion_usuario, name='cerrar_sesion_usuario'),
+    path('sesiones/cerrar-dispositivo/<str:session_key>/', views.cerrar_sesion_dispositivo, name='cerrar_sesion_dispositivo'),
     path('sesiones/cerrar-mi-sesion/', views.cerrar_mi_sesion, name='cerrar_mi_sesion'),
     path('sesiones/detalle/<str:session_key>/', views.sesion_detalle, name='sesion_detalle'),
     

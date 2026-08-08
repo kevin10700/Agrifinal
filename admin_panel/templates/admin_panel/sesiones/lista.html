@@ -115,12 +115,20 @@
                                        class="btn btn-info btn-sm" title="Ver Detalle">
                                         <i class="fas fa-eye"></i>
                                     </a>
+                                    <form method="POST" 
+                                          action="{% url 'admin_panel:cerrar_sesion_dispositivo' sesion.sesion.session_key %}"
+                                          onsubmit="return confirm('¿Cerrar esta sesión de {{ sesion.usuario.nombre_completo|default:"usuario desconocido" }}?\n\nIP: {{ sesion.ip }}\nDispositivo: {{ sesion.user_agent|truncatechars:30 }}');">
+                                        {% csrf_token %}
+                                        <button type="submit" class="btn btn-warning btn-sm" title="Cerrar Sesión de este Dispositivo">
+                                            <i class="fas fa-mobile-alt"></i> <i class="fas fa-power-off"></i>
+                                        </button>
+                                    </form>
                                     {% if sesion.usuario %}
                                     <form method="POST" 
                                           action="{% url 'admin_panel:cerrar_sesion_usuario' sesion.usuario.pk %}"
-                                          onsubmit="return confirm('¿Cerrar todas las sesiones de {{ sesion.usuario.nombre_completo }}?');">
+                                          onsubmit="return confirm('¿Cerrar TODAS las sesiones de {{ sesion.usuario.nombre_completo }}?');">
                                         {% csrf_token %}
-                                        <button type="submit" class="btn btn-danger btn-sm" title="Cerrar Sesiones del Usuario">
+                                        <button type="submit" class="btn btn-danger btn-sm" title="Cerrar Todas las Sesiones del Usuario">
                                             <i class="fas fa-power-off"></i>
                                         </button>
                                     </form>

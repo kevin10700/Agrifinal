@@ -2473,6 +2473,45 @@ def cerrar_sesion_usuario(request, id_usuario):
 
 
 @rol_requerido('puede_gestionar_clientes')
+def cerrar_sesion_dispositivo(request, session_key):
+    """Cierra una sesión específica de un dispositivo."""
+    try:
+        sesion = Session.objects.get(session_key=session_key)
+        data = sesion.get_decoded()
+        user_id = data.get('_auth_user_id')
+        
+        usuario = None
+        if user_id:
+            try:
+                usuario = Usuario.objects.get(pk=user_id)
+            except Usuario.DoesNotExist:
+                pass
+        
+        # Guardar información antes de eliminar
+        usuario_info = usuario.nombre_completo if usuario else "Usuario desconocido"
+        ip = data.get('login_ip', 'N/A')
+        user_agent = data.get('login_user_agent', 'N/A')
+        
+        # Eliminar la sesión
+        sesion.delete()
+        
+        messages.success(
+            request,
+            f'✅ Sesión cerrada exitosamente.\n'
+            f'Usuario: {usuario_info}\n'
+            f'IP: {ip}\n'
+            f'Dispositivo: {user_agent[:50]}...'
+        )
+        
+        logger.info(f"🔒 Admin {request.user.username} cerró sesión {session_key} de {usuario_info}")
+        
+    except Session.DoesNotExist:
+        messages.error(request, 'La sesión no existe o ha expirado.')
+    
+    return redirect('admin_panel:sesiones_lista')
+
+
+@rol_requerido('puede_gestionar_clientes')
 @require_POST
 def cerrar_mi_sesion(request):
     """Cierra la sesión actual del administrador."""
