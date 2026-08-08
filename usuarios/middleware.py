@@ -45,8 +45,8 @@ class NoCacheAuthenticatedMiddleware(MiddlewareMixin):
         response['X-Frame-Options'] = 'DENY'
         response['X-XSS-Protection'] = '1; mode=block'
         
-        # Limpiar datos del navegador (cookies, caché, storage)
-        response['Clear-Site-Data'] = '"cache", "cookies", "storage"'
+        # NOTA: No usamos Clear-Site-Data porque elimina las cookies CSRF y rompe el login
+        # Clear-Site-Data: '"cache", "cookies", "storage"'  # COMENTADO - causa error 403
         
         # Prevenir que el navegador guarde la página en el historial
         response['Cache-Control'] = 'no-store, no-cache, must-revalidate, max-age=0'

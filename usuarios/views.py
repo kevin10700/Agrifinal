@@ -315,11 +315,13 @@ def cerrar_sesion(request):
     logger.info(f"✅ Sesión cerrada para usuario {username}")
     messages.info(request, f'Hasta pronto, {nombre}. ¡Vuelve pronto!')
     
-    # Redirigir con headers anti-caché
+    # Redirigir con headers anti-caché (sin Clear-Site-Data para no romper CSRF)
     response = redirect('productos:lista')
     response['Cache-Control'] = 'no-cache, no-store, must-revalidate, private'
     response['Pragma'] = 'no-cache'
     response['Expires'] = '0'
+    # NOTA: No usamos Clear-Site-Data porque elimina cookies CSRF
+    # response['Clear-Site-Data'] = '"cache", "cookies", "storage"'
     
     return response
 
