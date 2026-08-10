@@ -583,7 +583,7 @@ def cerrar_sesiones_otros_dispositivos(request):
         if sesiones_cerradas > 0:
             messages.success(
                 request,
-                f'✅ Se cerraron {sesiones_cerradas} sesión(es) en otros dispositivos. '
+                f'Se cerraron {sesiones_cerradas} sesión(es) en otros dispositivos. '
                 f'Ahora puedes continuar de forma segura.'
             )
         else:

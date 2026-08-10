@@ -3,10 +3,7 @@ from django.db import models
 from django.utils import timezone
 
 
-class Usuario(AbstractUser):
-    # Mantenemos id_usuario como primary key para compatibilidad
-    id_usuario = models.AutoField(primary_key=True, db_column='id_usuario')
-    
+class Usuario(AbstractUser):    
     first_name = None  
     last_name = None  
     nombre = models.CharField("Nombre(s)", max_length=100)
