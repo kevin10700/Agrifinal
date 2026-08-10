@@ -10,16 +10,6 @@ from django.utils import timezone
 from django.http import JsonResponse
 from django.views.decorators.cache import never_cache
 
-@never_cache
-def iniciar_sesion(request):
-    ...  # sin cambios en el cuerpo
-
-@login_required
-@never_cache
-def cerrar_sesion(request):
-    ...  # sin cambios en el cuerpo
-
-
 # Importaciones unificadas
 from .models import Usuario, TokenVerificacion, TokenRecuperacion, RefreshToken
 from .forms import (
@@ -60,23 +50,16 @@ def registro(request):
         form = RegistroForm(request.POST)
         if form.is_valid():
             user = form.save(commit=False)
-            # NO marcamos como verificado aún
-            user.is_active = True  # Permitir que inicie sesión, pero...
-            user.correo_verificado = False  # ...debe verificar correo primero
+            user.is_active = True
+            user.correo_verificado = False
             user.is_new_user = True
             user.save()
 
-<<<<<<< HEAD
-            messages.success(
-                request,
-                f' ¡Registro exitoso! Bienvenido a Agrivale, {user.nombre}. Ya puedes iniciar sesión.'
-=======
             # Generar token de verificación
             token = TokenVerificacion.generar_token()
             token_obj = TokenVerificacion.objects.create(
                 usuario=user,
                 token=token
->>>>>>> 0e5a5b5b90a40a36b84c82934b57fc64f75bbeb3
             )
 
             # Construir URL de verificación
@@ -181,7 +164,7 @@ def verificar_email(request, token):
         return redirect('usuarios:login')
 
     if token_obj.ha_expirado():
-        user_to_delete = token_obj.id_usuario
+        user_to_delete = token_obj.usuario
         token_obj.delete()
         user_to_delete.delete() 
         
@@ -192,7 +175,7 @@ def verificar_email(request, token):
         )
         return redirect('usuarios:registro')
 
-    user = token_obj.id_usuario
+    user = token_obj.usuario
     user.is_active = True
     user.correo_verificado = True
     user.save()
@@ -210,7 +193,7 @@ def verificar_email(request, token):
 def verificar_correo_view(request, token):
     try:
         token_db = TokenVerificacion.objects.get(token=token)
-        usuario = token_db.id_usuario
+        usuario = token_db.usuario
 
         if token_db.ha_expirado():
             token_db.delete()
@@ -231,6 +214,7 @@ def verificar_correo_view(request, token):
 # LOGIN / LOGOUT - VERSIÓN CORREGIDA
 # ─────────────────────────────────────────────
 
+@never_cache
 def iniciar_sesion(request):
     if request.user.is_authenticated:
         logger.info(f"Usuario {request.user.username} ya autenticado, redirigiendo")
@@ -383,6 +367,7 @@ def iniciar_sesion(request):
 
 
 @login_required
+@never_cache
 def cerrar_sesion(request):
     """Cierra la sesión del usuario y revoca todos los tokens de refresco."""
     nombre = request.user.nombre
@@ -404,8 +389,6 @@ def cerrar_sesion(request):
     response['Cache-Control'] = 'no-cache, no-store, must-revalidate, private'
     response['Pragma'] = 'no-cache'
     response['Expires'] = '0'
-    # NOTA: No usamos Clear-Site-Data porque elimina cookies CSRF
-    # response['Clear-Site-Data'] = '"cache", "cookies", "storage"'
     
     return response
 
@@ -456,8 +439,8 @@ def solicitar_recuperacion(request):
                 user = Usuario.objects.get(email=email)
 
                 # Borrar tokens anteriores de recuperación
-                TokenRecuperacion.objects.filter(id_usuario=user).delete()
-                token_obj = TokenRecuperacion.objects.create(id_usuario=user)
+                TokenRecuperacion.objects.filter(usuario=user).delete()
+                token_obj = TokenRecuperacion.objects.create(usuario=user)
 
                 link = request.build_absolute_uri(
                     f'/usuarios/restablecer-contrasena/{token_obj.token}/'
@@ -530,7 +513,7 @@ def restablecer_contrasena(request, token):
         form = NuevaContrasenaForm(request.POST)
         if form.is_valid():
             nueva = form.cleaned_data['password1']
-            user = token_obj.id_usuario
+            user = token_obj.usuario
             user.set_password(nueva)
             user.save()
 
