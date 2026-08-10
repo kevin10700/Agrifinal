@@ -9,14 +9,14 @@ class Migration(migrations.Migration):
     initial = True
 
     dependencies = [
-        ('admin_panel', '0001_initial'),
         ('pedidos', '0001_initial'),
+        ('productos', '0001_initial'),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='historialproducto',
-            name='pedido',
-            field=models.ForeignKey(blank=True, db_column='id_pedido', null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='historiales', to='pedidos.pedido'),
+            model_name='carritoitem',
+            name='id_producto',
+            field=models.ForeignKey(db_column='id_producto', on_delete=django.db.models.deletion.CASCADE, to='productos.producto'),
         ),
     ]
