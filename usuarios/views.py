@@ -20,11 +20,6 @@ from .forms import (
 logger = logging.getLogger(__name__)
 
 
-
-# ─────────────────────────────────────────────
-# HELPER DE ENVÍO DE CORREO (RESEND API / SMTP)
-# ─────────────────────────────────────────────
-
 from django.core.mail import EmailMultiAlternatives
 
 def enviar_correo(asunto, mensaje_texto, destinatario, link=None, mensaje_html=None):
@@ -43,12 +38,9 @@ def enviar_correo(asunto, mensaje_texto, destinatario, link=None, mensaje_html=N
         return True
 
     except Exception as e:
-        logger.error(f"❌ ERROR ENVIANDO CORREO A {destinatario}: {e}")
+        logger.error(f" ERROR ENVIANDO CORREO A {destinatario}: {e}")
         return False
 
-# ─────────────────────────────────────────────
-# REGISTRO Y VERIFICACIÓN
-# ─────────────────────────────────────────────
 
 def registro(request):
     if request.user.is_authenticated:
@@ -66,7 +58,7 @@ def registro(request):
 
             messages.success(
                 request,
-                f'🎉 ¡Registro exitoso! Bienvenido a Agrivale, {user.nombre}. Ya puedes iniciar sesión.'
+                f' ¡Registro exitoso! Bienvenido a Agrivale, {user.nombre}. Ya puedes iniciar sesión.'
             )
             return redirect('usuarios:login')
     else:
@@ -93,7 +85,7 @@ def verificar_email(request, token):
         
         messages.error(
             request,
-            '❌ El enlace de verificación ha expirado. '
+            ' El enlace de verificación ha expirado. '
             'Por favor regístrate de nuevo.'
         )
         return redirect('usuarios:registro')
@@ -106,7 +98,7 @@ def verificar_email(request, token):
 
     messages.success(
         request,
-        f'🎉 ¡Correo verificado correctamente! Bienvenido a Agrivale, {user.nombre}. '
+        f' ¡Correo verificado correctamente! Bienvenido a Agrivale, {user.nombre}. '
         f'Ya puedes iniciar sesión.'
     )
     return redirect('usuarios:login')
@@ -145,18 +137,18 @@ def iniciar_sesion(request):
     if request.method == 'POST':
         # Log del intento de login
         username = request.POST.get('username')
-        logger.info(f"📝 Intento de login - Usuario: {username}")
-        logger.info(f"📝 Datos POST recibidos: {request.POST}")
+        logger.info(f" Intento de login - Usuario: {username}")
+        logger.info(f" Datos POST recibidos: {request.POST}")
         
         # ¡IMPORTANTE! Pasa 'request' como primer argumento
         form = LoginForm(request, data=request.POST)
         
         # Log para verificar si el formulario tiene errores antes de is_valid
-        logger.info(f"📝 Formulario creado, datos: {form.data}")
+        logger.info(f" Formulario creado, datos: {form.data}")
         
         if form.is_valid():
             user = form.get_user()
-            logger.info(f"✅ Formulario válido, usuario obtenido: {user}")
+            logger.info(f" Formulario válido, usuario obtenido: {user}")
             
             if user is not None:
                 login(request, user)

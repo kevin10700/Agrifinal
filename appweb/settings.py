@@ -29,10 +29,8 @@ DEBUG = os.getenv("DEBUG", "False").lower() == "true"
 
 ALLOWED_HOSTS = ['*']
 
-# ── Proxy seguro ──────────────────────────────────────────
 SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
 
-# ── CSRF Trusted Origins ──────────────────────────────────
 CSRF_TRUSTED_ORIGINS = [
     "https://agrifinal-production.up.railway.app",
     "https://*.ngrok-free.dev",
@@ -140,7 +138,7 @@ TIME_ZONE = 'America/Mexico_City'
 USE_I18N = True
 USE_TZ = True
 
-# ── Archivos Estáticos ────────────────────────────────────
+# archivos estaticos
 STATIC_URL = 'static/'
 STATICFILES_DIRS = [
     BASE_DIR / 'static',
@@ -148,7 +146,7 @@ STATICFILES_DIRS = [
 STATIC_ROOT = BASE_DIR / 'staticfiles'
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-# ── Cloudinary ─────────────────────────────────────────────
+#cloudinary para las imagenes en los productos
 CLOUDINARY_STORAGE = {
     'CLOUD_NAME': os.getenv('CLOUDINARY_CLOUD_NAME'),
     'API_KEY': os.getenv('CLOUDINARY_API_KEY'),
@@ -161,7 +159,7 @@ cloudinary.config(
     api_secret=CLOUDINARY_STORAGE['API_SECRET']
 )
 
-# ── Configuración de almacenamiento ──────────────────────
+# configuracion de almacenamientos
 STORAGES = {
     "default": {
         "BACKEND": "cloudinary_storage.storage.MediaCloudinaryStorage",
@@ -173,7 +171,7 @@ STORAGES = {
 
 DEFAULT_FILE_STORAGE = 'cloudinary_storage.storage.MediaCloudinaryStorage'
 
-# ── Archivos multimedia ───────────────────────────────────
+# archivos multimedia
 MEDIA_URL = '/media/'
 
 JWT_REFRESH_COOKIE = 'agrivale_refresh'
@@ -184,20 +182,22 @@ LOGIN_URL = '/usuarios/login/'
 LOGIN_REDIRECT_URL = '/'
 LOGOUT_REDIRECT_URL = '/'
 
-# ── Configuración de sesiones ─────────────────────────────
-SESSION_COOKIE_AGE = 3600
-SESSION_EXPIRE_AT_BROWSER_CLOSE = True
-SESSION_COOKIE_SECURE = not DEBUG
-SESSION_COOKIE_HTTPONLY = True
+# configuracion de sesiones
+SESSION_COOKIE_AGE = 1800
 SESSION_SAVE_EVERY_REQUEST = True
+SESSION_COOKIE_HTTPONLY = True
+#SESSION_EXPIRE_AT_BROWSER_CLOSE = True
+SESSION_COOKIE_SECURE = not DEBUG
 
-# ── Correo ────────────────────────────────────────────────
+
+
+# correo
 EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
 DEFAULT_FROM_EMAIL = 'Agrivale <no-reply@agrivale.com>'
 
 GEMINI_API_KEY = os.getenv('GEMINI_API_KEY')
 
-# ── Envia API ─────────────────────────────────────────────
+# Envia API
 ENVIA_API_TOKEN = os.getenv("ENVIA_API_TOKEN")
 ENVIA_API_URL = os.getenv("ENVIA_API_URL")
 ENVIA_ENVIRONMENT = os.getenv("ENVIA_ENVIRONMENT", "test")
@@ -212,16 +212,16 @@ ENVIA_ORIGIN_POSTAL_CODE = os.getenv("ENVIA_ORIGIN_POSTAL_CODE")
 ENVIA_LABEL_FORMAT = os.getenv("ENVIA_LABEL_FORMAT")
 ENVIA_LABEL_SIZE = os.getenv("ENVIA_LABEL_SIZE")
 
-# ── Stripe ─────────────────────────────────────────────────
+# Stripe API (pagos)
 STRIPE_PUBLIC_KEY = os.getenv("STRIPE_PUBLIC_KEY")
 STRIPE_SECRET_KEY = os.getenv("STRIPE_SECRET_KEY")
 
-# ── MercadoPago ────────────────────────────────────────────
+# MercadoPago API
 MERCADOPAGO_ACCESS_TOKEN = os.getenv("MERCADOPAGO_ACCESS_TOKEN")
 MERCADOPAGO_PUBLIC_KEY = os.getenv("MERCADOPAGO_PUBLIC_KEY")
 MERCADOPAGO_WEBHOOK_SECRET = os.getenv("MERCADOPAGO_WEBHOOK_SECRET")
 
-# ── Logging de Consola ────────────────────────────────────
+#Logging de Consola
 LOGGING = {
     'version': 1,
     'disable_existing_loggers': False,
