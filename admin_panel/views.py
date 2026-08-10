@@ -699,6 +699,7 @@ def historial_producto(request, id_producto):
 def historial_productos_lista(request):
     """Lista todos los productos con su historial resumido"""
     from django.core.paginator import Paginator
+    from django.db.models import OuterRef, Subquery, Count, Q
     from .models import HistorialProducto
     
     try:
@@ -706,18 +707,36 @@ def historial_productos_lista(request):
         
         # Obtener todos los productos
         productos = Producto.objects.select_related('id_categoria').all()
-        logger.info(f"✅ Productos cargados: {productos.count()}")
+        total_productos = productos.count()
+        logger.info(f"✅ Productos cargados: {total_productos}")
         
-        # Para cada producto, obtener el último cambio
+        # OPTIMIZACIÓN: Obtener último historial y total en consultas únicas (sin N+1)
+        # Subquery para obtener el ID del último historial por producto
+        ultimo_historial_subquery = HistorialProducto.objects.filter(
+            producto=OuterRef('pk')
+        ).order_by('-fecha_cambio').values('id_historial')[:1]
+        
+        # Obtener todos los historiales en una sola consulta
+        historiales_con_datos = HistorialProducto.objects.filter(
+            id_historial__in=Subquery(ultimo_historial_subquery)
+        ).select_related('usuario', 'movimiento_inventario')
+        
+        # Diccionario para acceso rápido: {producto_id: ultimo_historial}
+        dict_ultimos = {h.producto_id: h for h in historiales_con_datos}
+        
+        # Obtener total de cambios por producto en una sola consulta
+        totales_por_producto = HistorialProducto.objects.values('producto_id').annotate(
+            total=Count('id_historial')
+        )
+        dict_totales = {item['producto_id']: item['total'] for item in totales_por_producto}
+        
+        # Construir la lista (sin consultas adicionales)
         productos_con_historial = []
         for producto in productos:
-            ultimo_historial = HistorialProducto.objects.filter(producto=producto).first()
-            total_cambios = HistorialProducto.objects.filter(producto=producto).count()
-            
             productos_con_historial.append({
                 'producto': producto,
-                'ultimo_cambio': ultimo_historial,
-                'total_cambios': total_cambios,
+                'ultimo_cambio': dict_ultimos.get(producto.id_producto),
+                'total_cambios': dict_totales.get(producto.id_producto, 0),
             })
         
         logger.info(f"✅ Historial procesado para {len(productos_con_historial)} productos")
@@ -729,7 +748,7 @@ def historial_productos_lista(request):
         
         context = {
             'productos': productos_paginados,
-            'total_productos': len(productos_con_historial),
+            'total_productos': total_productos,
         }
         
         logger.info(f"✅ Renderizando lista de historial de productos")
