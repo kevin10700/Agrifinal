@@ -303,7 +303,7 @@
     
     <!-- JS personalizado -->
     <script>
-        // Variables de Django que necesitamos pasar al JS
+        
         window.agrivaleConfig = {
             isAuthenticated: {{ user.is_authenticated|yesno:"true,false" }},
             isNewUser: {% if user.is_new_user %}true{% else %}false{% endif %},
@@ -315,7 +315,6 @@
     <!-- Widget del chatbot Agrivale -->
     {% include "chatbot/widget.html" %}
 
-    <!-- ✅ CERRAR SESIÓN AL CERRAR PESTAÑA -->
     <script>
         (function() {
             {% if user.is_authenticated %}

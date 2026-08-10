@@ -93,7 +93,7 @@ class SessionValidationMiddleware(MiddlewareMixin):
                 logout(request)
                 messages.error(
                     request,
-                    '❌ Tu cuenta ha sido desactivada. Si tienes dudas, contacta al administrador.'
+                    'Tu cuenta ha sido desactivada. Si tienes dudas, contacta al administrador.'
                 )
                 return redirect('usuarios:login')
             
@@ -105,11 +105,11 @@ class SessionValidationMiddleware(MiddlewareMixin):
                     pass
             
         except Usuario.DoesNotExist:
-            logger.error(f"❌ Usuario {request.user.username} no existe en BD, cerrando sesión")
+            logger.error(f"Usuario {request.user.username} no existe en BD, cerrando sesión")
             logout(request)
             messages.error(
                 request,
-                '❌ Tu sesión ha sido cerrada incorrectamente. Por favor, inicia sesión de nuevo.'
+                'Tu sesión ha sido cerrada incorrectamente. Por favor, inicia sesión de nuevo.'
             )
             return redirect('usuarios:login')
         

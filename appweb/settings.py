@@ -8,10 +8,8 @@ import cloudinary
 import cloudinary.uploader
 import cloudinary.api
 
-# 1. Evitamos que Django bloquee el arranque por la versión de MariaDB
-BaseDatabaseWrapper.check_database_version_supported = lambda self: None
 
-# 2. Le indicamos a Django que nuestro motor NO soporta la sintaxis RETURNING
+BaseDatabaseWrapper.check_database_version_supported = lambda self: None
 @property
 def mock_can_return_rows_from_bulk_insert(self):
     return False
@@ -152,7 +150,7 @@ STATICFILES_DIRS = [
 STATIC_ROOT = BASE_DIR / 'staticfiles'
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-#cloudinary para las imagenes en los productos
+#cloudinary para imagenes
 CLOUDINARY_STORAGE = {
     'CLOUD_NAME': os.getenv('CLOUDINARY_CLOUD_NAME'),
     'API_KEY': os.getenv('CLOUDINARY_API_KEY'),
@@ -188,7 +186,7 @@ LOGIN_URL = '/usuarios/login/'
 LOGIN_REDIRECT_URL = '/'
 LOGOUT_REDIRECT_URL = '/'
 
-# ── Configuración de sesiones ─────────────────────────────
+# Configuración de sesiones
 SESSION_COOKIE_AGE = 60 * 60 * 8        # Sesión dura 8 horas de inactividad máxima
 SESSION_EXPIRE_AT_BROWSER_CLOSE = True  # Se cierra automáticamente al cerrar el navegador
 SESSION_SAVE_EVERY_REQUEST = True       # Renueva el tiempo de vida en cada request activo
@@ -197,7 +195,7 @@ SESSION_COOKIE_SECURE = not DEBUG       # Solo se envía por HTTPS en producció
 SESSION_COOKIE_SAMESITE = 'Lax'
 CSRF_COOKIE_SECURE = not DEBUG
 
-# ── Correo ────────────────────────────────────────────────
+#correo
 if DEBUG:
     # En desarrollo: imprimir correos en consola
     EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'

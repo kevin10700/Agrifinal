@@ -27,7 +27,7 @@ class ProductoListView(ListView):
             )
         categoria = self.request.GET.get('categoria')
         if categoria:
-            queryset = queryset.filter(id_categoria__slug=categoria)  # ← corregido
+            queryset = queryset.filter(id_categoria__slug=categoria)
         orden = self.request.GET.get('orden')
         if orden == 'precio_asc':
             queryset = queryset.order_by('precio')
@@ -39,8 +39,6 @@ class ProductoListView(ListView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        
-        # 🔴 CORREGIDO: 'filters' no existe, es 'filter'
         context['categorias'] = Categoria.objects.filter(activo=True)
         context['categoria_activa'] = self.request.GET.get('categoria')
         return context
@@ -116,7 +114,7 @@ def detalle_producto(request, slug):
     paginator = Paginator(comentarios, 5)
     comentarios_paginados = paginator.get_page(request.GET.get('page'))
 
-    # 🔴 CORREGIDO: Quitado el 'producto.' extra del lado izquierdo del filter
+    # Quitado el 'producto.' extra del lado izquierdo del filter
     relacionados = Producto.objects.filter(
         id_categoria=producto.id_categoria
     ).exclude(id_producto=producto.id_producto)[:4]
@@ -144,13 +142,13 @@ def agregar_comentario(request, producto_id):
         form = ComentarioForm(request.POST, request.FILES)
         if form.is_valid():
             comentario = form.save(commit=False)
-            comentario.id_producto = producto      # ← corregido
-            comentario.id_usuario = request.user   # ← corregido
+            comentario.id_producto = producto      
+            comentario.id_usuario = request.user   
 
             from pedidos.models import Pedido
             compro = Pedido.objects.filter(
-                id_usuario=request.user,           # ← corregido
-                items__id_producto=producto,       # ← corregido
+                id_usuario=request.user,           
+                items__id_producto=producto,      
                 estado='entregado'
             ).exists()
             comentario.compra_verificada = compro
@@ -199,7 +197,7 @@ def api_productos(request):
     ))})
 
 
-# ===================== FAVORITOS =====================
+#favoritos
 
 @login_required
 def toggle_favorito(request, producto_id):

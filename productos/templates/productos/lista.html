@@ -187,6 +187,7 @@
     {% if is_paginated %}
     <nav aria-label="Page navigation" class="mt-5">
         <ul class="pagination justify-content-center">
+
             {% if page_obj.has_previous %}
                 <li class="page-item">
                     <a class="page-link border-0 shadow-sm mx-1 rounded-3" href="?page=1{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}">
@@ -199,7 +200,7 @@
                     </a>
                 </li>
             {% endif %}
-            
+            #pagina actual
             <li class="page-item active">
                 <span class="page-link border-0 shadow-sm mx-1 rounded-3 bg-success">
                     Página {{ page_obj.number }} de {{ page_obj.paginator.num_pages }}
