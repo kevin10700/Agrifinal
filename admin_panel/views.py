@@ -715,18 +715,22 @@ def historial_productos_lista(request):
         logger.info(f"✅ Productos cargados: {total_productos}")
         
         # OPTIMIZACIÓN: Obtener último historial y total en consultas únicas (sin N+1)
-        # Subquery para obtener el ID del último historial por producto
-        ultimo_historial_subquery = HistorialProducto.objects.filter(
-            producto=OuterRef('pk')
-        ).order_by('-fecha_cambio').values('id_historial')[:1]
+        # MySQL no soporta LIMIT en subqueries con IN, así que usamos una estrategia compatible:
+        # 1. Obtener todos los historiales ordenados por producto y fecha
+        # 2. Filtrar en Python para obtener solo el último por producto
         
-        # Obtener todos los historiales en una sola consulta
-        historiales_con_datos = HistorialProducto.objects.filter(
-            id_historial__in=Subquery(ultimo_historial_subquery)
-        ).select_related('usuario', 'movimiento_inventario')
+        # Obtener todos los historiales para los productos, ordenados por producto y fecha descendente
+        historiales_todos = HistorialProducto.objects.filter(
+            producto__in=productos
+        ).select_related('usuario', 'movimiento_inventario').order_by(
+            'producto_id', '-fecha_cambio'
+        )
         
-        # Diccionario para acceso rápido: {producto_id: ultimo_historial}
-        dict_ultimos = {h.producto_id: h for h in historiales_con_datos}
+        # Diccionario para guardar solo el último historial por producto (primer registro = más reciente)
+        dict_ultimos = {}
+        for h in historiales_todos:
+            if h.producto_id not in dict_ultimos:
+                dict_ultimos[h.producto_id] = h
         
         # Obtener total de cambios por producto en una sola consulta
         totales_por_producto = HistorialProducto.objects.values('producto_id').annotate(

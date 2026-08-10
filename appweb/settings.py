@@ -185,7 +185,7 @@ JWT_COOKIE_SECURE = not DEBUG
 
 AUTH_USER_MODEL = 'usuarios.Usuario'
 LOGIN_URL = '/usuarios/login/'
-# ── Configuración de sesiones (agregar debajo de AUTH_USER_MODEL / LOGIN_URL) ──
+# ── Configuración de sesiones ─────────────────────────────
 SESSION_COOKIE_AGE = 60 * 60 * 8        # Sesión dura 8 horas de inactividad máxima
 SESSION_EXPIRE_AT_BROWSER_CLOSE = True  # Se cierra automáticamente al cerrar el navegador
 SESSION_SAVE_EVERY_REQUEST = True       # Renueva el tiempo de vida en cada request activo
@@ -195,13 +195,6 @@ SESSION_COOKIE_SAMESITE = 'Lax'
 CSRF_COOKIE_SECURE = not DEBUG
 LOGIN_REDIRECT_URL = '/'
 LOGOUT_REDIRECT_URL = '/'
-
-# ── Configuración de sesiones ─────────────────────────────
-SESSION_COOKIE_AGE = 3600
-SESSION_EXPIRE_AT_BROWSER_CLOSE = True
-SESSION_COOKIE_SECURE = not DEBUG
-SESSION_COOKIE_HTTPONLY = True
-SESSION_SAVE_EVERY_REQUEST = True
 
 # ── Correo ────────────────────────────────────────────────
 if DEBUG:

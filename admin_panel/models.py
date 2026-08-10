@@ -93,7 +93,7 @@ class UsuarioPanel(models.Model):
         settings.AUTH_USER_MODEL,
         on_delete=models.CASCADE,
         related_name='rol_panel',
-        db_column='id_usuario'
+        db_column='usuario_id'
     )
     rol = models.ForeignKey(
         RolPanel,
@@ -230,7 +230,7 @@ class MovimientoInventario(models.Model):
         on_delete=models.SET_NULL,
         null=True,
         related_name='movimientos_inventario',
-        db_column='id_usuario'
+        db_column='id'
     )
     fecha_movimiento = models.DateTimeField(auto_now_add=True)
     
@@ -310,7 +310,7 @@ class HistorialProducto(models.Model):
         on_delete=models.SET_NULL,
         null=True,
         related_name='historiales_productos',
-        db_column='id_usuario'
+        db_column='id'
     )
     observaciones = models.TextField(blank=True)
     fecha_cambio = models.DateTimeField(auto_now_add=True)
