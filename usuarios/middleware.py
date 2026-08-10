@@ -132,22 +132,14 @@ class AdminAccessMiddleware(MiddlewareMixin):
             
             # Si está autenticado, verificar que sea superuser
             if not request.user.is_superuser:
-                logger.warning(f"⚠️ Usuario {request.user.username} (staff={request.user.is_staff}) intentó acceder a /admin/ sin permisos")
+                logger.warning(f"⚠️ Usuario {request.user.username} intentó acceder a /admin/ sin permisos")
                 
-                # Si es staff, redirigir al admin_panel
-                if request.user.is_staff:
-                    messages.warning(
-                        request,
-                        'ℹ️ Los usuarios staff deben usar el Panel Administrativo personalizado.'
-                    )
-                    return redirect('admin_panel:dashboard')
-                else:
-                    # Si es usuario normal, redirigir a la tienda
-                    messages.error(
-                        request,
-                        '❌ No tienes permisos para acceder al panel de administración.'
-                    )
-                    return redirect('productos:lista')
+                # Bloquear acceso a /admin/ para todos los que no sean superuser
+                messages.error(
+                    request,
+                    '❌ No tienes permisos para acceder al panel de administración de Django.'
+                )
+                return redirect('productos:lista')
         
         return None
 

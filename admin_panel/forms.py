@@ -37,12 +37,24 @@ class PanelLoginForm(AuthenticationForm):
                     'Usuario o contraseña incorrectos. Por favor, intenta de nuevo.',
                     code='invalid_login'
                 )
-            elif not self.user_cache.is_staff:
-                raise forms.ValidationError(
-                    'No tienes permisos para acceder al panel administrativo.',
-                    code='no_permissions'
-                )
-            else:
+            elif not self.user_cache.is_superuser:
+                # Verificar si el usuario tiene asignado un rol en el panel administrativo
+                try:
+                    from .models import UsuarioPanel
+                    usuario_panel = UsuarioPanel.objects.select_related('rol').get(usuario=self.user_cache)
+                    if not usuario_panel.rol or not usuario_panel.rol.activo:
+                        raise forms.ValidationError(
+                            'No tienes permisos para acceder al panel administrativo.',
+                            code='no_permissions'
+                        )
+                except Exception:
+                    raise forms.ValidationError(
+                        'No tienes permisos para acceder al panel administrativo.',
+                        code='no_permissions'
+                    )
+            
+            # Solo confirmar login si pasa todas las validaciones
+            if self.user_cache:
                 self.confirm_login_allowed(self.user_cache)
         
         return self.cleaned_data

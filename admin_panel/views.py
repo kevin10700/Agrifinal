@@ -28,21 +28,27 @@ from .models import RolPanel, UsuarioPanel, Proveedor, Compra, ItemCompra, Movim
 def rol_requerido(permiso):
     """
     Decorador que verifica si el usuario tiene un permiso específico del RolPanel.
-    Si el usuario es superuser o staff, siempre tiene acceso.
+    Si el usuario es superuser, siempre tiene acceso.
+    Si el usuario tiene un UsuarioPanel con rol activo, se verifica el permiso específico.
     Si el usuario no tiene el permiso, redirige al dashboard con un mensaje de error.
     """
     def decorator(view_func):
         @login_required
         def wrapper(request, *args, **kwargs):
-            # Superusers y staff tienen acceso completo al panel
-            if request.user.is_superuser or request.user.is_staff:
+            # Superusers tienen acceso completo al panel
+            if request.user.is_superuser:
                 return view_func(request, *args, **kwargs)
+            
+            # Verificar si el usuario tiene un UsuarioPanel con rol activo
             try:
                 usuario_panel = UsuarioPanel.objects.select_related('rol').get(usuario=request.user)
-                if usuario_panel.rol and getattr(usuario_panel.rol, permiso, False):
-                    return view_func(request, *args, **kwargs)
+                if usuario_panel.rol and usuario_panel.rol.activo:
+                    # Si tiene rol activo, verificar el permiso específico
+                    if getattr(usuario_panel.rol, permiso, False):
+                        return view_func(request, *args, **kwargs)
             except UsuarioPanel.DoesNotExist:
                 pass
+            
             messages.error(request, 'No tienes permisos para acceder a esta sección.')
             return redirect('admin_panel:dashboard')
         return wrapper
@@ -53,8 +59,16 @@ def rol_requerido(permiso):
 
 def login_view(request):
     """Vista de login del Panel Administrativo"""
-    if request.user.is_authenticated and request.user.is_staff:
-        return redirect('admin_panel:dashboard')
+    # Verificar si el usuario ya tiene acceso al panel (superuser o con UsuarioPanel asignado)
+    if request.user.is_authenticated:
+        if request.user.is_superuser:
+            return redirect('admin_panel:dashboard')
+        try:
+            usuario_panel = UsuarioPanel.objects.select_related('rol').get(usuario=request.user)
+            if usuario_panel.rol and usuario_panel.rol.activo:
+                return redirect('admin_panel:dashboard')
+        except UsuarioPanel.DoesNotExist:
+            pass
 
     if request.method == 'POST':
         form = PanelLoginForm(request, data=request.POST)
