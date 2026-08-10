@@ -181,7 +181,7 @@ class Favorito(models.Model):
         'usuarios.Usuario',
         on_delete=models.CASCADE,
         related_name='favoritos',
-        db_column='id'
+        db_column='id_usuario'
     )
     id_producto = models.ForeignKey(
         Producto,

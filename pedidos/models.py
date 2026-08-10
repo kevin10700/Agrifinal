@@ -38,7 +38,7 @@ class Pedido(models.Model):
         Usuario,
         on_delete=models.CASCADE,
         related_name="pedidos",
-        db_column="id",
+        db_column="id_usuario",
     )
     id_direccion_envio = models.ForeignKey(
         DireccionEnvio,
@@ -185,7 +185,7 @@ class CarritoItem(models.Model):
         Usuario,
         on_delete=models.CASCADE,
         related_name="carrito_items",
-        db_column="id",
+        db_column="id_usuario",
     )
     id_producto = models.ForeignKey(
         Producto,
@@ -215,7 +215,7 @@ class Notificacion(models.Model):
         Usuario,
         on_delete=models.CASCADE,
         related_name="notificaciones",
-        db_column="id",
+        db_column="id_usuario",
     )
     id_pedido = models.ForeignKey(
         Pedido,
@@ -347,7 +347,7 @@ class ComentarioProducto(models.Model):
         settings.AUTH_USER_MODEL,
         on_delete=models.CASCADE,
         related_name="comentarios",
-        db_column="id",
+        db_column="id_usuario",
     )
 
     calificacion = models.IntegerField(choices=CALIFICACIONES)

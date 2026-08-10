@@ -4,8 +4,8 @@ from django.utils import timezone
 
 
 class Usuario(AbstractUser):
-    # ✅ ELIMINADO: id_usuario = models.AutoField(primary_key=True)
-    # Django ahora manejará 'id' automáticamente como clave primaria
+    # Mantenemos id_usuario como primary key para compatibilidad
+    id_usuario = models.AutoField(primary_key=True, db_column='id_usuario')
     
     first_name = None  
     last_name = None  

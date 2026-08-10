@@ -230,7 +230,7 @@ class MovimientoInventario(models.Model):
         on_delete=models.SET_NULL,
         null=True,
         related_name='movimientos_inventario',
-        db_column='id'
+        db_column='id_usuario'
     )
     fecha_movimiento = models.DateTimeField(auto_now_add=True)
     
@@ -310,7 +310,7 @@ class HistorialProducto(models.Model):
         on_delete=models.SET_NULL,
         null=True,
         related_name='historiales_productos',
-        db_column='id'
+        db_column='id_usuario'
     )
     observaciones = models.TextField(blank=True)
     fecha_cambio = models.DateTimeField(auto_now_add=True)

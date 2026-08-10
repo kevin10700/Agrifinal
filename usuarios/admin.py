@@ -19,7 +19,7 @@ class UsuarioAdmin(UserAdmin):
     inlines = [DireccionInline]
 
     list_display = [
-        "id", "username", "nombre", "apellido_paterno",
+        "id_usuario", "username", "nombre", "apellido_paterno",
         "apellido_materno", "email", "edad_display",
         "correo_verificado", "is_active",
     ]
