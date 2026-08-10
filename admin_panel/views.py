@@ -12,6 +12,10 @@ import json
 from decimal import Decimal
 from django.contrib.auth import login, logout as django_logout
 from django.views.decorators.cache import never_cache
+import logging
+
+# Configurar logger
+logger = logging.getLogger(__name__)
 
 # Asegúrate de importar tu formulario según la estructura de tu proyecto
 from .forms import PanelLoginForm
