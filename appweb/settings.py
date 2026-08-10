@@ -66,10 +66,10 @@ MIDDLEWARE = [
     'django.contrib.messages.middleware.MessageMiddleware',
     'usuarios.middleware.JWTApiAuthenticationMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
-    'usuarios.middleware.AdminAccessMiddleware',        # Bloquea acceso a /admin/ para no-superusers
-    'usuarios.middleware.SessionValidationMiddleware',  # Valida estado de sesión
-    'usuarios.middleware.SessionSecurityMiddleware',    # Detecta cambios sospechosos
-    'usuarios.middleware.NoCacheAuthenticatedMiddleware',  # Previene caché
+    'usuarios.middleware.AdminAccessMiddleware',
+    'usuarios.middleware.SessionValidationMiddleware',
+    'usuarios.middleware.SessionSecurityMiddleware',
+    'usuarios.middleware.NoCacheAuthenticatedMiddleware',
 ]
 
 ROOT_URLCONF = 'appweb.urls'
@@ -183,6 +183,9 @@ JWT_COOKIE_SECURE = not DEBUG
 
 AUTH_USER_MODEL = 'usuarios.Usuario'
 LOGIN_URL = '/usuarios/login/'
+LOGIN_REDIRECT_URL = '/'
+LOGOUT_REDIRECT_URL = '/'
+
 # ── Configuración de sesiones ─────────────────────────────
 SESSION_COOKIE_AGE = 60 * 60 * 8        # Sesión dura 8 horas de inactividad máxima
 SESSION_EXPIRE_AT_BROWSER_CLOSE = True  # Se cierra automáticamente al cerrar el navegador
@@ -191,22 +194,7 @@ SESSION_COOKIE_HTTPONLY = True          # JS no puede leer la cookie de sesión 
 SESSION_COOKIE_SECURE = not DEBUG       # Solo se envía por HTTPS en producción
 SESSION_COOKIE_SAMESITE = 'Lax'
 CSRF_COOKIE_SECURE = not DEBUG
-LOGIN_REDIRECT_URL = '/'
-LOGOUT_REDIRECT_URL = '/'
 
-<<<<<<< HEAD
-# configuracion de sesiones
-SESSION_COOKIE_AGE = 1800
-SESSION_SAVE_EVERY_REQUEST = True
-SESSION_COOKIE_HTTPONLY = True
-#SESSION_EXPIRE_AT_BROWSER_CLOSE = True
-SESSION_COOKIE_SECURE = not DEBUG
-
-
-
-# correo
-EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
-=======
 # ── Correo ────────────────────────────────────────────────
 if DEBUG:
     # En desarrollo: imprimir correos en consola
@@ -221,7 +209,6 @@ else:
     EMAIL_HOST_PASSWORD = os.getenv('EMAIL_HOST_PASSWORD', '')
     EMAIL_USE_SSL = False
 
->>>>>>> 0e5a5b5b90a40a36b84c82934b57fc64f75bbeb3
 DEFAULT_FROM_EMAIL = 'Agrivale <no-reply@agrivale.com>'
 
 GEMINI_API_KEY = os.getenv('GEMINI_API_KEY')
