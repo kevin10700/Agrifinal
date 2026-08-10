@@ -143,6 +143,12 @@ class TokenVerificacion(models.Model):
             self.token = uuid.uuid4().hex
         super().save(*args, **kwargs)
 
+    @classmethod
+    def generar_token(cls):
+        """Genera un token único para verificación de correo"""
+        import uuid
+        return uuid.uuid4().hex
+
     def ha_expirado(self):
         from datetime import timedelta
         return timezone.now() > self.creado_en + timedelta(minutes=5)

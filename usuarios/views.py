@@ -68,16 +68,102 @@ def registro(request):
         form = RegistroForm(request.POST)
         if form.is_valid():
             user = form.save(commit=False)
-            # Activamos y verificamos la cuenta de inmediato
-            user.is_active = True
-            user.correo_verificado = True
+            # NO marcamos como verificado aún
+            user.is_active = True  # Permitir que inicie sesión, pero...
+            user.correo_verificado = False  # ...debe verificar correo primero
             user.is_new_user = True
             user.save()
 
-            messages.success(
-                request,
-                f'🎉 ¡Registro exitoso! Bienvenido a Agrivale, {user.nombre}. Ya puedes iniciar sesión.'
+            # Generar token de verificación
+            token = TokenVerificacion.generar_token()
+            token_obj = TokenVerificacion.objects.create(
+                usuario=user,
+                token=token
             )
+
+            # Construir URL de verificación
+            from django.contrib.sites.shortcuts import get_current_site
+            from django.urls import reverse
+            dominio = get_current_site(request).domain
+            url_verificacion = f"https://{dominio}{reverse('usuarios:verificar_email', args=[token])}"
+
+            # Enviar correo de verificación
+            asunto = 'Verifica tu correo - Agrivale'
+            mensaje_texto = f"""
+Hola {user.nombre},
+
+Gracias por registrarte en Agrivale. Para completar tu registro y poder iniciar sesión, debes verificar tu correo electrónico.
+
+Haz clic en el siguiente enlace:
+{url_verificacion}
+
+Este enlace expirará en 24 horas.
+
+Si no te registraste en Agrivale, puedes ignorar este correo.
+
+Saludos,
+Equipo Agrivale
+            """.strip()
+
+            mensaje_html = f"""
+<html>
+<body style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; color: #333;">
+    <div style="background: linear-gradient(135deg, #2d8a4e 0%, #1e8449 100%); color: white; padding: 30px; border-radius: 10px 10px 0 0; text-align: center;">
+        <h1 style="margin: 0; font-size: 2em;">🌿 Agrivale</h1>
+        <p style="margin: 10px 0 0 0; opacity: 0.9;">Verificación de Correo Electrónico</p>
+    </div>
+    <div style="background: #f8f9fa; padding: 30px; border-radius: 0 0 10px 10px; border: 1px solid #dee2e6;">
+        <h2 style="color: #2d8a4e; margin-top: 0;">¡Hola, {user.nombre}! 👋</h2>
+        <p>Gracias por registrarte en <strong>Agrivale</strong>. Para completar tu registro y poder acceder a todos nuestros productos agrícolas, necesitas verificar tu correo electrónico.</p>
+        
+        <div style="text-align: center; margin: 30px 0;">
+            <a href="{url_verificacion}" style="background: #28a745; color: white; padding: 15px 30px; text-decoration: none; border-radius: 5px; font-weight: bold; display: inline-block; font-size: 16px;">
+                ✓ Verificar Mi Correo
+            </a>
+        </div>
+        
+        <p style="color: #666; font-size: 14px;">O copia y pega este enlace en tu navegador:</p>
+        <p style="background: #e9ecef; padding: 10px; border-radius: 5px; font-family: monospace; font-size: 12px; word-break: break-all;">{url_verificacion}</p>
+        
+        <div style="background: #fff3cd; border-left: 4px solid #ffc107; padding: 15px; margin: 20px 0; border-radius: 5px;">
+            <p style="margin: 0; color: #856404;"><strong>⚠️ Importante:</strong></p>
+            <p style="margin: 5px 0 0 0; color: #856404; font-size: 14px;">Este enlace expirará en <strong>24 horas</strong>. Si no verificas tu correo en ese tiempo, deberás registrarte nuevamente.</p>
+        </div>
+        
+        <p style="color: #666; font-size: 14px;">Si no te registraste en Agrivale, puedes ignorar este correo sin problema.</p>
+        
+        <hr style="border: none; border-top: 1px solid #dee2e6; margin: 30px 0;">
+        <p style="color: #666; font-size: 12px; text-align: center;">
+            <strong>Agrivale</strong> - Tu tienda de productos agrícolas<br>
+            Este correo fue enviado a {user.correo}
+        </p>
+    </div>
+</body>
+</html>
+            """.strip()
+
+            correo_enviado = enviar_correo(
+                asunto=asunto,
+                mensaje_texto=mensaje_texto,
+                destinatario=user.correo,
+                mensaje_html=mensaje_html
+            )
+
+            if correo_enviado:
+                logger.info(f"✅ Correo de verificación enviado a {user.correo}")
+                messages.success(
+                    request,
+                    f'🎉 ¡Registro exitoso! Hemos enviado un correo de verificación a {user.correo}. '
+                    'Por favor revisa tu bandeja de entrada (y spam) y haz clic en el enlace para activar tu cuenta.'
+                )
+            else:
+                logger.error(f"❌ Error al enviar correo de verificación a {user.correo}")
+                messages.warning(
+                    request,
+                    f'⚠️ Te registraste correctamente, pero hubo un problema al enviar el correo de verificación. '
+                    'Por favor contacta al administrador o intenta verificar tu correo más tarde.'
+                )
+
             return redirect('usuarios:login')
     else:
         form = RegistroForm()
