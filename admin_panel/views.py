@@ -642,46 +642,57 @@ def historial_producto(request, id_producto):
     from django.core.paginator import Paginator
     from .models import HistorialProducto
     
-    producto = get_object_or_404(Producto, id_producto=id_producto)
-    
-    # Obtener todo el historial del producto
-    historial = HistorialProducto.objects.filter(producto=producto).select_related('usuario', 'compra', 'pedido', 'movimiento_inventario')
-    
-    # Filtros
-    tipo_filtro = request.GET.get('tipo')
-    if tipo_filtro:
-        historial = historial.filter(tipo_cambio=tipo_filtro)
-    
-    fecha_desde = request.GET.get('fecha_desde')
-    if fecha_desde:
-        historial = historial.filter(fecha_cambio__date__gte=fecha_desde)
-    
-    fecha_hasta = request.GET.get('fecha_hasta')
-    if fecha_hasta:
-        historial = historial.filter(fecha_cambio__date__lte=fecha_hasta)
-    
-    # Ordenar por fecha descendente
-    historial = historial.order_by('-fecha_cambio')
-    
-    # Paginación
-    paginator = Paginator(historial, 50)
-    page = request.GET.get('page')
-    historial_paginado = paginator.get_page(page)
-    
-    # Obtener tipos de cambio únicos para el filtro
-    tipos_cambio = HistorialProducto.TIPOS_CAMBIO
-    
-    context = {
-        'producto': producto,
-        'historial': historial_paginado,
-        'tipos_cambio': tipos_cambio,
-        'tipo_filtro': tipo_filtro,
-        'fecha_desde': fecha_desde,
-        'fecha_hasta': fecha_hasta,
-        'total_cambios': historial.count(),
-    }
-    
-    return render(request, 'admin_panel/inventario/historial_producto.html', context)
+    try:
+        logger.info(f"📊 Cargando historial de producto ID: {id_producto}")
+        
+        producto = get_object_or_404(Producto, id_producto=id_producto)
+        logger.info(f"✅ Producto encontrado: {producto.nombre}")
+        
+        # Obtener todo el historial del producto
+        historial = HistorialProducto.objects.filter(producto=producto).select_related('usuario', 'compra', 'pedido', 'movimiento_inventario')
+        logger.info(f"✅ Historial cargado: {historial.count()} registros")
+        
+        # Filtros
+        tipo_filtro = request.GET.get('tipo')
+        if tipo_filtro:
+            historial = historial.filter(tipo_cambio=tipo_filtro)
+        
+        fecha_desde = request.GET.get('fecha_desde')
+        if fecha_desde:
+            historial = historial.filter(fecha_cambio__date__gte=fecha_desde)
+        
+        fecha_hasta = request.GET.get('fecha_hasta')
+        if fecha_hasta:
+            historial = historial.filter(fecha_cambio__date__lte=fecha_hasta)
+        
+        # Ordenar por fecha descendente
+        historial = historial.order_by('-fecha_cambio')
+        
+        # Paginación
+        paginator = Paginator(historial, 50)
+        page = request.GET.get('page')
+        historial_paginado = paginator.get_page(page)
+        
+        # Obtener tipos de cambio únicos para el filtro
+        tipos_cambio = HistorialProducto.TIPOS_CAMBIO
+        
+        context = {
+            'producto': producto,
+            'historial': historial_paginado,
+            'tipos_cambio': tipos_cambio,
+            'tipo_filtro': tipo_filtro,
+            'fecha_desde': fecha_desde,
+            'fecha_hasta': fecha_hasta,
+            'total_cambios': historial.count(),
+        }
+        
+        logger.info(f"✅ Renderizando historial de {producto.nombre}")
+        return render(request, 'admin_panel/inventario/historial_producto.html', context)
+        
+    except Exception as e:
+        logger.error(f"❌ Error en historial_producto (ID: {id_producto}): {str(e)}", exc_info=True)
+        messages.error(request, f'Error al cargar el historial: {str(e)}')
+        return redirect('admin_panel:inventario')
 
 
 @rol_requerido('puede_gestionar_inventario')
@@ -690,32 +701,44 @@ def historial_productos_lista(request):
     from django.core.paginator import Paginator
     from .models import HistorialProducto
     
-    # Obtener todos los productos
-    productos = Producto.objects.select_related('id_categoria').all()
-    
-    # Para cada producto, obtener el último cambio
-    productos_con_historial = []
-    for producto in productos:
-        ultimo_historial = HistorialProducto.objects.filter(producto=producto).first()
-        total_cambios = HistorialProducto.objects.filter(producto=producto).count()
+    try:
+        logger.info("📊 Cargando lista de historial de productos")
         
-        productos_con_historial.append({
-            'producto': producto,
-            'ultimo_cambio': ultimo_historial,
-            'total_cambios': total_cambios,
-        })
-    
-    # Paginación
-    paginator = Paginator(productos_con_historial, 20)
-    page = request.GET.get('page')
-    productos_paginados = paginator.get_page(page)
-    
-    context = {
-        'productos': productos_paginados,
-        'total_productos': len(productos_con_historial),
-    }
-    
-    return render(request, 'admin_panel/inventario/historial_productos.html', context)
+        # Obtener todos los productos
+        productos = Producto.objects.select_related('id_categoria').all()
+        logger.info(f"✅ Productos cargados: {productos.count()}")
+        
+        # Para cada producto, obtener el último cambio
+        productos_con_historial = []
+        for producto in productos:
+            ultimo_historial = HistorialProducto.objects.filter(producto=producto).first()
+            total_cambios = HistorialProducto.objects.filter(producto=producto).count()
+            
+            productos_con_historial.append({
+                'producto': producto,
+                'ultimo_cambio': ultimo_historial,
+                'total_cambios': total_cambios,
+            })
+        
+        logger.info(f"✅ Historial procesado para {len(productos_con_historial)} productos")
+        
+        # Paginación
+        paginator = Paginator(productos_con_historial, 20)
+        page = request.GET.get('page')
+        productos_paginados = paginator.get_page(page)
+        
+        context = {
+            'productos': productos_paginados,
+            'total_productos': len(productos_con_historial),
+        }
+        
+        logger.info(f"✅ Renderizando lista de historial de productos")
+        return render(request, 'admin_panel/inventario/historial_productos.html', context)
+        
+    except Exception as e:
+        logger.error(f"❌ Error en historial_productos_lista: {str(e)}", exc_info=True)
+        messages.error(request, f'Error al cargar el historial de productos: {str(e)}')
+        return redirect('admin_panel:inventario')
 
 
 @rol_requerido('puede_gestionar_inventario')
@@ -723,43 +746,53 @@ def inventario_movimientos(request):
     """Historial de movimientos de inventario (Kardex)"""
     from django.core.paginator import Paginator
     
-    # Obtener todos los movimientos
-    movimientos_lista = MovimientoInventario.objects.select_related(
-        'producto', 'compra', 'pedido', 'usuario'
-    ).all()
-    
-    # Filtro por producto
-    producto_nombre = request.GET.get('producto', '')
-    if producto_nombre:
-        movimientos_lista = movimientos_lista.filter(
-            producto__nombre__icontains=producto_nombre
-        )
-    
-    # Filtro por tipo de movimiento
-    tipo_movimiento = request.GET.get('tipo', '')
-    if tipo_movimiento:
-        movimientos_lista = movimientos_lista.filter(tipo=tipo_movimiento)
-    
-    # Filtro por fecha
-    fecha_desde = request.GET.get('fecha_desde', '')
-    if fecha_desde:
-        movimientos_lista = movimientos_lista.filter(
-            fecha_movimiento__date__gte=fecha_desde
-        )
-    
-    # Ordenamiento
-    movimientos_lista = movimientos_lista.order_by('-fecha_movimiento')
-    
-    # Paginación
-    paginator = Paginator(movimientos_lista, 50)
-    page = request.GET.get('page')
-    movimientos = paginator.get_page(page)
-    
-    context = {
-        'movimientos': movimientos,
-    }
-    
-    return render(request, 'admin_panel/inventario/movimientos.html', context)
+    try:
+        logger.info("📊 Cargando movimientos de inventario")
+        
+        # Obtener todos los movimientos
+        movimientos_lista = MovimientoInventario.objects.select_related(
+            'producto', 'compra', 'pedido', 'usuario'
+        ).all()
+        logger.info(f"✅ Movimientos cargados: {movimientos_lista.count()}")
+        
+        # Filtro por producto
+        producto_nombre = request.GET.get('producto', '')
+        if producto_nombre:
+            movimientos_lista = movimientos_lista.filter(
+                producto__nombre__icontains=producto_nombre
+            )
+        
+        # Filtro por tipo de movimiento
+        tipo_movimiento = request.GET.get('tipo', '')
+        if tipo_movimiento:
+            movimientos_lista = movimientos_lista.filter(tipo=tipo_movimiento)
+        
+        # Filtro por fecha
+        fecha_desde = request.GET.get('fecha_desde', '')
+        if fecha_desde:
+            movimientos_lista = movimientos_lista.filter(
+                fecha_movimiento__date__gte=fecha_desde
+            )
+        
+        # Ordenamiento
+        movimientos_lista = movimientos_lista.order_by('-fecha_movimiento')
+        
+        # Paginación
+        paginator = Paginator(movimientos_lista, 50)
+        page = request.GET.get('page')
+        movimientos = paginator.get_page(page)
+        
+        context = {
+            'movimientos': movimientos,
+        }
+        
+        logger.info(f"✅ Renderizando movimientos de inventario")
+        return render(request, 'admin_panel/inventario/movimientos.html', context)
+        
+    except Exception as e:
+        logger.error(f"❌ Error en inventario_movimientos: {str(e)}", exc_info=True)
+        messages.error(request, f'Error al cargar los movimientos de inventario: {str(e)}')
+        return redirect('admin_panel:inventario')
 
 
 # ===== VISTAS DE PEDIDOS =====
