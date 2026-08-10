@@ -29,6 +29,7 @@ DEBUG = os.getenv("DEBUG", "False").lower() == "true"
 
 ALLOWED_HOSTS = ['*']
 DOMINIO = os.getenv("DOMINIO", "https://agrifinal-production.up.railway.app")
+SITE_URL = os.getenv("SITE_URL", "https://agrifinal-production.up.railway.app")
 
 SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
 
