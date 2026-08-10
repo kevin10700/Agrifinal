@@ -257,5 +257,10 @@ LOGGING = {
             'level': 'DEBUG',
             'propagate': False,
         },
+        'admin_panel': {
+            'handlers': ['console'],
+            'level': 'DEBUG',
+            'propagate': False,
+        },
     },
 }
