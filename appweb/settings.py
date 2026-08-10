@@ -28,6 +28,7 @@ SECRET_KEY = os.getenv("SECRET_KEY") or dotenv_values(BASE_DIR / ".env").get("SE
 DEBUG = os.getenv("DEBUG", "False").lower() == "true"
 
 ALLOWED_HOSTS = ['*']
+DOMINIO = os.getenv("DOMINIO", "https://agrifinal-production.up.railway.app")
 
 SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
 
