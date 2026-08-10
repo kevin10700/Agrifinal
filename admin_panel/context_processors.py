@@ -15,7 +15,7 @@ def alertas_sistema(request):
 
     #contar notificaciones no leidas del usuario actual
     notificaciones_no_leidas = Notificacion.objects.filter(
-        id_usuario=request.user,
+        usuario_id=request.user,
         leida=False
     ).count()
 

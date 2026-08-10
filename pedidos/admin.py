@@ -51,7 +51,7 @@ class PagoAdmin(admin.ModelAdmin):
 class NotificacionAdmin(admin.ModelAdmin):
     list_display = ["id_usuario", "id_pedido", "leida", "fecha_creacion"]
     list_filter = ["leida", "fecha_creacion"]
-    search_fields = ["usuario__username", "mensaje"]
+    search_fields = ["id_usuario__username", "mensaje"]
 
 # 5. Registro de Comentarios
 @admin.register(ComentarioProducto)
