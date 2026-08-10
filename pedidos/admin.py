@@ -30,14 +30,14 @@ class EntregaAdmin(admin.ModelAdmin):
     search_fields = ["id_pedido__id_pedido", "numero_guia", "tracking_number"]
     fields = ["id_pedido", "transportista", "servicio", "paqueteria", "numero_guia", "tracking_number", "costo_envio", "respuesta_json", "estado", "ubicacion_actual", "notas_entrega"]
 
-# 3. Registro de Pago (¡MUY IMPORTANTE PARA TU FLUJO!)
+# 3. Registro de Pago
 @admin.register(Pago)
 class PagoAdmin(admin.ModelAdmin):
     list_display = ["id_pago", "id_pedido", "proveedor_pago", "referencia_pago", "metodo", "estado", "fecha_pago"]
     list_editable = ["estado"]
     list_filter = ["estado", "metodo"]
     search_fields = ["id_pedido__id_pedido", "referencia", "referencia_pago", "mercadopago_payment_id"]
-    actions = ['confirmar_pagos'] # Habilita la acción en lote que vimos
+    actions = ['confirmar_pagos']
 
     @admin.action(description="Marcar pagos seleccionados como PAGADOS")
     def confirmar_pagos(self, request, queryset):
@@ -46,12 +46,12 @@ class PagoAdmin(admin.ModelAdmin):
                 pago.marcar_pagado(referencia="Confirmación Admin")
         self.message_user(request, "Los pagos seleccionados han sido confirmados y notificados.")
 
-# 4. Registro de Notificación (Para monitoreo)
+# 4. Registro de Notificación (CORREGIDO - usa usuario)
 @admin.register(Notificacion)
 class NotificacionAdmin(admin.ModelAdmin):
     list_display = ["id_usuario", "id_pedido", "leida", "fecha_creacion"]
     list_filter = ["leida", "fecha_creacion"]
-    search_fields = ["id_usuario__username", "mensaje"]
+    search_fields = ["usuario__username", "mensaje"]
 
 # 5. Registro de Comentarios
 @admin.register(ComentarioProducto)
@@ -61,6 +61,6 @@ class ComentarioProductoAdmin(admin.ModelAdmin):
     list_filter = ["aprobado", "calificacion"]
     search_fields = ["id_producto__nombre", "id_usuario__username"]
 
-# Registro simple para los que no necesitan configuración especial
+# Registro simple
 admin.site.register(ItemPedido)
 admin.site.register(CarritoItem)
