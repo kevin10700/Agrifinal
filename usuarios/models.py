@@ -4,8 +4,8 @@ from django.utils import timezone
 
 
 class Usuario(AbstractUser):
-    # ✅ ELIMINADO: id_usuario = models.AutoField(primary_key=True)
-    # Django ahora manejará 'id' automáticamente como clave primaria
+    # Mantenemos id_usuario como primary key para compatibilidad
+    id_usuario = models.AutoField(primary_key=True, db_column='id_usuario')
     
     first_name = None  
     last_name = None  
@@ -142,6 +142,12 @@ class TokenVerificacion(models.Model):
         if not self.token:
             self.token = uuid.uuid4().hex
         super().save(*args, **kwargs)
+
+    @classmethod
+    def generar_token(cls):
+        """Genera un token único para verificación de correo"""
+        import uuid
+        return uuid.uuid4().hex
 
     def ha_expirado(self):
         from datetime import timedelta

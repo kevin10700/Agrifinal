@@ -1,0 +1,155 @@
+{% extends 'productos/base.html' %}
+{% load static %}
+
+{% block title %}Cerrar Sesiones - Agrivale{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8 col-lg-6">
+            <div class="card border-0 shadow-sm rounded-4 overflow-hidden bg-white">
+                <div class="card-header bg-warning text-dark py-3 text-center border-0">
+                    <h3 class="fw-bold mb-0">
+                        <i class="fas fa-exclamation-triangle"></i> Sesiones Activas Detectadas
+                    </h3>
+                </div>
+                <div class="card-body p-4 p-md-5">
+                    
+                    <!-- Mensajes -->
+                    {% if messages %}
+                        {% for message in messages %}
+                            <div class="alert alert-{% if message.tags == 'error' %}danger{% else %}{{ message.tags }}{% endif %} alert-dismissible fade show border-0 rounded-3 small mb-3" role="alert">
+                                {{ message }}
+                                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                            </div>
+                        {% endfor %}
+                    {% endif %}
+
+                    <!-- Alerta de seguridad -->
+                    <div class="alert alert-warning border-0 rounded-3 mb-4">
+                        <h5 class="alert-heading">
+                            <i class="fas fa-shield-alt"></i> <strong>Detección de Seguridad</strong>
+                        </h5>
+                        <p class="mb-0">
+                            Detectamos que tu navegador fue cerrado y reabierto. Por seguridad, 
+                            te recomendamos cerrar todas las sesiones en otros dispositivos antes de continuar.
+                        </p>
+                    </div>
+
+                    <!-- Información de sesiones -->
+                    {% if otras_sesiones > 0 %}
+                        <div class="alert alert-info border-0 rounded-3 mb-4">
+                            <h6 class="alert-heading">
+                                <i class="fas fa-info-circle"></i> Sesiones Encontradas
+                            </h6>
+                            <p class="mb-2">
+                                Tienes <strong>{{ otras_sesiones }}</strong> sesión(es) activa(s) en otros dispositivos.
+                            </p>
+                            <p class="mb-0 text-muted small">
+                                Se cerrará automáticamente la sesión actual si no realizas ninguna acción.
+                            </p>
+                        </div>
+
+                        <!-- Lista de sesiones -->
+                        <div class="mb-4">
+                            <h6 class="fw-bold mb-3">Dispositivos con sesión activa:</h6>
+                            <div class="list-group">
+                                {% for sesion in sesiones %}
+                                    {% if not sesion.es_actual %}
+                                        <div class="list-group-item border-0 mb-2 bg-light rounded-3">
+                                            <div class="d-flex align-items-start">
+                                                <div class="me-3">
+                                                    <i class="fas fa-desktop text-primary fa-2x"></i>
+                                                </div>
+                                                <div class="flex-grow-1">
+                                                    <strong>Dispositivo {{ forloop.counter }}</strong>
+                                                    {% if sesion.ip != 'N/A' %}
+                                                        <div class="small text-muted">
+                                                            <i class="fas fa-network-wired"></i> IP: {{ sesion.ip }}
+                                                        </div>
+                                                    {% endif %}
+                                                    {% if sesion.user_agent != 'N/A' %}
+                                                        <div class="small text-muted">
+                                                            <i class="fas fa-globe"></i> 
+                                                            {{ sesion.user_agent|truncatechars:60 }}
+                                                        </div>
+                                                    {% endif %}
+                                                    {% if sesion.login_time != 'N/A' %}
+                                                        <div class="small text-muted">
+                                                            <i class="fas fa-clock"></i> 
+                                                            Iniciada: {{ sesion.login_time|date:"d/m/Y H:i" }}
+                                                        </div>
+                                                    {% endif %}
+                                                </div>
+                                            </div>
+                                        </div>
+                                    {% endif %}
+                                {% endfor %}
+                            </div>
+                        </div>
+
+                        <!-- Botones de acción -->
+                        <div class="d-grid gap-2">
+                            <form method="POST" action="{% url 'usuarios:cerrar_sesiones_otros_dispositivos' %}">
+                                {% csrf_token %}
+                                <button type="submit" class="btn btn-warning btn-lg rounded-3 fw-bold">
+                                    <i class="fas fa-power-off"></i> Cerrar Todas las Sesiones en Otros Dispositivos
+                                </button>
+                            </form>
+                            
+                            <a href="{% url 'productos:lista' %}" class="btn btn-outline-secondary rounded-3">
+                                <i class="fas fa-arrow-right"></i> Continuar sin Cerrar Sesiones
+                            </a>
+                        </div>
+
+                    {% else %}
+                        <!-- No hay otras sesiones -->
+                        <div class="alert alert-success border-0 rounded-3 mb-4">
+                            <h5 class="alert-heading">
+                                <i class="fas fa-check-circle"></i> Todo Seguro
+                            </h5>
+                            <p class="mb-0">
+                                No se detectaron otras sesiones activas. Tu cuenta está segura.
+                            </p>
+                        </div>
+
+                        <div class="d-grid">
+                            <a href="{% url 'productos:lista' %}" class="btn btn-success btn-lg rounded-3 fw-bold">
+                                <i class="fas fa-arrow-right"></i> Continuar
+                            </a>
+                        </div>
+                    {% endif %}
+
+                    <!-- Información adicional -->
+                    <div class="mt-4">
+                        <div class="card border-0 bg-light">
+                            <div class="card-body">
+                                <h6 class="fw-bold mb-2">
+                                    <i class="fas fa-info-circle"></i> ¿Por qué esta alerta?
+                                </h6>
+                                <p class="small text-muted mb-0">
+                                    Cuando cierras el navegador, la cookie de sesión puede permanecer activa. 
+                                    Si alguien accede a tu dispositivo, podría usar tu sesión. 
+                                    Por seguridad, te recomendamos cerrar todas las sesiones en otros dispositivos.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Redirigir automáticamente después de 5 minutos si no hay acción
+setTimeout(function() {
+    if (confirm('¿Deseas continuar sin cerrar las sesiones en otros dispositivos?')) {
+        window.location.href = '{% url "productos:lista" %}';
+    }
+}, 300000); // 5 minutos = 300000 ms
+</script>
+{% endblock %}

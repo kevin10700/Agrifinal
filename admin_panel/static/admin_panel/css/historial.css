@@ -1,0 +1,585 @@
+/* ===== HISTORIAL DE PRODUCTOS - ESTILOS ESPECÍFICOS ===== */
+
+/* Contenedor principal */
+.historial-container {
+    padding: 20px;
+}
+
+/* Timeline de cambios */
+.timeline {
+    position: relative;
+    padding-left: 30px;
+}
+
+.timeline::before {
+    content: '';
+    position: absolute;
+    left: 8px;
+    top: 0;
+    bottom: 0;
+    width: 2px;
+    background: linear-gradient(180deg, #667eea 0%, #764ba2 100%);
+}
+
+.timeline-item {
+    position: relative;
+    padding-bottom: 30px;
+    animation: fadeInUp 0.5s ease;
+}
+
+.timeline-item:last-child {
+    padding-bottom: 0;
+}
+
+.timeline-marker {
+    position: absolute;
+    left: -30px;
+    top: 0;
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    background: white;
+    border: 3px solid #667eea;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.7rem;
+    color: #667eea;
+    z-index: 1;
+}
+
+.timeline-marker.creacion {
+    border-color: #28a745;
+    color: #28a745;
+}
+
+.timeline-marker.precio {
+    border-color: #ffc107;
+    color: #ffc107;
+}
+
+.timeline-marker.stock {
+    border-color: #17a2b8;
+    color: #17a2b8;
+}
+
+.timeline-marker.estado {
+    border-color: #dc3545;
+    color: #dc3545;
+}
+
+.timeline-marker.compra {
+    border-color: #28a745;
+    color: #28a745;
+}
+
+.timeline-marker.pedido {
+    border-color: #007bff;
+    color: #007bff;
+}
+
+.timeline-content {
+    background: white;
+    border-radius: 8px;
+    padding: 15px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    border-left: 3px solid #667eea;
+    transition: all 0.3s ease;
+}
+
+.timeline-content:hover {
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+    transform: translateX(4px);
+}
+
+.timeline-content.creacion {
+    border-left-color: #28a745;
+}
+
+.timeline-content.precio {
+    border-left-color: #ffc107;
+}
+
+.timeline-content.stock {
+    border-left-color: #17a2b8;
+}
+
+.timeline-content.estado {
+    border-left-color: #dc3545;
+}
+
+.timeline-content.compra {
+    border-left-color: #28a745;
+}
+
+.timeline-content.pedido {
+    border-left-color: #007bff;
+}
+
+/* Iconos de tipo de cambio */
+.tipo-cambio-icon {
+    width: 40px;
+    height: 40px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.2rem;
+    flex-shrink: 0;
+}
+
+.tipo-cambio-icon.creacion {
+    background: #d4edda;
+    color: #28a745;
+}
+
+.tipo-cambio-icon.precio {
+    background: #fff3cd;
+    color: #ffc107;
+}
+
+.tipo-cambio-icon.stock {
+    background: #d1ecf1;
+    color: #17a2b8;
+}
+
+.tipo-cambio-icon.estado {
+    background: #f8d7da;
+    color: #dc3545;
+}
+
+.tipo-cambio-icon.compra {
+    background: #d4edda;
+    color: #28a745;
+}
+
+.tipo-cambio-icon.pedido {
+    background: #cce5ff;
+    color: #007bff;
+}
+
+/* Tarjetas de estadísticas */
+.historial-stats {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 15px;
+    margin-bottom: 30px;
+}
+
+.stat-card-historial {
+    background: white;
+    border-radius: 12px;
+    padding: 20px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    border-left: 4px solid #667eea;
+    transition: all 0.3s ease;
+}
+
+.stat-card-historial:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.12);
+}
+
+.stat-card-historial.creacion {
+    border-left-color: #28a745;
+}
+
+.stat-card-historial.precio {
+    border-left-color: #ffc107;
+}
+
+.stat-card-historial.stock {
+    border-left-color: #17a2b8;
+}
+
+.stat-card-historial.estado {
+    border-left-color: #dc3545;
+}
+
+.stat-card-historial .stat-value {
+    font-size: 2rem;
+    font-weight: 700;
+    color: #333;
+    margin-bottom: 5px;
+}
+
+.stat-card-historial .stat-label {
+    font-size: 0.85rem;
+    color: #6c757d;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+/* Filtros */
+.filtros-card {
+    background: white;
+    border-radius: 12px;
+    padding: 20px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    margin-bottom: 30px;
+}
+
+.filtros-card .form-label {
+    font-weight: 600;
+    color: #495057;
+    font-size: 0.85rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.filtros-card .form-select,
+.filtros-card .form-control {
+    border-radius: 6px;
+    border: 1px solid #dee2e6;
+    padding: 8px 12px;
+    transition: all 0.2s ease;
+}
+
+.filtros-card .form-select:focus,
+.filtros-card .form-control:focus {
+    border-color: #667eea;
+    box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+}
+
+/* Detalles de cambio */
+.cambio-detalle {
+    background: #f8f9fa;
+    border-radius: 6px;
+    padding: 12px;
+    margin-top: 10px;
+}
+
+.cambio-detalle .cambio-item {
+    display: flex;
+    align-items: center;
+    padding: 6px 0;
+    border-bottom: 1px solid #e8e8e8;
+}
+
+.cambio-detalle .cambio-item:last-child {
+    border-bottom: none;
+}
+
+.cambio-detalle .cambio-label {
+    font-weight: 600;
+    color: #495057;
+    min-width: 120px;
+    font-size: 0.85rem;
+}
+
+.cambio-detalle .cambio-valor {
+    color: #333;
+    font-size: 0.9rem;
+}
+
+.cambio-detalle .cambio-anterior {
+    text-decoration: line-through;
+    color: #dc3545;
+    margin-right: 8px;
+}
+
+.cambio-detalle .cambio-nuevo {
+    color: #28a745;
+    font-weight: 600;
+}
+
+.cambio-detalle .cambio-porcentaje {
+    background: #ffc107;
+    color: #333;
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    margin-left: 8px;
+}
+
+/* Información de compra/pedido */
+.compra-info,
+.pedido-info {
+    background: #e7f3ff;
+    border-left: 3px solid #007bff;
+    padding: 10px 15px;
+    border-radius: 6px;
+    margin-top: 10px;
+}
+
+.compra-info {
+    background: #d4edda;
+    border-left-color: #28a745;
+}
+
+.pedido-info {
+    background: #cce5ff;
+    border-left-color: #007bff;
+}
+
+.compra-info .info-title,
+.pedido-info .info-title {
+    font-weight: 600;
+    color: #495057;
+    font-size: 0.85rem;
+    margin-bottom: 5px;
+}
+
+.compra-info .info-detail,
+.pedido-info .info-detail {
+    font-size: 0.85rem;
+    color: #6c757d;
+}
+
+/* Usuario que realizó el cambio */
+.usuario-cambio {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 10px;
+    padding-top: 10px;
+    border-top: 1px solid #e8e8e8;
+}
+
+.usuario-avatar {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 600;
+    font-size: 0.85rem;
+}
+
+.usuario-info {
+    flex: 1;
+}
+
+.usuario-nombre {
+    font-weight: 600;
+    color: #333;
+    font-size: 0.85rem;
+    margin: 0;
+}
+
+.usuario-fecha {
+    font-size: 0.75rem;
+    color: #6c757d;
+    margin: 0;
+}
+
+/* Filtros activos */
+.filtros-activos {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-bottom: 20px;
+}
+
+.filtro-tag {
+    background: #667eea;
+    color: white;
+    padding: 6px 12px;
+    border-radius: 20px;
+    font-size: 0.85rem;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.filtro-tag .remove-filter {
+    cursor: pointer;
+    font-weight: bold;
+    opacity: 0.8;
+    transition: opacity 0.2s ease;
+}
+
+.filtro-tag .remove-filter:hover {
+    opacity: 1;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .timeline {
+        padding-left: 20px;
+    }
+
+    .timeline::before {
+        left: 5px;
+    }
+
+    .timeline-marker {
+        left: -25px;
+        width: 14px;
+        height: 14px;
+    }
+
+    .timeline-content {
+        padding: 12px;
+    }
+
+    .historial-stats {
+        grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+        gap: 10px;
+    }
+
+    .stat-card-historial {
+        padding: 15px;
+    }
+
+    .stat-card-historial .stat-value {
+        font-size: 1.5rem;
+    }
+
+    .cambio-detalle .cambio-item {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 4px;
+    }
+
+    .cambio-detalle .cambio-label {
+        min-width: auto;
+    }
+}
+
+@media (max-width: 576px) {
+    .timeline {
+        padding-left: 15px;
+    }
+
+    .timeline-marker {
+        left: -20px;
+        width: 12px;
+        height: 12px;
+    }
+
+    .timeline-content {
+        padding: 10px;
+        font-size: 0.9rem;
+    }
+
+    .historial-stats {
+        grid-template-columns: 1fr;
+    }
+
+    .filtros-card {
+        padding: 15px;
+    }
+
+    .filtros-card .row {
+        gap: 10px;
+    }
+
+    .filtros-card .col {
+        flex: 1 1 100%;
+    }
+}
+
+/* Animaciones */
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.timeline-item {
+    animation: fadeInUp 0.5s ease;
+}
+
+/* Loading skeleton */
+.skeleton {
+    background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+    background-size: 200% 100%;
+    animation: skeleton-loading 1.5s infinite;
+    border-radius: 4px;
+}
+
+@keyframes skeleton-loading {
+    0% {
+        background-position: 200% 0;
+    }
+    100% {
+        background-position: -200% 0;
+    }
+}
+
+.skeleton-text {
+    height: 16px;
+    margin-bottom: 8px;
+}
+
+.skeleton-title {
+    height: 24px;
+    width: 60%;
+    margin-bottom: 12px;
+}
+
+/* Empty state */
+.empty-state {
+    text-align: center;
+    padding: 60px 20px;
+}
+
+.empty-state-icon {
+    font-size: 4rem;
+    color: #dee2e6;
+    margin-bottom: 20px;
+}
+
+.empty-state-title {
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: #495057;
+    margin-bottom: 10px;
+}
+
+.empty-state-description {
+    color: #6c757d;
+    margin-bottom: 20px;
+}
+
+/* Badge de tipo de cambio */
+.badge-tipo-cambio {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 4px 10px;
+    border-radius: 20px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+}
+
+.badge-tipo-cambio.creacion {
+    background: #d4edda;
+    color: #28a745;
+}
+
+.badge-tipo-cambio.precio {
+    background: #fff3cd;
+    color: #ffc107;
+}
+
+.badge-tipo-cambio.stock {
+    background: #d1ecf1;
+    color: #17a2b8;
+}
+
+.badge-tipo-cambio.estado {
+    background: #f8d7da;
+    color: #dc3545;
+}
+
+.badge-tipo-cambio.compra {
+    background: #d4edda;
+    color: #28a745;
+}
+
+.badge-tipo-cambio.pedido {
+    background: #cce5ff;
+    color: #007bff;
+}

@@ -1,6 +1,14 @@
 {% extends 'productos/base.html' %}
 {% load static %}
 
+{% block extra_head %}
+<!-- Meta tags para prevenir guardado en historial y caché -->
+<meta http-equiv="Cache-Control" content="no-store, no-cache, must-revalidate, max-age=0">
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="Expires" content="0">
+<meta name="robots" content="noindex, nofollow, noarchive, nocache">
+{% endblock %}
+
 {% block content %}
 <div class="container py-5">
     <div class="row justify-content-center">
@@ -100,6 +108,55 @@
             toggleIcon.classList.add("fa-eye");
         }
     }
+    
+    // Prevenir guardado en historial y detectar sesiones restauradas
+    // Obtener el session_token de la sesión de Django (si existe)
+    const sessionToken = '{{ request.session.session_token|default:"" }}';
+    
+    // Guardar el token en sessionStorage al cargar la página
+    if (sessionToken) {
+        sessionStorage.setItem('agrivale_session_token', sessionToken);
+    }
+    
+    // Verificar si existe el token en sessionStorage
+    const storedToken = sessionStorage.getItem('agrivale_session_token');
+    
+    // Si no hay token en sessionStorage pero hay sesión activa, significa que se restauró
+    // después de cerrar el navegador
+    if (!storedToken && sessionToken) {
+        // Cerrar la sesión automáticamente
+        fetch('/usuarios/logout/', {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': '{{ csrf_token }}',
+                'Content-Type': 'application/json',
+            },
+        }).then(() => {
+            // Redirigir al login con mensaje
+            window.location.href = '/usuarios/login/?session_restored=true';
+        });
+    }
+    
+    // Prevenir guardado en historial
+    if (window.history && window.history.pushState) {
+        window.history.replaceState(null, null, window.location.href);
+        window.addEventListener('popstate', function(event) {
+            window.location.href = '/usuarios/login/';
+        });
+    }
+    
+    // Limpiar datos al salir
+    window.addEventListener('beforeunload', function(event) {
+        sessionStorage.clear();
+        const keysToRemove = [];
+        for (let i = 0; i < localStorage.length; i++) {
+            const key = localStorage.key(i);
+            if (key && (key.includes('agrivale') || key.includes('session') || key.includes('token'))) {
+                keysToRemove.push(key);
+            }
+        }
+        keysToRemove.forEach(key => localStorage.removeItem(key));
+    });
 </script>
 
 <style>

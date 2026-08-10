@@ -8,6 +8,16 @@ from django.core.mail import send_mail, EmailMultiAlternatives
 from django.conf import settings
 from django.utils import timezone
 from django.http import JsonResponse
+from django.views.decorators.cache import never_cache
+
+@never_cache
+def iniciar_sesion(request):
+    ...  # sin cambios en el cuerpo
+
+@login_required
+@never_cache
+def cerrar_sesion(request):
+    ...  # sin cambios en el cuerpo
 
 
 # Importaciones unificadas
@@ -50,16 +60,108 @@ def registro(request):
         form = RegistroForm(request.POST)
         if form.is_valid():
             user = form.save(commit=False)
-            # Activamos y verificamos la cuenta de inmediato
-            user.is_active = True
-            user.correo_verificado = True
+            # NO marcamos como verificado aún
+            user.is_active = True  # Permitir que inicie sesión, pero...
+            user.correo_verificado = False  # ...debe verificar correo primero
             user.is_new_user = True
             user.save()
 
+<<<<<<< HEAD
             messages.success(
                 request,
                 f' ¡Registro exitoso! Bienvenido a Agrivale, {user.nombre}. Ya puedes iniciar sesión.'
+=======
+            # Generar token de verificación
+            token = TokenVerificacion.generar_token()
+            token_obj = TokenVerificacion.objects.create(
+                usuario=user,
+                token=token
+>>>>>>> 0e5a5b5b90a40a36b84c82934b57fc64f75bbeb3
             )
+
+            # Construir URL de verificación
+            from django.contrib.sites.shortcuts import get_current_site
+            from django.urls import reverse
+            dominio = get_current_site(request).domain
+            url_verificacion = f"https://{dominio}{reverse('usuarios:verificar_email', args=[token])}"
+
+            # Enviar correo de verificación
+            asunto = 'Verifica tu correo - Agrivale'
+            mensaje_texto = f"""
+Hola {user.nombre},
+
+Gracias por registrarte en Agrivale. Para completar tu registro y poder iniciar sesión, debes verificar tu correo electrónico.
+
+Haz clic en el siguiente enlace:
+{url_verificacion}
+
+Este enlace expirará en 24 horas.
+
+Si no te registraste en Agrivale, puedes ignorar este correo.
+
+Saludos,
+Equipo Agrivale
+            """.strip()
+
+            mensaje_html = f"""
+<html>
+<body style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; color: #333;">
+    <div style="background: linear-gradient(135deg, #2d8a4e 0%, #1e8449 100%); color: white; padding: 30px; border-radius: 10px 10px 0 0; text-align: center;">
+        <h1 style="margin: 0; font-size: 2em;">🌿 Agrivale</h1>
+        <p style="margin: 10px 0 0 0; opacity: 0.9;">Verificación de Correo Electrónico</p>
+    </div>
+    <div style="background: #f8f9fa; padding: 30px; border-radius: 0 0 10px 10px; border: 1px solid #dee2e6;">
+        <h2 style="color: #2d8a4e; margin-top: 0;">¡Hola, {user.nombre}! 👋</h2>
+        <p>Gracias por registrarte en <strong>Agrivale</strong>. Para completar tu registro y poder acceder a todos nuestros productos agrícolas, necesitas verificar tu correo electrónico.</p>
+        
+        <div style="text-align: center; margin: 30px 0;">
+            <a href="{url_verificacion}" style="background: #28a745; color: white; padding: 15px 30px; text-decoration: none; border-radius: 5px; font-weight: bold; display: inline-block; font-size: 16px;">
+                ✓ Verificar Mi Correo
+            </a>
+        </div>
+        
+        <p style="color: #666; font-size: 14px;">O copia y pega este enlace en tu navegador:</p>
+        <p style="background: #e9ecef; padding: 10px; border-radius: 5px; font-family: monospace; font-size: 12px; word-break: break-all;">{url_verificacion}</p>
+        
+        <div style="background: #fff3cd; border-left: 4px solid #ffc107; padding: 15px; margin: 20px 0; border-radius: 5px;">
+            <p style="margin: 0; color: #856404;"><strong>⚠️ Importante:</strong></p>
+            <p style="margin: 5px 0 0 0; color: #856404; font-size: 14px;">Este enlace expirará en <strong>24 horas</strong>. Si no verificas tu correo en ese tiempo, deberás registrarte nuevamente.</p>
+        </div>
+        
+        <p style="color: #666; font-size: 14px;">Si no te registraste en Agrivale, puedes ignorar este correo sin problema.</p>
+        
+        <hr style="border: none; border-top: 1px solid #dee2e6; margin: 30px 0;">
+        <p style="color: #666; font-size: 12px; text-align: center;">
+            <strong>Agrivale</strong> - Tu tienda de productos agrícolas<br>
+            Este correo fue enviado a {user.correo}
+        </p>
+    </div>
+</body>
+</html>
+            """.strip()
+
+            correo_enviado = enviar_correo(
+                asunto=asunto,
+                mensaje_texto=mensaje_texto,
+                destinatario=user.correo,
+                mensaje_html=mensaje_html
+            )
+
+            if correo_enviado:
+                logger.info(f"✅ Correo de verificación enviado a {user.correo}")
+                messages.success(
+                    request,
+                    f'🎉 ¡Registro exitoso! Hemos enviado un correo de verificación a {user.correo}. '
+                    'Por favor revisa tu bandeja de entrada (y spam) y haz clic en el enlace para activar tu cuenta.'
+                )
+            else:
+                logger.error(f"❌ Error al enviar correo de verificación a {user.correo}")
+                messages.warning(
+                    request,
+                    f'⚠️ Te registraste correctamente, pero hubo un problema al enviar el correo de verificación. '
+                    'Por favor contacta al administrador o intenta verificar tu correo más tarde.'
+                )
+
             return redirect('usuarios:login')
     else:
         form = RegistroForm()
@@ -135,6 +237,9 @@ def iniciar_sesion(request):
         return redirect('productos:lista')
 
     if request.method == 'POST':
+        # Limpiar mensajes antiguos para evitar confusión
+        list(messages.get_messages(request))
+        
         # Log del intento de login
         username = request.POST.get('username')
         logger.info(f" Intento de login - Usuario: {username}")
@@ -151,11 +256,32 @@ def iniciar_sesion(request):
             logger.info(f" Formulario válido, usuario obtenido: {user}")
             
             if user is not None:
+                # Verificar si la cuenta está activa
+                if not user.is_active:
+                    logger.warning(f"⚠️ Intento de login con cuenta desactivada: {username}")
+                    messages.error(
+                        request,
+                        '❌ Tu cuenta ha sido desactivada. '
+                        'Si crees que esto es un error, contacta al administrador.'
+                    )
+                    return render(request, 'usuarios/login.html', {'form': form})
+                
+                # Verificar si el correo está verificado
+                if not user.correo_verificado:
+                    logger.warning(f"⚠️ Intento de login con correo no verificado: {username}")
+                    messages.error(
+                        request,
+                        '❌ Debes verificar tu correo electrónico antes de iniciar sesión. '
+                        'Revisa tu bandeja de entrada y spam.'
+                    )
+                    return render(request, 'usuarios/login.html', {'form': form})
+                
+                # Login exitoso
                 login(request, user)
                 messages.success(request, f'¡Bienvenido de nuevo, {user.nombre}!')
-                # ✅ CORREGIDO: Eliminado {user.id}
                 logger.info(f"✅ Login exitoso para {user.username}")
                 
+                # Redirigir según el rol
                 if user.is_staff:
                     logger.info(f"👤 Usuario staff, redirigiendo a admin_panel:dashboard")
                     return redirect('admin_panel:dashboard')
@@ -171,17 +297,62 @@ def iniciar_sesion(request):
             logger.error(f"   - Errores no field: {form.non_field_errors()}")
             logger.error(f"   - Campos con errores: {list(form.errors.keys())}")
             
-            # Mostrar errores al usuario
+            # Determinar el tipo de error y mostrar mensaje apropiado
+            error_ocurred = False
+            
+            # Verificar errores de campo
             for field, errors in form.errors.items():
                 for error in errors:
-                    messages.error(request, f'❌ {error}')
-                    logger.error(f"   - Error en {field}: {error}")
+                    error_str = str(error).lower()
+                    
+                    # Detectar error de cuenta inactiva
+                    if 'inactiva' in error_str or 'desactivada' in error_str or 'active' in error_str:
+                        messages.error(
+                            request,
+                            '❌ Tu cuenta ha sido desactivada. '
+                            'Si crees que esto es un error, contacta al administrador.'
+                        )
+                        error_ocurred = True
+                        break
+                    
+                    # Detectar error de correo no verificado
+                    elif 'verificad' in error_str or 'correo' in error_str or 'email' in error_str:
+                        messages.error(
+                            request,
+                            '❌ Debes verificar tu correo electrónico antes de iniciar sesión. '
+                            'Revisa tu bandeja de entrada y carpeta de spam.'
+                        )
+                        error_ocurred = True
+                        break
+                    
+                    # Detectar error de credenciales incorrectas
+                    elif 'incorrecta' in error_str or 'inválida' in error_str or 'invalid' in error_str:
+                        messages.error(
+                            request,
+                            '❌ Usuario o contraseña incorrectos. Por favor, verifica tus datos.'
+                        )
+                        error_ocurred = True
+                        break
+                    
+                    # Otro tipo de error
+                    else:
+                        messages.error(request, f'❌ {error}')
+                        error_ocurred = True
+                
+                if error_ocurred:
+                    break
+            
+            # Si no se identificó un error específico, mostrar mensaje genérico
+            if not error_ocurred:
+                messages.error(
+                    request,
+                    '❌ No se pudo iniciar sesión. Por favor, verifica que tu usuario y contraseña sean correctos.'
+                )
             
             # Verificar si el usuario existe en la BD (para diagnóstico)
             try:
                 user_obj = Usuario.objects.get(username=username)
                 logger.info(f"🔍 Usuario {username} existe en BD:")
-                # ✅ CORREGIDO: Eliminado {user_obj.id}
                 logger.info(f"   - Username: {user_obj.username}")
                 logger.info(f"   - is_active: {user_obj.is_active}")
                 logger.info(f"   - correo_verificado: {user_obj.correo_verificado}")
@@ -200,6 +371,10 @@ def iniciar_sesion(request):
                     
             except Usuario.DoesNotExist:
                 logger.error(f"❌ Usuario {username} NO existe en BD")
+                messages.error(
+                    request,
+                    '❌ El usuario no existe en el sistema. Por favor, verifica el nombre de usuario.'
+                )
     else:
         form = LoginForm()
         logger.info("📄 Mostrando formulario de login (GET)")
@@ -209,11 +384,30 @@ def iniciar_sesion(request):
 
 @login_required
 def cerrar_sesion(request):
+    """Cierra la sesión del usuario y revoca todos los tokens de refresco."""
     nombre = request.user.nombre
-    RefreshToken.objects.filter(usuario=request.user, revocado_en__isnull=True).update(revocado_en=timezone.now())
+    username = request.user.username
+    
+    # Revocar todos los refresh tokens activos
+    RefreshToken.objects.filter(usuario=request.user, revocado_en__isnull=True).update(
+        revocado_en=timezone.now()
+    )
+    
+    # Cerrar sesión de Django
     logout(request)
+    
+    logger.info(f"✅ Sesión cerrada para usuario {username}")
     messages.info(request, f'Hasta pronto, {nombre}. ¡Vuelve pronto!')
-    return redirect('productos:lista')
+    
+    # Redirigir con headers anti-caché (sin Clear-Site-Data para no romper CSRF)
+    response = redirect('productos:lista')
+    response['Cache-Control'] = 'no-cache, no-store, must-revalidate, private'
+    response['Pragma'] = 'no-cache'
+    response['Expires'] = '0'
+    # NOTA: No usamos Clear-Site-Data porque elimina cookies CSRF
+    # response['Clear-Site-Data'] = '"cache", "cookies", "storage"'
+    
+    return response
 
 
 # ─────────────────────────────────────────────
@@ -355,3 +549,69 @@ def restablecer_contrasena(request, token):
         'form': form,
         'token': token,
     })
+
+
+def cerrar_sesiones_otros_dispositivos(request):
+    """
+    Muestra ventana para cerrar sesiones en otros dispositivos.
+    Se muestra cuando se detecta una sesión restaurada (navegador cerrado y reabierto).
+    """
+    from django.contrib.sessions.models import Session
+    
+    if not request.user.is_authenticated:
+        return redirect('usuarios:login')
+    
+    # Obtener todas las sesiones activas del usuario
+    sesiones_usuario = []
+    sesion_actual = request.session.session_key
+    
+    todas_sesiones = Session.objects.filter(expire_date__gte=timezone.now())
+    
+    for sesion in todas_sesiones:
+        try:
+            data = sesion.get_decoded()
+            user_id = data.get('_auth_user_id')
+            
+            if user_id == str(request.user.pk):
+                # Es una sesión del usuario actual
+                es_sesion_actual = sesion.session_key == sesion_actual
+                sesiones_usuario.append({
+                    'sesion': sesion,
+                    'ip': data.get('login_ip', 'N/A'),
+                    'user_agent': data.get('login_user_agent', 'N/A'),
+                    'login_time': data.get('login_time', 'N/A'),
+                    'es_actual': es_sesion_actual,
+                })
+        except Exception as e:
+            logger.error(f"❌ Error al procesar sesión: {e}")
+    
+    # Cerrar todas las sesiones excepto la actual
+    sesiones_cerradas = 0
+    if request.method == 'POST':
+        for sesion_info in sesiones_usuario:
+            if not sesion_info['es_actual']:
+                try:
+                    sesion = sesion_info['sesion']
+                    sesion.delete()
+                    sesiones_cerradas += 1
+                except Exception as e:
+                    logger.error(f"❌ Error al cerrar sesión: {e}")
+        
+        if sesiones_cerradas > 0:
+            messages.success(
+                request,
+                f'✅ Se cerraron {sesiones_cerradas} sesión(es) en otros dispositivos. '
+                f'Ahora puedes continuar de forma segura.'
+            )
+        else:
+            messages.info(request, 'ℹ️ No había otras sesiones activas.')
+        
+        return redirect('productos:lista')
+    
+    context = {
+        'sesiones': sesiones_usuario,
+        'total_sesiones': len(sesiones_usuario),
+        'otras_sesiones': len([s for s in sesiones_usuario if not s['es_actual']]),
+    }
+    
+    return render(request, 'usuarios/cerrar_sesiones_otros_dispositivos.html', context)

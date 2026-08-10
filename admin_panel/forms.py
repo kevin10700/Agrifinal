@@ -1,6 +1,9 @@
 from django import forms
 from django.contrib.auth import authenticate
 from django.contrib.auth.forms import AuthenticationForm
+import logging
+
+logger = logging.getLogger(__name__)
 
 
 class PanelLoginForm(AuthenticationForm):
@@ -33,16 +36,50 @@ class PanelLoginForm(AuthenticationForm):
                 password=password
             )
             if self.user_cache is None:
+                logger.warning(f"Intento de login fallido para usuario: {username}")
                 raise forms.ValidationError(
                     'Usuario o contraseña incorrectos. Por favor, intenta de nuevo.',
                     code='invalid_login'
                 )
-            elif not self.user_cache.is_staff:
-                raise forms.ValidationError(
-                    'No tienes permisos para acceder al panel administrativo.',
-                    code='no_permissions'
-                )
+            elif self.user_cache.is_superuser:
+                # Superusers tienen acceso directo
+                logger.info(f"Superuser {username} autenticado para admin_panel")
             else:
+                # Verificar si el usuario tiene asignado un rol en el panel administrativo
+                try:
+                    from .models import UsuarioPanel
+                    usuario_panel = UsuarioPanel.objects.select_related('rol').get(usuario=self.user_cache)
+                    
+                    if not usuario_panel.rol:
+                        logger.warning(f"Usuario {username} no tiene rol asignado en UsuarioPanel")
+                        raise forms.ValidationError(
+                            'No tienes un rol asignado en el panel administrativo. Contacta al administrador.',
+                            code='no_role'
+                        )
+                    elif not usuario_panel.rol.activo:
+                        logger.warning(f"Usuario {username} tiene rol inactivo: {usuario_panel.rol.nombre}")
+                        raise forms.ValidationError(
+                            'Tu rol en el panel administrativo está desactivado. Contacta al administrador.',
+                            code='role_inactive'
+                        )
+                    else:
+                        logger.info(f"Usuario {username} tiene rol activo: {usuario_panel.rol.nombre}")
+                
+                except UsuarioPanel.DoesNotExist:
+                    logger.warning(f"Usuario {username} no tiene UsuarioPanel asignado")
+                    raise forms.ValidationError(
+                        'No tienes permisos para acceder al panel administrativo. Necesitas que te asignen un rol.',
+                        code='no_usuario_panel'
+                    )
+                except Exception as e:
+                    logger.error(f"Error al verificar UsuarioPanel para {username}: {str(e)}")
+                    raise forms.ValidationError(
+                        'Error al verificar permisos. Contacta al administrador.',
+                        code='error'
+                    )
+            
+            # Solo confirmar login si pasa todas las validaciones
+            if self.user_cache:
                 self.confirm_login_allowed(self.user_cache)
         
         return self.cleaned_data

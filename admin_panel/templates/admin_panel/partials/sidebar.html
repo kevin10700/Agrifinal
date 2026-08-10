@@ -31,9 +31,13 @@
                 <i class="fas fa-tags"></i>
                 <span>Categorías</span>
             </a>
-            <a href="{% url 'admin_panel:inventario' %}" class="nav-item {% if 'inventario' in request.path %}active{% endif %}">
+            <a href="{% url 'admin_panel:inventario' %}" class="nav-item {% if 'inventario' in request.path and 'historial' not in request.path %}active{% endif %}">
                 <i class="fas fa-warehouse"></i>
                 <span>Inventario</span>
+            </a>
+            <a href="{% url 'admin_panel:historial_productos_lista' %}" class="nav-item {% if 'historial' in request.path %}active{% endif %}">
+                <i class="fas fa-history"></i>
+                <span>Historial de Productos</span>
             </a>
             <a href="{% url 'admin_panel:comentarios_lista' %}" class="nav-item {% if 'comentarios' in request.path %}active{% endif %}">
                 <i class="fas fa-star"></i>
@@ -152,6 +156,10 @@
             <a href="{% url 'admin_panel:tokens_verificacion_lista' %}" class="nav-item {% if 'tokens/verificacion' in request.path %}active{% endif %}">
                 <i class="fas fa-user-check"></i>
                 <span>Tokens de verificación</span>
+            </a>
+            <a href="{% url 'admin_panel:sesiones_lista' %}" class="nav-item {% if 'sesiones' in request.path %}active{% endif %}">
+                <i class="fas fa-shield-alt"></i>
+                <span>Gestión de Sesiones</span>
             </a>
             <a href="{% url 'admin_panel:configuracion' %}" class="nav-item {% if 'configuracion' in request.path %}active{% endif %}">
                 <i class="fas fa-cog"></i>

@@ -1,0 +1,143 @@
+{% extends 'admin_panel/base.html' %}
+{% load static %}
+
+{% block title %}Historial de Productos - Panel Administrativo{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h1 class="h3 mb-0 text-gray-800">
+                <i class="fas fa-history"></i> Historial de Productos
+            </h1>
+            <p class="text-muted">Registro completo de cambios y movimientos de productos</p>
+        </div>
+        <div>
+            <a href="{% url 'admin_panel:inventario' %}" class="btn btn-secondary">
+                <i class="fas fa-arrow-left"></i> Volver a Inventario
+            </a>
+        </div>
+    </div>
+
+    <!-- Estadísticas -->
+    <div class="row mb-4">
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-primary shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
+                                Total Productos</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ total_productos }}</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-box fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Tabla de Productos -->
+    <div class="card shadow mb-4">
+        <div class="card-header py-3">
+            <h6 class="m-0 font-weight-bold text-primary">
+                <i class="fas fa-list"></i> Productos con Historial
+            </h6>
+        </div>
+        <div class="card-body">
+            {% if productos %}
+            <div class="table-responsive">
+                <table class="table table-bordered table-hover">
+                    <thead class="thead-light">
+                        <tr>
+                            <th>Producto</th>
+                            <th>Categoría</th>
+                            <th>Stock Actual</th>
+                            <th>Precio</th>
+                            <th>Último Cambio</th>
+                            <th>Total Cambios</th>
+                            <th>Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for item in productos %}
+                        <tr>
+                            <td>
+                                <strong>{{ item.producto.nombre }}</strong><br>
+                                <small class="text-muted">{{ item.producto.slug }}</small>
+                            </td>
+                            <td>{{ item.producto.id_categoria.nombre }}</td>
+                            <td>
+                                <span class="badge {% if item.producto.stock == 0 %}badge-danger{% elif item.producto.stock <= 10 %}badge-warning{% else %}badge-success{% endif %}">
+                                    {{ item.producto.stock }}
+                                </span>
+                            </td>
+                            <td>
+                                <strong>${{ item.producto.precio }}</strong>
+                                {% if item.producto.precio_oferta %}
+                                    <br><small class="text-danger">Oferta: ${{ item.producto.precio_oferta }}</small>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if item.ultimo_cambio %}
+                                    <div>
+                                        <span class="badge badge-info">{{ item.ultimo_cambio.get_tipo_cambio_display }}</span>
+                                        <br>
+                                        <small class="text-muted">{{ item.ultimo_cambio.fecha_cambio|date:"d/m/Y H:i" }}</small>
+                                    </div>
+                                {% else %}
+                                    <span class="text-muted">Sin cambios</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <span class="badge badge-primary">{{ item.total_cambios }}</span>
+                            </td>
+                            <td>
+                                <a href="{% url 'admin_panel:historial_producto' item.producto.id_producto %}" 
+                                   class="btn btn-info btn-sm">
+                                    <i class="fas fa-eye"></i> Ver Historial
+                                </a>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Paginación -->
+            {% if productos.has_other_pages %}
+            <nav class="mt-4">
+                <ul class="pagination justify-content-center">
+                    {% if productos.has_previous %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ productos.previous_page_number }}">Anterior</a>
+                        </li>
+                    {% endif %}
+                    
+                    {% for num in productos.paginator.page_range %}
+                        <li class="page-item {% if productos.number == num %}active{% endif %}">
+                            <a class="page-link" href="?page={{ num }}">{{ num }}</a>
+                        </li>
+                    {% endfor %}
+                    
+                    {% if productos.has_next %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ productos.next_page_number }}">Siguiente</a>
+                        </li>
+                    {% endif %}
+                </ul>
+            </nav>
+            {% endif %}
+
+            {% else %}
+            <div class="alert alert-info">
+                <i class="fas fa-info-circle"></i> No hay productos registrados en el sistema.
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

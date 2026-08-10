@@ -7,7 +7,7 @@ app_name = 'admin_panel'
 urlpatterns = [
     # Login del panel
     path('login/', views.login_view, name='login'),
-    path('logout/', auth_views.LogoutView.as_view(next_page='/panel/login/'), name='logout'),  
+    path('logout/', views.logout_view, name='logout'),
     # Dashboard
     path('', views.dashboard, name='dashboard'),
     # Productos
@@ -78,6 +78,18 @@ urlpatterns = [
     # Tokens de verificación
     path('tokens/verificacion/', views.tokens_verificacion_lista, name='tokens_verificacion_lista'),
     path('tokens/verificacion/<int:id_token>/eliminar/', views.token_verificacion_eliminar, name='token_verificacion_eliminar'),
+    
+    # Gestión de Sesiones
+    path('sesiones/', views.sesiones_lista, name='sesiones_lista'),
+    path('sesiones/cerrar-todas/', views.cerrar_todas_sesiones, name='cerrar_todas_sesiones'),
+    path('sesiones/cerrar-usuario/<int:id_usuario>/', views.cerrar_sesion_usuario, name='cerrar_sesion_usuario'),
+    path('sesiones/cerrar-dispositivo/<str:session_key>/', views.cerrar_sesion_dispositivo, name='cerrar_sesion_dispositivo'),
+    path('sesiones/cerrar-mi-sesion/', views.cerrar_mi_sesion, name='cerrar_mi_sesion'),
+    path('sesiones/detalle/<str:session_key>/', views.sesion_detalle, name='sesion_detalle'),
+    
+    # Historial de Productos
+    path('inventario/historial/', views.historial_productos_lista, name='historial_productos_lista'),
+    path('inventario/historial/<int:id_producto>/', views.historial_producto, name='historial_producto'),
     
     # Logística
     path('logistica/', views.logistica, name='logistica'),

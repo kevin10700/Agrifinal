@@ -93,7 +93,7 @@ class UsuarioPanel(models.Model):
         settings.AUTH_USER_MODEL,
         on_delete=models.CASCADE,
         related_name='rol_panel',
-        db_column='id_usuario'
+        db_column='usuario_id'
     )
     rol = models.ForeignKey(
         RolPanel,
@@ -242,3 +242,88 @@ class MovimientoInventario(models.Model):
     
     def __str__(self):
         return f"{self.get_tipo_display()} - {self.producto.nombre} ({self.cantidad})"
+
+
+class HistorialProducto(models.Model):
+    """Historial completo de cambios y actualizaciones de productos"""
+    TIPOS_CAMBIO = [
+        ('creacion', 'Creación de Producto'),
+        ('actualizacion', 'Actualización de Datos'),
+        ('cambio_precio', 'Cambio de Precio'),
+        ('cambio_stock', 'Cambio de Stock'),
+        ('cambio_estado', 'Cambio de Estado (Activo/Inactivo)'),
+        ('cambio_costo', 'Cambio de Costo Promedio'),
+        ('actualizacion_imagen', 'Actualización de Imagen'),
+    ]
+    
+    id_historial = models.AutoField(primary_key=True)
+    producto = models.ForeignKey(
+        'productos.Producto',
+        on_delete=models.CASCADE,
+        related_name='historial',
+        db_column='id_producto'
+    )
+    tipo_cambio = models.CharField(max_length=30, choices=TIPOS_CAMBIO)
+    
+    # Campos que cambiaron (JSON para flexibilidad)
+    campos_cambiados = models.JSONField(default=dict, blank=True)
+    # Ejemplo: {"precio": {"anterior": 10.00, "nuevo": 12.50}, "stock": {"anterior": 100, "nuevo": 104}}
+    
+    # Valores específicos para cambios de precio
+    precio_anterior = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
+    precio_nuevo = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
+    costo_anterior = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
+    costo_nuevo = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
+    
+    # Referencia al movimiento de inventario relacionado (si aplica)
+    movimiento_inventario = models.ForeignKey(
+        MovimientoInventario,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='historiales',
+        db_column='id_movimiento'
+    )
+    
+    # Referencia a la compra relacionada (si aplica)
+    compra = models.ForeignKey(
+        Compra,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='historiales',
+        db_column='id_compra'
+    )
+    
+    # Referencia al pedido relacionado (si aplica)
+    pedido = models.ForeignKey(
+        'pedidos.Pedido',
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='historiales',
+        db_column='id_pedido'
+    )
+    
+    usuario = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        related_name='historiales_productos',
+        db_column='id_usuario'
+    )
+    observaciones = models.TextField(blank=True)
+    fecha_cambio = models.DateTimeField(auto_now_add=True)
+    
+    class Meta:
+        db_table = 'admin_panel_historial_producto'
+        verbose_name = 'Historial de Producto'
+        verbose_name_plural = 'Historiales de Productos'
+        ordering = ['-fecha_cambio']
+        indexes = [
+            models.Index(fields=['producto', '-fecha_cambio']),
+            models.Index(fields=['tipo_cambio', '-fecha_cambio']),
+        ]
+    
+    def __str__(self):
+        return f"{self.get_tipo_cambio_display()} - {self.producto.nombre} - {self.fecha_cambio.strftime('%d/%m/%Y %H:%M')}"
