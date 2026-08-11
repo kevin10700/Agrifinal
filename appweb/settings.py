@@ -1,17 +1,15 @@
 import os
 from pathlib import Path
-import dj_database_url
 from dotenv import dotenv_values, load_dotenv
-
-import cloudinary
-import cloudinary.api
-import cloudinary.uploader
-import django.db.backends.mysql.features as mysql_features
+import dj_database_url
 from django.db.backends.base.base import BaseDatabaseWrapper
+import django.db.backends.mysql.features as mysql_features
+import cloudinary
+import cloudinary.uploader
+import cloudinary.api
 
-# Bypasses para compatibilidad de versión en MySQL
+
 BaseDatabaseWrapper.check_database_version_supported = lambda self: None
-
 @property
 def mock_can_return_rows_from_bulk_insert(self):
     return False
@@ -19,7 +17,6 @@ def mock_can_return_rows_from_bulk_insert(self):
 mysql_features.DatabaseFeatures.can_return_rows_from_bulk_insert = mock_can_return_rows_from_bulk_insert
 mysql_features.DatabaseFeatures.can_return_columns_from_insert = mock_can_return_rows_from_bulk_insert
 
-# Cargar variables de entorno
 load_dotenv()
 
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -48,17 +45,15 @@ INSTALLED_APPS = [
     'django.contrib.contenttypes',
     'django.contrib.sessions',
     'django.contrib.messages',
-    'cloudinary_storage',
     'django.contrib.staticfiles',
-    'cloudinary',
-    'django.contrib.humanize',
-    'productos',
-    'usuarios',
-    'chatbot',
-    'payments.apps.PaymentsConfig',
+    "django.contrib.humanize",
+    "productos",
+    "usuarios",
+    "chatbot",
+    "payments.apps.PaymentsConfig",
     'pedidos.apps.PedidosConfig',
-    'shipping.apps.ShippingConfig',
-    'admin_panel.apps.AdminPanelConfig',
+    "shipping.apps.ShippingConfig",
+    "admin_panel.apps.AdminPanelConfig",
 ]
 
 MIDDLEWARE = [
@@ -147,7 +142,7 @@ TIME_ZONE = 'America/Mexico_City'
 USE_I18N = True
 USE_TZ = True
 
-# Archivos estáticos
+# archivos estaticos
 STATIC_URL = 'static/'
 STATICFILES_DIRS = [
     BASE_DIR / 'static',
@@ -155,7 +150,7 @@ STATICFILES_DIRS = [
 STATIC_ROOT = BASE_DIR / 'staticfiles'
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-# Cloudinary para imágenes
+#cloudinary para imagenes
 CLOUDINARY_STORAGE = {
     'CLOUD_NAME': os.getenv('CLOUDINARY_CLOUD_NAME'),
     'API_KEY': os.getenv('CLOUDINARY_API_KEY'),
@@ -168,7 +163,7 @@ cloudinary.config(
     api_secret=CLOUDINARY_STORAGE['API_SECRET']
 )
 
-# Configuración de almacenamientos
+# configuracion de almacenamientos
 STORAGES = {
     "default": {
         "BACKEND": "cloudinary_storage.storage.MediaCloudinaryStorage",
@@ -180,10 +175,7 @@ STORAGES = {
 
 DEFAULT_FILE_STORAGE = 'cloudinary_storage.storage.MediaCloudinaryStorage'
 
-# AGREGAR ESTA LÍNEA para compatibilidad con cloudinary_storage en collectstatic:
-STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
-
-# Archivos multimedia
+# archivos multimedia
 MEDIA_URL = '/media/'
 
 JWT_REFRESH_COOKIE = 'agrivale_refresh'
@@ -198,12 +190,12 @@ LOGOUT_REDIRECT_URL = '/'
 SESSION_COOKIE_AGE = 60 * 60 * 8        # Sesión dura 8 horas de inactividad máxima
 SESSION_EXPIRE_AT_BROWSER_CLOSE = True  # Se cierra automáticamente al cerrar el navegador
 SESSION_SAVE_EVERY_REQUEST = True       # Renueva el tiempo de vida en cada request activo
-SESSION_COOKIE_HTTPONLY = True          # JS no puede leer la cookie de sesión
-SESSION_COOKIE_SECURE = not DEBUG       # Solo por HTTPS en producción
+SESSION_COOKIE_HTTPONLY = True          # JS no puede leer la cookie de sesión (seguridad)
+SESSION_COOKIE_SECURE = not DEBUG       # Solo se envía por HTTPS en producción
 SESSION_COOKIE_SAMESITE = 'Lax'
 CSRF_COOKIE_SECURE = not DEBUG
 
-# Configuración de correo
+#correo
 if DEBUG:
     # En desarrollo: imprimir correos en consola
     EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
@@ -211,7 +203,7 @@ else:
     # En producción: usar SMTP real
     EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
     EMAIL_HOST = os.getenv('EMAIL_HOST', 'smtp.gmail.com')
-    EMAIL_PORT = int(os.getenv('EMAIL_PORT') or 587)
+    EMAIL_PORT = int(os.getenv('EMAIL_PORT', 587))
     EMAIL_USE_TLS = os.getenv('EMAIL_USE_TLS', 'True').lower() == 'true'
     EMAIL_HOST_USER = os.getenv('EMAIL_HOST_USER', '')
     EMAIL_HOST_PASSWORD = os.getenv('EMAIL_HOST_PASSWORD', '')
@@ -221,11 +213,9 @@ DEFAULT_FROM_EMAIL = 'Agrivale <no-reply@agrivale.com>'
 
 GEMINI_API_KEY = os.getenv('GEMINI_API_KEY')
 
-# Envia Shipping API
+# Envia API
 ENVIA_API_TOKEN = os.getenv("ENVIA_API_TOKEN")
-ENVIA_API_KEY = ENVIA_API_TOKEN
-ENVIA_SANDBOX = os.getenv("ENVIA_SANDBOX", "True").strip().lower() in ("true", "1", "t")
-ENVIA_API_URL = os.getenv("ENVIA_API_URL", "https://api-test.envia.com")
+ENVIA_API_URL = os.getenv("ENVIA_API_URL")
 ENVIA_ENVIRONMENT = os.getenv("ENVIA_ENVIRONMENT", "test")
 ENVIA_DEFAULT_CARRIER = os.getenv("ENVIA_DEFAULT_CARRIER", "dhl")
 ENVIA_ORIGIN_NAME = os.getenv("ENVIA_ORIGIN_NAME")
@@ -247,7 +237,7 @@ MERCADOPAGO_ACCESS_TOKEN = os.getenv("MERCADOPAGO_ACCESS_TOKEN")
 MERCADOPAGO_PUBLIC_KEY = os.getenv("MERCADOPAGO_PUBLIC_KEY")
 MERCADOPAGO_WEBHOOK_SECRET = os.getenv("MERCADOPAGO_WEBHOOK_SECRET")
 
-# Logging de Consola
+#Logging de Consola
 LOGGING = {
     'version': 1,
     'disable_existing_loggers': False,
