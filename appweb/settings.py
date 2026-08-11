@@ -180,6 +180,9 @@ STORAGES = {
 
 DEFAULT_FILE_STORAGE = 'cloudinary_storage.storage.MediaCloudinaryStorage'
 
+# AGREGAR ESTA LÍNEA para compatibilidad con cloudinary_storage en collectstatic:
+STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
+
 # Archivos multimedia
 MEDIA_URL = '/media/'
 
