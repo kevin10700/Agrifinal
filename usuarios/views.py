@@ -285,3 +285,10 @@ def restablecer_contrasena(request, token):
         form = NuevaContrasenaForm()
 
     return render(request, 'usuarios/restablecer_contrasena.html', {'form': form, 'token': token})
+
+def verificar_email(request, token):
+    """
+    Vista temporal/básica para manejar la verificación de correo mediante token.
+    """
+    messages.info(request, "La verificación de correo se procesará aquí.")
+    return redirect('usuarios:login')
