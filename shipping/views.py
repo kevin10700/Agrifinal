@@ -77,3 +77,6 @@ def cotizar(request):
 
     except (ValidationError, EnviaAPIError) as error:
         return _error_response(error)
+
+def codigo_postal(request, codigo_postal):
+    return JsonResponse({"codigo_postal": codigo_postal, "status": "ok"})
