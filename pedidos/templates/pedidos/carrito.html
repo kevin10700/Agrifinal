@@ -2,7 +2,7 @@
 
 {% block content %}
 <div class="container">
-    <h2 class="mb-4"> Mi Carrito</h2>
+    <h2 class="mb-4"><i class="fas fa-shopping-cart"></i> Mi Carrito</h2>
     
     {% if items %}
         <div class="table-responsive">
@@ -43,16 +43,131 @@
                 </tfoot>
             </table>
         </div>
+
+        <!-- ======================================================= -->
+        <!-- SECCIÓN AGREGADA: COTIZADOR DE ENVÍO CON ENVIA.COM     -->
+        <!-- ======================================================= -->
+        <div class="card p-3 my-4 border-success shadow-sm">
+            <h5 class="card-title text-success mb-3"><i class="fas fa-truck me-2"></i>Cotizar Costo de Envío</h5>
+            <div class="row g-2 align-items-center">
+                <div class="col-md-6 col-lg-4">
+                    <div class="input-group">
+                        <span class="input-group-text"><i class="fas fa-map-marker-alt"></i></span>
+                        <input type="text" id="cp-destino" class="form-control" placeholder="Tu Código Postal" maxlength="5">
+                        <button class="btn btn-success" type="button" id="btn-cotizar-envio">
+                            <i class="fas fa-calculator me-1"></i> Cotizar
+                        </button>
+                    </div>
+                </div>
+            </div>
+            <!-- Contenedor donde se despliegan los resultados -->
+            <div id="resultado-cotizacion" class="mt-3" style="display: none;"></div>
+        </div>
+        <!-- ======================================================= -->
         
-        <div class="text-end mt-3">
+        <div class="text-end mt-3 mb-5">
             <a href="{% url 'productos:lista' %}" class="btn btn-secondary">Seguir comprando</a>
             <a href="{% url 'pedidos:confirmar' %}" class="btn btn-success"><i class="fas fa-arrow-right"></i> Continuar con el pago</a>
         </div>
     {% else %}
         <div class="alert alert-info text-center">
-            <p>Tu carrito está vacío.</p>
+            <p class="mb-2">Tu carrito está vacío.</p>
             <a href="{% url 'productos:lista' %}" class="btn btn-primary">Ver productos</a>
         </div>
     {% endif %}
 </div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const btnCotizar = document.getElementById('btn-cotizar-envio');
+    const inputCP = document.getElementById('cp-destino');
+    const contenedorResultado = document.getElementById('resultado-cotizacion');
+
+    if (!btnCotizar) return;
+
+    btnCotizar.addEventListener('click', function(e) {
+        e.preventDefault();
+        
+        const codigoPostal = inputCP.value.trim();
+
+        // 1. Validar Código Postal
+        if (!codigoPostal || codigoPostal.length < 5) {
+            contenedorResultado.style.display = 'block';
+            contenedorResultado.innerHTML = `
+                <div class="alert alert-warning py-2 mb-0">
+                    <i class="fas fa-exclamation-triangle me-1"></i> Por favor ingresa un código postal válido de 5 dígitos.
+                </div>`;
+            return;
+        }
+
+        // 2. Estado del botón al dar clic
+        btnCotizar.disabled = true;
+        btnCotizar.innerHTML = `<i class="fas fa-spinner fa-spin me-1"></i> Cotizando...`;
+        contenedorResultado.style.display = 'none';
+
+        // 3. Petición POST a la vista de Django
+        fetch('/shipping/cotizar/', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': window.agrivaleConfig ? window.agrivaleConfig.csrfToken : ''
+            },
+            body: JSON.stringify({
+                destino: {
+                    codigo_postal: codigoPostal
+                }
+            })
+        })
+        .then(response => {
+            if (response.status === 401) {
+                throw new Error("Debes iniciar sesión para cotizar el envío.");
+            }
+            if (!response.ok) {
+                throw new Error("No se pudo obtener la cotización. Revisa los datos o intenta de nuevo.");
+            }
+            return response.json();
+        })
+        .then(data => {
+            btnCotizar.disabled = false;
+            btnCotizar.innerHTML = `<i class="fas fa-calculator me-1"></i> Cotizar`;
+            contenedorResultado.style.display = 'block';
+
+            if (data.opciones && data.opciones.length > 0) {
+                let htmlOpciones = '<h6 class="mt-2 mb-2">Paqueterías disponibles:</h6><div class="list-group">';
+                
+                data.opciones.forEach((opcion, index) => {
+                    htmlOpciones += `
+                        <label class="list-group-item d-flex justify-content-between align-items-center">
+                            <div>
+                                <input class="form-check-input me-2" type="radio" name="opcion_envio" value="${opcion.precio}" ${index === 0 ? 'checked' : ''}>
+                                <strong>${opcion.transportista}</strong> <small class="text-muted">(${opcion.servicio})</small>
+                                <br><small class="text-muted"><i class="fas fa-clock me-1"></i> Entrega estimada: ${opcion.dias_estimados}</small>
+                            </div>
+                            <span class="badge bg-success rounded-pill fs-6">$${opcion.precio.toFixed(2)} MXN</span>
+                        </label>`;
+                });
+                
+                htmlOpciones += '</div>';
+                contenedorResultado.innerHTML = htmlOpciones;
+            } else {
+                contenedorResultado.innerHTML = `
+                    <div class="alert alert-info py-2 mb-0">
+                        No hay opciones de envío disponibles para este código postal.
+                    </div>`;
+            }
+        })
+        .catch(error => {
+            btnCotizar.disabled = false;
+            btnCotizar.innerHTML = `<i class="fas fa-calculator me-1"></i> Cotizar`;
+            contenedorResultado.style.display = 'block';
+            contenedorResultado.innerHTML = `
+                <div class="alert alert-danger py-2 mb-0">
+                    <i class="fas fa-times-circle me-1"></i> ${error.message}
+                </div>`;
+        });
+    });
+});
+</script>
 {% endblock %}
