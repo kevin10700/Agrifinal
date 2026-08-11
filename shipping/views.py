@@ -43,8 +43,11 @@ def _error_response(error):
 
 
 @require_POST
-@login_required
 def cotizar(request):
+    # Verificación explícita en lugar de @login_required para evitar el redirect 404
+    if not request.user.is_authenticated:
+        return JsonResponse({"error": "Debes iniciar sesión para cotizar el envío."}, status=401)
+
     try:
         payload = _json_body(request)
         origen = payload.get("origen", {
@@ -93,6 +96,7 @@ def cotizar(request):
 
     except (ValidationError, EnviaAPIError) as error:
         return _error_response(error)
+
 
 def codigo_postal(request, codigo_postal):
     return JsonResponse({"codigo_postal": codigo_postal, "status": "ok"})
