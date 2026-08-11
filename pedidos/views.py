@@ -121,7 +121,7 @@ def calcular_resumen_carrito(items):
             return Decimal("1")
         if producto.unidad_medida == "libra":
             return Decimal("0.453592")
-        return Decimal("0")
+        return Decimal("1")
 
     peso_total = sum(
         (peso_unitario(item.id_producto) * item.cantidad for item in items), Decimal("0")
