@@ -6,7 +6,23 @@ from django.views.decorators.http import require_POST
 
 from .services.envia import EnviaAPIError, cotizar_envio, crear_envio
 
-
+@require_POST
+@login_required
+def crear(request):
+    try:
+        payload = _json_body(request)
+        
+        # Llama a la API para generar la guía y etiqueta de envío real
+        respuesta_envio = crear_envio(payload)
+        
+        return JsonResponse({
+            "status": "ok",
+            "tracking_number": respuesta_envio.get("trackingNumber"),
+            "label_url": respuesta_envio.get("label"),
+            "detalle": respuesta_envio
+        })
+    except (ValidationError, EnviaAPIError) as error:
+        return _error_response(error)
 def _json_body(request):
     try:
         return json.loads(request.body)
