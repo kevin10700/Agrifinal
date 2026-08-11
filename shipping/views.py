@@ -42,6 +42,13 @@ def cotizar(request):
     try:
         payload = _json_body(request)
         destino = payload.get("destino") or {}
+        
+        # IMPRIMIR QUÉ PAQUETE Y DESTINO LLEGAN DESDE EL FRONTEND
+        print("\n================ DATA RECIBIDA =============")
+        print("DESTINO:", json.dumps(destino, indent=2))
+        print("PAQUETE:", json.dumps(payload.get("paquete", {}), indent=2))
+        print("============================================\n")
+
         reparto_local = buscar_zona_local(destino.get("codigo_postal"))
         if reparto_local:
             zona = reparto_local["zona"]
@@ -53,7 +60,6 @@ def cotizar(request):
                 "dias_estimados": reparto_local["tiempo_entrega"],
                 "zona_reparto": zona.nombre,
             }
-            # Una zona propia nunca realiza una llamada a Envia.
             result = {"tipo": "local", "opciones": [opcion]}
         else:
             result = cotizar_envio(
@@ -63,7 +69,12 @@ def cotizar(request):
                 payload.get("transportista"),
             )
             result["tipo"] = "envia"
-        # La selección posterior se valida contra este resultado del servidor.
+
+        #  IMPRIMIR QUÉ RESPONDE LA FUNCIÓN COTIZAR_ENVIO
+        print("\n================ RESULTADO DE COTIZAR_ENVIO =============")
+        print(json.dumps(result, indent=2, default=str))
+        print("=========================================================\n")
+
         request.session["envia_cotizaciones"] = result["opciones"]
         return JsonResponse(result)
     except (ValidationError, EnviaAPIError) as error:
