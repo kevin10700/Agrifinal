@@ -38,7 +38,6 @@
                     });
                 </script>
               </div>
-
             </div>
 
             <hr class="my-4">
@@ -110,14 +109,12 @@
   const selectedCarrier = document.getElementById('id_transportista'), selectedService = document.getElementById('id_servicio'), csrf = document.querySelector('[name=csrfmiddlewaretoken]').value;
   const money = value => '$' + Number(value).toFixed(2), escapeHtml = value => String(value ?? '').replace(/[&<>'"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[c]));
   const errorText = error => { if (typeof error === 'string') return error; if (Array.isArray(error)) return error.join(' '); if (error && typeof error === 'object') return Object.values(error).flat().join(' '); return 'Ocurrió un error al consultar Envia.'; };
-  const fieldValue = id => document.getElementById(id).value;
+  const fieldValue = id => document.getElementById(id) ? document.getElementById(id).value : '';
   let enviaStateCode = '';
 
-  // Función para convertir nombres completos de estados a códigos ISO de 2/3 letras reconocidos por Envia.com
   const getEnviaStateCode = (stateName) => {
     if (!stateName) return 'MEX';
     const name = stateName.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
-    
     const map = {
       'aguascalientes': 'AGS', 'baja california sur': 'BCS', 'baja california': 'BC',
       'campeche': 'CAMP', 'chiapas': 'CHIS', 'chihuahua': 'CHIH', 'coahuila': 'COAH',
@@ -129,7 +126,6 @@
       'sinaloa': 'SIN', 'sonora': 'SON', 'tabasco': 'TAB', 'tamaulipas': 'TAM',
       'tlaxcala': 'TLAX', 'veracruz': 'VER', 'yucatan': 'YUC', 'zacatecas': 'ZAC'
     };
-
     for (const [key, code] of Object.entries(map)) {
       if (name.includes(key)) return code;
     }
@@ -147,79 +143,105 @@
   });
 
   const postalCode = document.getElementById('id_codigo_postal');
-  postalCode.addEventListener('change', async () => { 
-    const code = postalCode.value.trim(); 
-    if (code.length !== 5) return; 
-    const status = document.getElementById('quote-message'); 
-    status.className='small text-muted'; 
-    status.textContent='Validando código postal…'; 
-    try { 
-      const response=await fetch(`/shipping/codigo-postal/${encodeURIComponent(code)}/`); 
-      const data=await response.json(); 
-      if (!response.ok) throw new Error(errorText(data.error)); 
-      document.getElementById('id_estado').value=data.estado; 
-      document.getElementById('id_municipio').value=data.municipio; 
-      enviaStateCode=data.estado_codigo || getEnviaStateCode(data.estado); 
-      const colonia=document.getElementById('id_colonia'), list=document.getElementById('colonias-list'); 
-      list.innerHTML=''; 
-      (data.colonias || []).forEach(nombre=>{const option=document.createElement('option');option.value=nombre;list.appendChild(option);}); 
-      colonia.setAttribute('list','colonias-list'); 
-      if ((data.colonias || []).length === 1) colonia.value=data.colonias[0]; 
-      status.textContent=(data.colonias || []).length > 1 ? 'Código postal validado. Selecciona tu colonia.' : 'Código postal validado. Completa calle y número.'; 
-    } catch(error) { 
-      status.textContent=error.message; 
-      status.className='small text-danger'; 
-    }
-  });
+  if (postalCode) {
+    postalCode.addEventListener('change', async () => { 
+      const code = postalCode.value.trim(); 
+      if (code.length !== 5) return; 
+      const status = document.getElementById('quote-message'); 
+      status.className = 'small text-muted'; 
+      status.textContent = 'Validando código postal…'; 
+      try { 
+        const response = await fetch(`/shipping/codigo-postal/${encodeURIComponent(code)}/`); 
+        const data = await response.json(); 
+        if (!response.ok) throw new Error(errorText(data.error)); 
+        
+        if (document.getElementById('id_estado')) document.getElementById('id_estado').value = data.estado || '';
+        if (document.getElementById('id_municipio')) document.getElementById('id_municipio').value = data.municipio || '';
+        
+        enviaStateCode = data.estado_codigo || getEnviaStateCode(data.estado); 
+        
+        const colonia = document.getElementById('id_colonia');
+        const list = document.getElementById('colonias-list'); 
+        if (list) {
+            list.innerHTML = ''; 
+            (data.colonias || []).forEach(nombre => {
+                const option = document.createElement('option');
+                option.value = nombre;
+                list.appendChild(option);
+            }); 
+            if (colonia) colonia.setAttribute('list', 'colonias-list'); 
+        }
+        if (colonia && (data.colonias || []).length === 1) colonia.value = data.colonias[0]; 
+        
+        status.textContent = (data.colonias || []).length > 1 ? 'Código postal validado. Selecciona tu colonia.' : 'Código postal validado. Completa calle y número.'; 
+      } catch(error) { 
+        status.textContent = 'No se pudo autocompletar el C.P. Verifica los datos.'; 
+        status.className = 'small text-danger'; 
+      }
+    });
 
-  if (postalCode.value.trim().length === 5) postalCode.dispatchEvent(new Event('change'));
-
-  quoteButton.addEventListener('click', async () => { 
-    selectedCarrier.value=''; 
-    selectedService.value=''; 
-    message.className='small text-muted'; 
-    message.textContent='Consultando opciones de envío…'; 
-    optionsContainer.innerHTML=''; 
-    try { 
-      const response=await fetch('{% url "shipping:cotizar" %}',{method:'POST',headers:{'Content-Type':'application/json','X-CSRFToken':csrf},body:JSON.stringify({destino:address(),paquete:packageData})}); 
-      const data=await response.json(); 
-      if(!response.ok) throw new Error(errorText(data.error)); 
-      if(!data.opciones.length) throw new Error('No hay servicios disponibles para esta dirección.'); 
-      if(data.tipo==='local'){
-        const option=data.opciones[0],days=option.dias_estimados??'Por confirmar'; 
-        selectedCarrier.value=option.transportista;
-        selectedService.value=option.servicio;
-        message.textContent='Tu dirección cuenta con reparto propio de Agrivale.';
-        optionsContainer.innerHTML=`<div class="shipping-option border border-success rounded-3 p-3 d-flex justify-content-between align-items-center"><span><strong>🚚 Reparto Agrivale</strong><small class="d-block">Entrega estimada: ${escapeHtml(days)}</small></span><strong class="text-success">${money(option.precio)}</strong></div>`;
-        document.getElementById('shipping-price').textContent=money(option.precio);
-        document.getElementById('total-price').textContent=money(subtotal+Number(option.precio));
-        return;
-      } 
-      message.textContent='Selecciona una opción de envío.'; 
-      data.opciones.forEach((option,index)=>{
-        const id=`shipping-${index}`,days=option.dias_estimados??'Por confirmar'; 
-        optionsContainer.insertAdjacentHTML('beforeend',`<label class="shipping-option border rounded-3 p-3 d-flex justify-content-between align-items-center mb-2" for="${id}"><span><input type="radio" name="shipping-choice" id="${id}" data-carrier="${escapeHtml(option.transportista)}" data-service="${escapeHtml(option.servicio)}" data-price="${Number(option.precio)}" required> <strong>${escapeHtml(option.transportista)}</strong><small class="d-block ms-4">${escapeHtml(option.servicio)} · ${days} días estimados</small></span><strong class="text-success">${money(option.precio)}</strong></label>`);
-      }); 
-      document.querySelectorAll('[name=shipping-choice]').forEach(input=>input.addEventListener('change',e=>{
-        const c=e.target;
-        selectedCarrier.value=c.dataset.carrier;
-        selectedService.value=c.dataset.service;
-        document.getElementById('shipping-price').textContent=money(c.dataset.price);
-        document.getElementById('total-price').textContent=money(subtotal+Number(c.dataset.price));
-      })); 
-    } catch(error) {
-      message.textContent=error.message;
-      message.className='small text-danger';
+    if (postalCode.value.trim().length === 5) {
+      postalCode.dispatchEvent(new Event('change'));
     }
-  });
+  }
 
-  form.addEventListener('submit',event=>{
-    if(!selectedCarrier.value||!selectedService.value){
-      event.preventDefault();
-      message.textContent='Primero cotiza y selecciona un envío.';
-      message.className='small text-danger';
-    }
-  });
+  if (quoteButton) {
+    quoteButton.addEventListener('click', async () => { 
+      if (selectedCarrier) selectedCarrier.value = ''; 
+      if (selectedService) selectedService.value = ''; 
+      message.className = 'small text-muted'; 
+      message.textContent = 'Consultando opciones de envío…'; 
+      optionsContainer.innerHTML = ''; 
+      try { 
+        const response = await fetch('{% url "shipping:cotizar" %}', {
+          method: 'POST',
+          headers: {'Content-Type': 'application/json', 'X-CSRFToken': csrf},
+          body: JSON.stringify({destino: address(), paquete: packageData})
+        }); 
+        const data = await response.json(); 
+        if (!response.ok) throw new Error(errorText(data.error)); 
+        if (!data.opciones || !data.opciones.length) throw new Error('No hay servicios disponibles para esta dirección.'); 
+        
+        if (data.tipo === 'local') {
+          const option = data.opciones[0], days = option.dias_estimados ?? 'Por confirmar'; 
+          if (selectedCarrier) selectedCarrier.value = option.transportista;
+          if (selectedService) selectedService.value = option.servicio;
+          message.textContent = 'Tu dirección cuenta con reparto propio de Agrivale.';
+          optionsContainer.innerHTML = `<div class="shipping-option border border-success rounded-3 p-3 d-flex justify-content-between align-items-center"><span><strong>🚚 Reparto Agrivale</strong><small class="d-block">Entrega estimada: ${escapeHtml(days)}</small></span><strong class="text-success">${money(option.precio)}</strong></div>`;
+          document.getElementById('shipping-price').textContent = money(option.precio);
+          document.getElementById('total-price').textContent = money(subtotal + Number(option.precio));
+          return;
+        } 
+        
+        message.textContent = 'Selecciona una opción de envío.'; 
+        data.opciones.forEach((option, index) => {
+          const id = `shipping-${index}`, days = option.dias_estimados ?? 'Por confirmar'; 
+          optionsContainer.insertAdjacentHTML('beforeend', `<label class="shipping-option border rounded-3 p-3 d-flex justify-content-between align-items-center mb-2" for="${id}"><span><input type="radio" name="shipping-choice" id="${id}" data-carrier="${escapeHtml(option.transportista)}" data-service="${escapeHtml(option.servicio)}" data-price="${Number(option.precio)}" required> <strong>${escapeHtml(option.transportista)}</strong><small class="d-block ms-4">${escapeHtml(option.servicio)} · ${days} días estimados</small></span><strong class="text-success">${money(option.precio)}</strong></label>`);
+        }); 
+
+        document.querySelectorAll('[name=shipping-choice]').forEach(input => input.addEventListener('change', e => {
+          const c = e.target;
+          if (selectedCarrier) selectedCarrier.value = c.dataset.carrier;
+          if (selectedService) selectedService.value = c.dataset.service;
+          document.getElementById('shipping-price').textContent = money(c.dataset.price);
+          document.getElementById('total-price').textContent = money(subtotal + Number(c.dataset.price));
+        })); 
+      } catch(error) {
+        message.textContent = error.message;
+        message.className = 'small text-danger';
+      }
+    });
+  }
+
+  if (form) {
+    form.addEventListener('submit', event => {
+      if (selectedCarrier && selectedService && (!selectedCarrier.value || !selectedService.value)) {
+        event.preventDefault();
+        message.textContent = 'Primero cotiza y selecciona un envío.';
+        message.className = 'small text-danger';
+      }
+    });
+  }
 })();
 </script>
 <style>
