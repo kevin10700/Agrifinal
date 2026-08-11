@@ -1,99 +1,129 @@
-"""Cliente mock/local para la Shipping API (Sin dependencia de Envia.com)."""
-
-from decimal import Decimal
-
+import os
+import requests
 from django.conf import settings
 from django.core.exceptions import ValidationError
-from django.db import transaction
 
-from pedidos.models import Entrega
+ENVIA_API_KEY = getattr(settings, "ENVIA_API_KEY", os.getenv("ENVIA_API_KEY", ""))
+IS_SANDBOX = str(getattr(settings, "ENVIA_SANDBOX", os.getenv("ENVIA_SANDBOX", "True"))).lower() in ("true", "1", "t")
+
+# Endpoints oficiales de Envia.com (Sandbox vs Producción)
+BASE_URL_QUERIES = "https://queries-test.envia.com" if IS_SANDBOX else "https://queries.envia.com"
+BASE_URL_SHIPPING = "https://api-test.envia.com" if IS_SANDBOX else "https://api.envia.com"
 
 
 class EnviaAPIError(Exception):
-    """Error controlado para mantener compatibilidad con las vistas."""
-
-    def __init__(self, message, status_code=None, response_data=None):
+    def __init__(self, message, status_code=502, response_data=None):
         super().__init__(message)
         self.status_code = status_code
         self.response_data = response_data
 
 
-def validar_codigo_postal(codigo_postal):
-    """Valida el código postal localmente sin llamar a la API de Envia."""
-    cp_str = str(codigo_postal).strip() if codigo_postal else ""
-    if not cp_str.isdigit() or len(cp_str) != 5:
-        raise ValidationError({"codigo_postal": "Ingresa un código postal mexicano de 5 dígitos."})
-
-    # Devuelve una estructura compatible sin depender de Envia Geocodes
+def _headers():
     return {
-        "codigo_postal": cp_str,
-        "estado": "México",
-        "estado_codigo": "MEX",
-        "municipio": "Localidad Standard",
-        "colonias": [],
+        "Authorization": f"Bearer {ENVIA_API_KEY}",
+        "Content-Type": "application/json",
     }
 
 
-def _valor_decimal(value, field_name):
+def cotizar_envio(origen, destino, paquete):
+    """
+    Consulta las tarifas disponibles en Envia.com
+    """
+    url = f"{BASE_URL_QUERIES}/rate"
+    payload = {
+        "origin": origen,
+        "destination": destino,
+        "packages": [paquete] if isinstance(paquete, dict) else paquete,
+        "shipment": {
+            "carrier": "fedex", # Puedes omitir o cambiar el carrier por defecto
+            "type": 1
+        }
+    }
+
     try:
-        value = Decimal(str(value))
-    except (TypeError, ValueError, ArithmeticError) as exc:
-        raise ValidationError({field_name: "Debe ser un número válido."}) from exc
+        response = requests.post(url, json=payload, headers=_headers(), timeout=10)
+        data = response.json()
 
-    if value <= 0:
-        return Decimal("1.0")
+        if response.status_code != 200 or "data" not in data:
+            raise EnviaAPIError(
+                message=data.get("message", "Error al cotizar con Envia"),
+                status_code=response.status_code,
+                response_data=data
+            )
+        return data["data"]
 
-    return value
+    except requests.RequestException as e:
+        raise EnviaAPIError(f"Error de conexión con Envia: {str(e)}")
 
 
-def cotizar_envio(origen, destino, paquete, transportista=None):
+def crear_envio(pedido, carrier, service):
     """
-    Simulación de cotización externa.
-    Al estar desactivado Envia, retorna una lista vacía de opciones externas.
-    La vista principal manejará el reparto local.
+    Genera la guía de envío en Envia.com
     """
-    return {
-        "opciones": [],
-        "respuesta_json": {"detail": "Servicio de Envia.com desactivado. Usando reparto local."}
+    url = f"{BASE_URL_SHIPPING}/ship/generate"
+    # Lógica básica para armar el payload con los datos del pedido...
+    payload = {
+        "origin": {
+            "name": "Agrivale Store",
+            "company": "Agrivale",
+            "email": "contacto@agrivale.com",
+            "phone": "5555555555",
+            "street": "Av Principal",
+            "number": "123",
+            "district": "Centro",
+            "city": "Toluca",
+            "state": "MEX",
+            "country": "MX",
+            "postalCode": "50000"
+        },
+        "destination": {
+            "name": pedido.id_usuario.get_full_name() or "Cliente",
+            "email": pedido.id_usuario.email,
+            "phone": getattr(pedido, "telefono", "5555555555"),
+            "street": pedido.direccion,
+            "number": "1",
+            "district": "Centro",
+            "city": pedido.ciudad,
+            "state": pedido.estado,
+            "country": "MX",
+            "postalCode": pedido.codigo_postal
+        },
+        "packages": [
+            {
+                "content": f"Pedido #{pedido.id_pedido}",
+                "amount": 1,
+                "type": "box",
+                "weight": 1,
+                "length": 10,
+                "width": 10,
+                "height": 10
+            }
+        ],
+        "shipment": {
+            "carrier": carrier,
+            "service": service,
+            "type": 1
+        }
     }
 
+    try:
+        response = requests.post(url, json=payload, headers=_headers(), timeout=10)
+        data = response.json()
 
-def crear_envio(pedido, transportista, servicio):
-    """Genera un registro local de entrega sin consumir la API de Envia."""
-    if not transportista or not servicio:
-        raise ValidationError("Transportista y servicio son obligatorios.")
+        if response.status_code not in (200, 201) or "data" not in data:
+            raise EnviaAPIError(
+                message=data.get("message", "Error al generar la guía en Envia"),
+                status_code=response.status_code,
+                response_data=data
+            )
+        
+        # Formatear la respuesta de la guía
+        guia_info = data["data"][0] if isinstance(data["data"], list) else data["data"]
+        return {
+            "tracking_number": guia_info.get("trackingNumber"),
+            "carreir": carrier,
+            "label_url": guia_info.get("label")
+        }
 
-    tracking_number = f"AGR-{pedido.id if hasattr(pedido, 'id') else '000'}"
-    price = getattr(pedido, "costo_envio", Decimal("0.00")) or Decimal("0.00")
-
-    with transaction.atomic():
-        entrega, _ = Entrega.objects.select_for_update().get_or_create(id_pedido=pedido)
-        if entrega.tracking_number or entrega.numero_guia:
-            raise EnviaAPIError("El pedido ya tiene una guía de envío generada.")
-
-        entrega.paqueteria = transportista
-        entrega.transportista = transportista
-        entrega.servicio = servicio
-        entrega.numero_guia = tracking_number
-        entrega.tracking_number = tracking_number
-        entrega.costo_envio = price
-        entrega.respuesta_json = {"status": "Creado localmente sin Envia.com"}
-        entrega.save()
-
-        pedido.costo_envio = price
-        pedido.numero_rastreo = tracking_number
-        pedido.save(update_fields=["costo_envio", "numero_rastreo"])
-
-    return entrega
-
-
-def rastrear_envio(tracking_number):
-    """Consulta simulada de rastreo."""
-    if not tracking_number:
-        raise ValidationError({"tracking_number": "Este campo es obligatorio."})
-
-    return {
-        "status": "En tránsito / Reparto local",
-        "tracking_number": tracking_number,
-        "eventos": []
-    }
+    except requests.RequestException as e:
+        raise EnviaAPIError(f"Error de conexión al generar la guía: {str(e)}")
