@@ -11,8 +11,26 @@
                 <p class="text-muted">
                     Ingresa tu correo electrónico y te enviaremos un enlace
                     para restablecer tu contraseña. El enlace es válido por
-                    <strong>5 minutos</strong>.
+                    <strong>30 minutos</strong>.
                 </p>
+
+                <!-- 🔥 MOSTRAR ENLACE DIRECTAMENTE SI EL CORREO FALLÓ -->
+                {% if correo_fallido and reset_link %}
+                    <div class="alert alert-warning border-2 border-warning">
+                        <h5 class="alert-heading"><i class="fas fa-exclamation-triangle"></i> No pudimos enviar el correo</h5>
+                        <p>Pero puedes restablecer tu contraseña usando este enlace:</p>
+                        <div class="bg-light p-3 rounded">
+                            <a href="{{ reset_link }}" class="text-break fw-bold" target="_blank">
+                                {{ reset_link }}
+                            </a>
+                        </div>
+                        <hr>
+                        <p class="mb-0 text-muted small">
+                            <i class="fas fa-info-circle"></i> Haz clic en el enlace para restablecer tu contraseña.
+                            Este enlace es válido por 30 minutos.
+                        </p>
+                    </div>
+                {% endif %}
 
                 <form method="post">
                     {% csrf_token %}

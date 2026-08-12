@@ -241,16 +241,21 @@ def completar_onboarding(request):
 # RECUPERACIÓN DE CONTRASEÑA
 # ─────────────────────────────────────────────
 
+# ─────────────────────────────────────────────
+# RECUPERACIÓN DE CONTRASEÑA (CON FALLBACK)
+# ─────────────────────────────────────────────
+
 def solicitar_recuperacion(request):
     if request.method == 'POST':
         form = SolicitarRecuperacionForm(request.POST)
         if form.is_valid():
             email = form.cleaned_data['email']
             
-            # ✅ CORREGIDO: usar filter().first()
+            # ✅ Buscar usuario
             user = Usuario.objects.filter(email=email).first()
             
-            if user:  # ✅ Verificar si existe el usuario
+            if user:
+                # Eliminar tokens anteriores
                 TokenRecuperacion.objects.filter(usuario=user).delete()
                 token_obj = TokenRecuperacion.objects.create(usuario=user)
 
@@ -258,48 +263,81 @@ def solicitar_recuperacion(request):
                     reverse('usuarios:restablecer_contrasena', args=[token_obj.token])
                 )
 
-                asunto = 'Recupera tu contraseña en Agrivale 🔑'
-                mensaje_texto = (
-                    f'Hola {user.nombre},\n\n'
-                    f'Recibimos una solicitud para restablecer tu contraseña.\n'
-                    f'Haz clic en el siguiente enlace (válido por 30 minutos):\n\n'
-                    f'{link}\n\n'
-                    f'Si no solicitaste esto, ignora este mensaje.'
-                )
-                mensaje_html = f"""
-                    <div style="font-family: Arial, sans-serif; padding: 20px; color: #333;">
-                        <h2>Restablecimiento de contraseña 🔑</h2>
-                        <p>Hola <strong>{user.nombre}</strong>,</p>
-                        <p>Recibimos una solicitud para restablecer la contraseña de tu cuenta en Agrivale.</p>
-                        <p style="margin: 25px 0;">
-                            <a href="{link}" style="background-color: #0288d1; color: white; padding: 12px 24px; text-decoration: none; border-radius: 5px; font-weight: bold;">
-                                Restablecer contraseña
-                            </a>
-                        </p>
-                        <p>O copia y pega el siguiente enlace en tu navegador:</p>
-                        <p><a href="{link}">{link}</a></p>
-                        <hr style="margin-top: 30px; border: none; border-top: 1px solid #ccc;">
-                        <p style="font-size: 12px; color: #777;">Si no solicitaste este cambio, puedes ignorar este mensaje.</p>
-                    </div>
-                """
+                # 🔥 INTENTAR ENVIAR CORREO
+                correo_enviado = False
+                try:
+                    asunto = 'Recupera tu contraseña en Agrivale 🔑'
+                    mensaje_texto = (
+                        f'Hola {user.nombre},\n\n'
+                        f'Recibimos una solicitud para restablecer tu contraseña.\n'
+                        f'Haz clic en el siguiente enlace (válido por 30 minutos):\n\n'
+                        f'{link}\n\n'
+                        f'Si no solicitaste esto, ignora este mensaje.'
+                    )
+                    mensaje_html = f"""
+                        <div style="font-family: Arial, sans-serif; padding: 20px; color: #333;">
+                            <h2>Restablecimiento de contraseña 🔑</h2>
+                            <p>Hola <strong>{user.nombre}</strong>,</p>
+                            <p>Recibimos una solicitud para restablecer la contraseña de tu cuenta en Agrivale.</p>
+                            <p style="margin: 25px 0;">
+                                <a href="{link}" style="background-color: #0288d1; color: white; padding: 12px 24px; text-decoration: none; border-radius: 5px; font-weight: bold;">
+                                    Restablecer contraseña
+                                </a>
+                            </p>
+                            <p>O copia y pega el siguiente enlace en tu navegador:</p>
+                            <p><a href="{link}">{link}</a></p>
+                            <hr style="margin-top: 30px; border: none; border-top: 1px solid #ccc;">
+                            <p style="font-size: 12px; color: #777;">Si no solicitaste este cambio, puedes ignorar este mensaje.</p>
+                        </div>
+                    """
 
-                enviar_correo(
-                    asunto=asunto,
-                    mensaje_texto=mensaje_texto,
-                    destinatario=user.email,
-                    mensaje_html=mensaje_html
-                )
+                    correo_enviado = enviar_correo(
+                        asunto=asunto,
+                        mensaje_texto=mensaje_texto,
+                        destinatario=user.email,
+                        mensaje_html=mensaje_html
+                    )
+                except Exception as e:
+                    logger.error(f"❌ Error enviando correo: {e}")
+                    correo_enviado = False
+
+                # 🔥 SI EL CORREO FALLA, MOSTRAR EL ENLACE DIRECTAMENTE
+                if not correo_enviado:
+                    messages.warning(
+                        request,
+                        f'⚠️ No pudimos enviar el correo, pero puedes usar este enlace para restablecer tu contraseña:'
+                    )
+                    messages.info(
+                        request,
+                        f'🔗 {link}'
+                    )
+                    # Guardar el enlace en la sesión para mostrarlo en la página
+                    request.session['reset_link'] = link
+                    request.session['reset_email'] = user.email
+                    return render(request, 'usuarios/solicitar_recuperacion.html', {
+                        'form': form,
+                        'reset_link': link,
+                        'reset_email': user.email,
+                        'correo_fallido': True
+                    })
+                else:
+                    messages.success(request, '✅ Se ha enviado un enlace de recuperación a tu correo electrónico.')
             else:
-                # ✅ Si no existe el usuario, no hacemos nada (por seguridad)
-                pass
+                messages.info(request, 'Si el correo existe en nuestro sistema, recibirás un enlace de recuperación.')
 
-            messages.info(request, 'Se ha enviado un correo con instrucciones a tu email en caso de estar registrado. Revisa tu bandeja de entrada.')
             return redirect('usuarios:login')
     else:
         form = SolicitarRecuperacionForm()
+        # Limpiar sesión si viene de un fallo anterior
+        if 'reset_link' in request.session:
+            del request.session['reset_link']
 
-    return render(request, 'usuarios/solicitar_recuperacion.html', {'form': form})
-
+    return render(request, 'usuarios/solicitar_recuperacion.html', {
+        'form': form,
+        'reset_link': request.session.get('reset_link'),
+        'reset_email': request.session.get('reset_email'),
+        'correo_fallido': 'reset_link' in request.session
+    })
 
 def restablecer_contrasena(request, token):
     try:
