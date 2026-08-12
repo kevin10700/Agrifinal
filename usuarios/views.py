@@ -237,106 +237,128 @@ def completar_onboarding(request):
     return JsonResponse({'onboarding_completado': True})
 
 
-# ─────────────────────────────────────────────
 # RECUPERACIÓN DE CONTRASEÑA
-# ─────────────────────────────────────────────
-
-# ─────────────────────────────────────────────
-# RECUPERACIÓN DE CONTRASEÑA (CON FALLBACK)
-# ─────────────────────────────────────────────
 
 def solicitar_recuperacion(request):
+    """Permite restablecer la contraseña directamente sin necesidad de correo"""
+    
+    # Si el usuario ya está autenticado, redirigir
+    if request.user.is_authenticated:
+        return redirect('productos:lista')
+    
+    # Variable para mostrar el formulario de cambio de contraseña
+    mostrar_formulario_cambio = False
+    email_usuario = None
+    token = None
+    
     if request.method == 'POST':
-        form = SolicitarRecuperacionForm(request.POST)
-        if form.is_valid():
-            email = form.cleaned_data['email']
+        # Verificar si es el paso 1 (solicitar email) o paso 2 (cambiar contraseña)
+        if 'email' in request.POST and 'password1' not in request.POST:
+            # PASO 1: El usuario ingresó su email
+            email = request.POST.get('email')
             
-            # ✅ Buscar usuario
+            if not email:
+                messages.error(request, '❌ Por favor ingresa tu correo electrónico.')
+                return render(request, 'usuarios/solicitar_recuperacion.html', {
+                    'form': SolicitarRecuperacionForm()
+                })
+            
+            # Buscar usuario
             user = Usuario.objects.filter(email=email).first()
             
             if user:
-                # Eliminar tokens anteriores
+                # Crear token de recuperación
                 TokenRecuperacion.objects.filter(usuario=user).delete()
                 token_obj = TokenRecuperacion.objects.create(usuario=user)
-
-                link = request.build_absolute_uri(
-                    reverse('usuarios:restablecer_contrasena', args=[token_obj.token])
-                )
-
-                # 🔥 INTENTAR ENVIAR CORREO
-                correo_enviado = False
-                try:
-                    asunto = 'Recupera tu contraseña en Agrivale 🔑'
-                    mensaje_texto = (
-                        f'Hola {user.nombre},\n\n'
-                        f'Recibimos una solicitud para restablecer tu contraseña.\n'
-                        f'Haz clic en el siguiente enlace (válido por 30 minutos):\n\n'
-                        f'{link}\n\n'
-                        f'Si no solicitaste esto, ignora este mensaje.'
-                    )
-                    mensaje_html = f"""
-                        <div style="font-family: Arial, sans-serif; padding: 20px; color: #333;">
-                            <h2>Restablecimiento de contraseña 🔑</h2>
-                            <p>Hola <strong>{user.nombre}</strong>,</p>
-                            <p>Recibimos una solicitud para restablecer la contraseña de tu cuenta en Agrivale.</p>
-                            <p style="margin: 25px 0;">
-                                <a href="{link}" style="background-color: #0288d1; color: white; padding: 12px 24px; text-decoration: none; border-radius: 5px; font-weight: bold;">
-                                    Restablecer contraseña
-                                </a>
-                            </p>
-                            <p>O copia y pega el siguiente enlace en tu navegador:</p>
-                            <p><a href="{link}">{link}</a></p>
-                            <hr style="margin-top: 30px; border: none; border-top: 1px solid #ccc;">
-                            <p style="font-size: 12px; color: #777;">Si no solicitaste este cambio, puedes ignorar este mensaje.</p>
-                        </div>
-                    """
-
-                    correo_enviado = enviar_correo(
-                        asunto=asunto,
-                        mensaje_texto=mensaje_texto,
-                        destinatario=user.email,
-                        mensaje_html=mensaje_html
-                    )
-                except Exception as e:
-                    logger.error(f"❌ Error enviando correo: {e}")
-                    correo_enviado = False
-
-                # 🔥 SI EL CORREO FALLA, MOSTRAR EL ENLACE DIRECTAMENTE
-                if not correo_enviado:
-                    messages.warning(
-                        request,
-                        f'⚠️ No pudimos enviar el correo, pero puedes usar este enlace para restablecer tu contraseña:'
-                    )
-                    messages.info(
-                        request,
-                        f'🔗 {link}'
-                    )
-                    # Guardar el enlace en la sesión para mostrarlo en la página
-                    request.session['reset_link'] = link
-                    request.session['reset_email'] = user.email
-                    return render(request, 'usuarios/solicitar_recuperacion.html', {
-                        'form': form,
-                        'reset_link': link,
-                        'reset_email': user.email,
-                        'correo_fallido': True
-                    })
-                else:
-                    messages.success(request, '✅ Se ha enviado un enlace de recuperación a tu correo electrónico.')
+                
+                # Mostrar formulario de cambio de contraseña
+                mostrar_formulario_cambio = True
+                email_usuario = user.email
+                token = token_obj.token
+                messages.success(request, f'✅ Usuario verificado: {user.email}')
+                
+                return render(request, 'usuarios/solicitar_recuperacion.html', {
+                    'form': SolicitarRecuperacionForm(),
+                    'mostrar_formulario_cambio': True,
+                    'email_usuario': user.email,
+                    'token': token_obj.token
+                })
             else:
-                messages.info(request, 'Si el correo existe en nuestro sistema, recibirás un enlace de recuperación.')
-
-            return redirect('usuarios:login')
-    else:
-        form = SolicitarRecuperacionForm()
-        # Limpiar sesión si viene de un fallo anterior
-        if 'reset_link' in request.session:
-            del request.session['reset_link']
-
+                messages.error(request, '❌ No existe un usuario con ese correo electrónico.')
+                return render(request, 'usuarios/solicitar_recuperacion.html', {
+                    'form': SolicitarRecuperacionForm()
+                })
+        
+        elif 'password1' in request.POST and 'password2' in request.POST:
+            # PASO 2: El usuario está cambiando su contraseña
+            token = request.POST.get('token')
+            
+            if not token:
+                messages.error(request, '❌ Token inválido. Por favor, intenta nuevamente.')
+                return redirect('usuarios:solicitar_recuperacion')
+            
+            # Validar token
+            try:
+                token_obj = TokenRecuperacion.objects.get(token=token, usado=False)
+                
+                if token_obj.ha_expirado():
+                    messages.error(request, '❌ El tiempo ha expirado. Por favor, solicita nuevamente.')
+                    return redirect('usuarios:solicitar_recuperacion')
+                
+                user = token_obj.usuario
+                
+                # Validar contraseñas
+                password1 = request.POST.get('password1')
+                password2 = request.POST.get('password2')
+                
+                if not password1 or not password2:
+                    messages.error(request, '❌ Por favor completa todos los campos.')
+                    return render(request, 'usuarios/solicitar_recuperacion.html', {
+                        'form': SolicitarRecuperacionForm(),
+                        'mostrar_formulario_cambio': True,
+                        'email_usuario': user.email,
+                        'token': token
+                    })
+                
+                if password1 != password2:
+                    messages.error(request, '❌ Las contraseñas no coinciden.')
+                    return render(request, 'usuarios/solicitar_recuperacion.html', {
+                        'form': SolicitarRecuperacionForm(),
+                        'mostrar_formulario_cambio': True,
+                        'email_usuario': user.email,
+                        'token': token
+                    })
+                
+                if len(password1) < 8:
+                    messages.error(request, '❌ La contraseña debe tener al menos 8 caracteres.')
+                    return render(request, 'usuarios/solicitar_recuperacion.html', {
+                        'form': SolicitarRecuperacionForm(),
+                        'mostrar_formulario_cambio': True,
+                        'email_usuario': user.email,
+                        'token': token
+                    })
+                
+                # Cambiar contraseña
+                user.set_password(password1)
+                user.save()
+                
+                # Marcar token como usado
+                token_obj.usado = True
+                token_obj.save()
+                
+                messages.success(request, '✅ Contraseña actualizada correctamente. ¡Ya puedes iniciar sesión!')
+                return redirect('usuarios:login')
+                
+            except TokenRecuperacion.DoesNotExist:
+                messages.error(request, '❌ Token inválido. Por favor, solicita nuevamente.')
+                return redirect('usuarios:solicitar_recuperacion')
+    
+    # GET: Mostrar formulario inicial
+    form = SolicitarRecuperacionForm()
+    
     return render(request, 'usuarios/solicitar_recuperacion.html', {
         'form': form,
-        'reset_link': request.session.get('reset_link'),
-        'reset_email': request.session.get('reset_email'),
-        'correo_fallido': 'reset_link' in request.session
+        'mostrar_formulario_cambio': False
     })
 
 def restablecer_contrasena(request, token):
