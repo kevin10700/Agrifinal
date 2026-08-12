@@ -233,3 +233,35 @@ class SessionSecurityMiddleware(MiddlewareMixin):
         else:
             ip = request.META.get('REMOTE_ADDR')
         return ip
+
+class SingleSessionMiddleware(MiddlewareMixin):
+    """
+    Middleware para permitir solo una sesión activa por usuario
+    """
+    def process_request(self, request):
+        # Si el usuario está autenticado
+        if request.user.is_authenticated:
+            current_session_key = request.session.session_key
+            
+            # Si el usuario tiene una sesión guardada
+            if request.user.session_key:
+                # Si la sesión guardada es diferente a la actual
+                if request.user.session_key != current_session_key:
+                    # Verificar si la sesión anterior sigue activa
+                    from django.contrib.sessions.models import Session
+                    try:
+                        old_session = Session.objects.get(session_key=request.user.session_key)
+                        # Si la sesión anterior sigue activa, cerrarla
+                        old_session.delete()
+                    except Session.DoesNotExist:
+                        pass
+                    
+                    # Actualizar con la nueva sesión
+                    request.user.session_key = current_session_key
+                    request.user.last_session_update = timezone.now()
+                    request.user.save(update_fields=['session_key', 'last_session_update'])
+            else:
+                # Primera vez que inicia sesión
+                request.user.session_key = current_session_key
+                request.user.last_session_update = timezone.now()
+                request.user.save(update_fields=['session_key', 'last_session_update'])

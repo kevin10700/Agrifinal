@@ -138,7 +138,13 @@ def iniciar_sesion(request):
                         request,
                         '❌ Tu cuenta ha sido desactivada. Contacta al administrador si consideras que es un error.'
                     )
-                    return render(request, 'usuarios/login.html', {'form': form})   
+                    return render(request, 'usuarios/login.html', {'form': form})
+                
+                # 🔥 GUARDAR SESSION_KEY EN EL USUARIO (para control de sesión única)
+                from django.utils import timezone
+                user.session_key = request.session.session_key
+                user.last_session_update = timezone.now()
+                user.save(update_fields=['session_key', 'last_session_update'])
                 
                 login(request, user)
                 messages.success(request, f'¡Bienvenido de nuevo, {user.nombre}!')

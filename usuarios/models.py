@@ -24,6 +24,8 @@ class Usuario(AbstractUser):
     is_new_user = models.BooleanField(default=True)
     onboarding_completado = models.BooleanField(default=False)
     activo = models.BooleanField(default=True, verbose_name="Activo")
+    session_key = models.CharField(max_length=40, null=True, blank=True, db_index=True)
+    last_session_update = models.DateTimeField(null=True, blank=True)
 
     USERNAME_FIELD = "username"
     REQUIRED_FIELDS = ["email", "nombre", "apellido_paterno"]

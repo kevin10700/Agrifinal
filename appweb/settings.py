@@ -70,6 +70,7 @@ MIDDLEWARE = [
     'usuarios.middleware.SessionValidationMiddleware',
     'usuarios.middleware.SessionSecurityMiddleware',
     'usuarios.middleware.NoCacheAuthenticatedMiddleware',
+    'usuarios.middleware.SingleSessionMiddleware',
 ]
 
 ROOT_URLCONF = 'appweb.urls'
