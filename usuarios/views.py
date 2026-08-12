@@ -246,9 +246,11 @@ def solicitar_recuperacion(request):
         form = SolicitarRecuperacionForm(request.POST)
         if form.is_valid():
             email = form.cleaned_data['email']
-            try:
-                user = Usuario.objects.get(email=email).first()
-
+            
+            # ✅ CORREGIDO: usar filter().first()
+            user = Usuario.objects.filter(email=email).first()
+            
+            if user:  # ✅ Verificar si existe el usuario
                 TokenRecuperacion.objects.filter(usuario=user).delete()
                 token_obj = TokenRecuperacion.objects.create(usuario=user)
 
@@ -287,8 +289,8 @@ def solicitar_recuperacion(request):
                     destinatario=user.email,
                     mensaje_html=mensaje_html
                 )
-
-            except Usuario.DoesNotExist:
+            else:
+                # ✅ Si no existe el usuario, no hacemos nada (por seguridad)
                 pass
 
             messages.info(request, 'Se ha enviado un correo con instrucciones a tu email en caso de estar registrado. Revisa tu bandeja de entrada.')
