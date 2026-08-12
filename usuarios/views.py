@@ -247,7 +247,7 @@ def solicitar_recuperacion(request):
         if form.is_valid():
             email = form.cleaned_data['email']
             try:
-                user = Usuario.objects.get(email=email)
+                user = Usuario.objects.get(email=email).first()
 
                 TokenRecuperacion.objects.filter(usuario=user).delete()
                 token_obj = TokenRecuperacion.objects.create(usuario=user)
